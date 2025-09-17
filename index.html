@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Anudeep Reddy - Mechanical Engineer & ML Specialist. Predictive maintenance and manufacturing intelligence.">
+    <meta name="description" content="Anudeep Reddy - The Machinist. Mechanical Engineer & Machine Learning Specialist. Predictive maintenance, computer vision, and manufacturing intelligence.">
+    <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing">
     <meta name="author" content="Anudeep Reddy">
-    <title>The Machinist</title>
+    <meta property="og:title" content="The Machinist - Mechanical Engineer & ML Specialist">
+    <meta property="og:description" content="Combining mechanical engineering expertise with machine learning to solve industrial challenges.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://themachinist.org">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>The Machinist - Mechanical Engineer & ML Specialist</title>
     <style>
         * {
             margin: 0;
@@ -14,11 +20,27 @@
         }
 
         :root {
-            --black: #000000;
-            --white: #ffffff;
-            --gray: #666666;
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --text-secondary: #666666;
             --accent: #e74c3c;
+            --border-color: #e5e5e5;
+            --section-bg: #fafafa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
             --max-width: 1000px;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0a0a0a;
+            --text-color: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #e74c3c;
+            --border-color: #2a2a2a;
+            --section-bg: #1a1a1a;
+            --card-bg: #1a1a1a;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
         html {
@@ -27,10 +49,11 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--white);
-            color: var(--black);
+            background: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.6;
             font-size: 16px;
+            transition: var(--transition);
         }
 
         .container {
@@ -46,6 +69,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            position: relative;
         }
 
         h1 {
@@ -53,27 +77,32 @@
             font-weight: 900;
             letter-spacing: -0.02em;
             margin-bottom: 16px;
+            transition: var(--transition);
         }
 
         .subtitle {
             font-size: clamp(1rem, 3vw, 1.25rem);
-            color: var(--gray);
+            color: var(--text-secondary);
             font-weight: 400;
             margin-bottom: 48px;
+            transition: var(--transition);
         }
 
         .cta {
             display: inline-block;
             background: var(--accent);
-            color: var(--white);
+            color: #ffffff;
             padding: 16px 32px;
             text-decoration: none;
             font-weight: 600;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
         }
 
         .cta:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
         }
 
         /* Navigation */
@@ -81,12 +110,13 @@
             position: fixed;
             top: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.98);
+            background: var(--bg-color);
             z-index: 100;
             padding: 24px 0;
             opacity: 0;
             transform: translateY(-100%);
-            transition: all 0.3s;
+            transition: var(--transition);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         nav.visible {
@@ -94,15 +124,20 @@
             transform: translateY(0);
         }
 
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         nav ul {
             list-style: none;
             display: flex;
-            justify-content: center;
             gap: 48px;
         }
 
         nav a {
-            color: var(--black);
+            color: var(--text-color);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s;
@@ -112,9 +147,51 @@
             color: var(--accent);
         }
 
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--border-color);
+        }
+
+        .theme-toggle.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
+        .toggle-icon {
+            width: 14px;
+            height: 14px;
+            fill: var(--text-color);
+        }
+
         /* Sections */
         section {
             padding: 120px 0;
+            transition: var(--transition);
         }
 
         h2 {
@@ -123,6 +200,7 @@
             margin-bottom: 64px;
             text-align: center;
             letter-spacing: -0.02em;
+            transition: var(--transition);
         }
 
         /* Projects */
@@ -133,7 +211,8 @@
 
         .project {
             padding: 48px 0;
-            border-bottom: 1px solid #e5e5e5;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
         }
 
         .project:last-child {
@@ -144,6 +223,7 @@
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 16px;
+            transition: var(--transition);
         }
 
         .project-tech {
@@ -155,23 +235,25 @@
 
         .tech-tag {
             font-size: 0.875rem;
-            color: var(--gray);
+            color: var(--text-secondary);
             padding: 4px 12px;
-            border: 1px solid #e5e5e5;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
         }
 
         .project-link {
-            color: var(--black);
+            color: var(--text-color);
             text-decoration: none;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: gap 0.2s;
+            transition: gap 0.2s, color 0.2s;
         }
 
         .project-link:hover {
             gap: 16px;
+            color: var(--accent);
         }
 
         .project-link::after {
@@ -180,7 +262,7 @@
 
         /* About */
         #about {
-            background: #fafafa;
+            background: var(--section-bg);
         }
 
         .about-text {
@@ -188,11 +270,12 @@
             margin: 0 auto;
             font-size: 1.125rem;
             text-align: center;
-            color: var(--gray);
+            color: var(--text-secondary);
+            transition: var(--transition);
         }
 
         .about-text strong {
-            color: var(--black);
+            color: var(--text-color);
             font-weight: 600;
         }
 
@@ -209,46 +292,194 @@
             font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 24px;
+            transition: var(--transition);
         }
 
         .skill-list {
             list-style: none;
-            color: var(--gray);
+            color: var(--text-secondary);
             line-height: 2;
+            transition: var(--transition);
+        }
+
+        /* Learning Log */
+        #learning-log {
+            background: var(--section-bg);
+        }
+
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 24px;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .article-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--accent);
+        }
+
+        .article-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-color);
+        }
+
+        .article-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .article-tag {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            background: var(--accent);
+            color: #ffffff;
+            border-radius: 2px;
+        }
+
+        /* Contact Section */
+        #contact {
+            text-align: center;
+            padding: 120px 0;
+        }
+
+        .contact-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            transition: var(--transition);
+        }
+
+        .contact-icons {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .contact-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .contact-icon:hover {
+            color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .contact-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .contact-icon span {
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         /* Footer */
         footer {
-            padding: 120px 0 48px;
+            padding: 48px 0;
             text-align: center;
-            border-top: 1px solid #e5e5e5;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
         }
 
-        .contact-links {
+        .footer-links {
             display: flex;
             justify-content: center;
-            gap: 48px;
-            margin-bottom: 64px;
+            gap: 24px;
+            margin-bottom: 24px;
         }
 
-        .contact-links a {
-            color: var(--black);
-            text-decoration: none;
-            font-weight: 500;
+        .footer-links a {
+            color: var(--text-secondary);
             transition: color 0.2s;
         }
 
-        .contact-links a:hover {
+        .footer-links a:hover {
             color: var(--accent);
         }
 
+        .footer-links svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
         .copyright {
-            color: var(--gray);
+            color: var(--text-secondary);
             font-size: 0.875rem;
+            transition: var(--transition);
         }
 
         /* Mobile */
         @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+
             nav ul {
                 gap: 24px;
                 font-size: 0.875rem;
@@ -258,27 +489,28 @@
                 padding: 80px 0;
             }
 
-            .contact-links {
+            .contact-icons {
                 flex-direction: column;
-                gap: 16px;
+                gap: 32px;
             }
 
             .skills-grid {
                 gap: 48px;
             }
+
+            .filter-buttons {
+                justify-content: stretch;
+            }
+
+            .filter-btn {
+                flex: 1;
+                min-width: 100px;
+            }
         }
 
-        /* Utility */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0,0,0,0);
-            white-space: nowrap;
-            border: 0;
+        /* Hidden class for filtering */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -293,12 +525,33 @@
 
     <nav id="nav">
         <div class="container">
-            <ul>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
+            <div class="nav-container">
+                <ul>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#learning-log">Learning Log</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -386,21 +639,160 @@
                 </div>
             </div>
         </section>
+
+        <section id="learning-log">
+            <div class="container">
+                <h2>Learning Log</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="project-deep-dives">Project Deep Dives</button>
+                    <button class="filter-btn" data-filter="concept-exploration">Concept Exploration</button>
+                    <button class="filter-btn" data-filter="field-notes">Field Notes</button>
+                </div>
+                <div class="articles-grid" id="articlesGrid">
+                    <article class="article-card" data-category="project-deep-dives">
+                        <div class="article-date">December 15, 2024</div>
+                        <h3 class="article-title">Building a Real-Time Anomaly Detection System</h3>
+                        <p class="article-excerpt">Deep dive into creating a production-ready anomaly detection system using autoencoders for industrial IoT sensor data.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Project Deep Dives</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="concept-exploration">
+                        <div class="article-date">December 8, 2024</div>
+                        <h3 class="article-title">Understanding Transformer Architecture</h3>
+                        <p class="article-excerpt">Breaking down the attention mechanism and exploring how transformers revolutionized sequence modeling.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Concept Exploration</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="field-notes">
+                        <div class="article-date">December 1, 2024</div>
+                        <h3 class="article-title">Key Takeaways: Pattern Recognition and Machine Learning</h3>
+                        <p class="article-excerpt">Summary and practical insights from Bishop's comprehensive ML textbook, focusing on probabilistic perspectives.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Field Notes</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="project-deep-dives">
+                        <div class="article-date">November 24, 2024</div>
+                        <h3 class="article-title">Computer Vision for Defect Detection</h3>
+                        <p class="article-excerpt">Implementation details of a CNN-based system for detecting microscopic defects in manufactured components.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Project Deep Dives</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="concept-exploration">
+                        <div class="article-date">November 17, 2024</div>
+                        <h3 class="article-title">Graph Neural Networks in Manufacturing</h3>
+                        <p class="article-excerpt">Exploring how GNNs can model complex relationships in supply chain and production line optimization.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Concept Exploration</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="field-notes">
+                        <div class="article-date">November 10, 2024</div>
+                        <h3 class="article-title">Fast.ai Course Notes: Practical Deep Learning</h3>
+                        <p class="article-excerpt">Key lessons and code snippets from completing the Fast.ai practical deep learning course.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Field Notes</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact">
+            <div class="container">
+                <h2>Get In Touch</h2>
+                <p class="contact-subtitle">Open to full-time opportunities and collaborative projects.</p>
+                <div class="contact-icons">
+                    <a href="mailto:anudeepreddy332@gmail.com" class="contact-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,8l-8,5L4,8V6l8,5l8-5V8z"/>
+                        </svg>
+                        <span>Email</span>
+                    </a>
+                    <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" class="contact-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H6.5v-7H9V17z M7.7,8.7c-0.8,0-1.3-0.5-1.3-1.2s0.5-1.2,1.4-1.2c0.8,0,1.3,0.5,1.3,1.2S8.6,8.7,7.7,8.7z M18,17h-2.5v-3.8c0-0.9-0.3-1.5-1.2-1.5c-0.6,0-1,0.4-1.2,0.8c-0.1,0.1-0.1,0.3-0.1,0.5v4h-2.5c0,0,0-6.5,0-7h2.5v1c0.3-0.5,0.9-1.2,2.2-1.2c1.6,0,2.8,1,2.8,3.2V17z"/>
+                        </svg>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" class="contact-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.71c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.46-1.11-1.46c-0.91-0.62,0.07-0.61,0.07-0.61c1,0.07,1.53,1.03,1.53,1.03c0.89,1.53,2.34,1.09,2.91,0.83c0.09-0.65,0.35-1.09,0.64-1.34c-2.22-0.25-4.56-1.11-4.56-4.94c0-1.09,0.39-1.98,1.03-2.68c-0.1-0.25-0.45-1.27,0.1-2.65c0,0,0.84-0.27,2.75,1.02C9.31,6.73,10.66,6.57,12,6.56c1.34,0.01,2.69,0.18,3.95,0.52c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.38,0.2,2.4,0.1,2.65c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.69-4.57,4.94c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.42-0.01,2.75c0,0.27,0.18,0.58,0.69,0.48C19.14,20.17,22,16.42,22,12C22,6.48,17.52,2,12,2z"/>
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer id="contact">
+    <footer>
         <div class="container">
-            <div class="contact-links">
-                <a href="mailto:anudeepreddy332@gmail.com">Email</a>
-                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener">GitHub</a>
-                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener">LinkedIn</a>
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
             </div>
-            <p class="copyright">© 2025 The Machinist</p>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
         </div>
     </footer>
 
     <script>
-        // Simple nav reveal on scroll
+        // Dark mode toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = themeToggle.querySelector('.sun-icon');
+        const moonIcon = themeToggle.querySelector('.moon-icon');
+        const htmlElement = document.documentElement;
+
+        // Check for saved theme preference or default to 'light'
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateThemeToggle(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const theme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeToggle(theme);
+        });
+
+        function updateThemeToggle(theme) {
+            if (theme === 'dark') {
+                themeToggle.classList.add('active');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                themeToggle.classList.remove('active');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        // Navigation reveal on scroll
         let lastScroll = 0;
         const nav = document.getElementById('nav');
 
@@ -425,6 +817,68 @@
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
+        });
+
+        // Learning Log filtering
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const articleCards = document.querySelectorAll('.article-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                const filter = button.getAttribute('data-filter');
+
+                articleCards.forEach(card => {
+                    if (filter === 'all') {
+                        card.classList.remove('hidden');
+                    } else {
+                        const category = card.getAttribute('data-category');
+                        if (category === filter) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+        });
+
+        // Add animation to article cards on hover
+        articleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // In a real implementation, this would navigate to the article
+                console.log('Article clicked:', this.querySelector('.article-title').textContent);
+            });
+        });
+
+        // Add subtle entrance animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        entry.target.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections and cards
+        document.querySelectorAll('section, .project, .article-card').forEach(el => {
+            observer.observe(el);
         });
     </script>
 </body>
