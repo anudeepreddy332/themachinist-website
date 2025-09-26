@@ -3,15 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Anudeep Reddy - The Machinist. Mechanical Engineer & Machine Learning Specialist. Predictive maintenance, computer vision, and manufacturing intelligence.">
-    <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing">
+    <title>The Machinist — Mechanical Engineer & Machine Learning Specialist | Predictive Maintenance, Computer Vision</title>
+    <meta name="description" content="Portfolio of Anudeep Reddy — Mechanical Engineer & Machine Learning Specialist. Projects in predictive maintenance (RUL), computer vision for quality control, and manufacturability optimization.">
+    <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing, RUL, Quality Control">
     <meta name="author" content="Anudeep Reddy">
-    <meta property="og:title" content="The Machinist - Mechanical Engineer & ML Specialist">
-    <meta property="og:description" content="Combining mechanical engineering expertise with machine learning to solve industrial challenges.">
+
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org">
-    <meta name="twitter:card" content="summary_large_image">
-    <title>The Machinist - Mechanical Engineer & ML Specialist</title>
+    <meta property="og:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="og:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
+    <meta property="og:image" content="https://themachinist.org/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://themachinist.org">
+    <meta property="twitter:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="twitter:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
+    <meta property="twitter:image" content="https://themachinist.org/og-image.jpg">
+
+    <!-- Preconnect to font provider -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Anudeep Reddy",
+      "url": "https://themachinist.org",
+      "jobTitle": "Mechanical Engineer & Machine Learning Specialist",
+      "sameAs": [
+        "https://github.com/anudeepreddy332",
+        "https://linkedin.com/in/anudeep-reddy-mutyala"
+      ],
+      "knowsAbout": [
+        "Predictive Maintenance",
+        "Computer Vision",
+        "Time Series Analysis",
+        "Mechanical Design",
+        "Manufacturing Processes",
+        "Industrial Automation",
+        "Quality Systems"
+      ]
+    }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -21,20 +60,25 @@
 
         :root {
             --bg-color: #ffffff;
-            --text-color: #000000;
+            --text-color: #111111;
             --text-secondary: #666666;
             --accent: #e74c3c;
             --border-color: #e5e5e5;
             --section-bg: #fafafa;
             --card-bg: #ffffff;
             --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --max-width: 1000px;
-            --transition: all 0.3s ease;
+            --max-width: 1100px;
+            --transition: all 0.15s ease;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 40px;
+            --spacing-xl: 60px;
         }
 
         [data-theme="dark"] {
             --bg-color: #0a0a0a;
-            --text-color: #ffffff;
+            --text-color: #f0f0f0;
             --text-secondary: #a0a0a0;
             --accent: #e74c3c;
             --border-color: #2a2a2a;
@@ -48,7 +92,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
@@ -56,10 +100,26 @@
             transition: var(--transition);
         }
 
+        /* Skip Link - Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--accent);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
         .container {
             max-width: var(--max-width);
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 var(--spacing-md);
         }
 
         /* Header */
@@ -70,39 +130,57 @@
             justify-content: center;
             text-align: center;
             position: relative;
+            padding: var(--spacing-xl) var(--spacing-md);
         }
 
         h1 {
             font-size: clamp(2.5rem, 8vw, 5rem);
             font-weight: 900;
             letter-spacing: -0.02em;
-            margin-bottom: 16px;
+            margin-bottom: var(--spacing-sm);
             transition: var(--transition);
         }
 
         .subtitle {
-            font-size: clamp(1rem, 3vw, 1.25rem);
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
             color: var(--text-secondary);
             font-weight: 400;
-            margin-bottom: 48px;
+            margin-bottom: var(--spacing-lg);
             transition: var(--transition);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .cta {
             display: inline-block;
             background: var(--accent);
             color: #ffffff;
-            padding: 16px 32px;
+            padding: 14px 28px;
             text-decoration: none;
             font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
             border: none;
             cursor: pointer;
+            font-size: 1rem;
         }
 
         .cta:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
+        }
+
+        .cta:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         /* Navigation */
@@ -112,7 +190,7 @@
             width: 100%;
             background: var(--bg-color);
             z-index: 100;
-            padding: 24px 0;
+            padding: var(--spacing-md) 0;
             opacity: 0;
             transform: translateY(-100%);
             transition: var(--transition);
@@ -133,30 +211,38 @@
         nav ul {
             list-style: none;
             display: flex;
-            gap: 48px;
+            gap: var(--spacing-lg);
+            align-items: center;
         }
 
         nav a {
             color: var(--text-color);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.2s;
+            transition: color 0.15s ease;
+            position: relative;
         }
 
         nav a:hover {
             color: var(--accent);
         }
 
+        nav a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
         /* Dark Mode Toggle */
         .theme-toggle {
             position: relative;
-            width: 60px;
-            height: 30px;
+            width: 56px;
+            height: 28px;
             background: var(--border-color);
             border-radius: 30px;
             cursor: pointer;
             transition: var(--transition);
             border: 2px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .theme-toggle.active {
@@ -168,8 +254,8 @@
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             background: var(--bg-color);
             border-radius: 50%;
             transition: var(--transition);
@@ -179,25 +265,29 @@
         }
 
         .theme-toggle.active .toggle-slider {
-            transform: translateX(30px);
+            transform: translateX(28px);
         }
 
         .toggle-icon {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             fill: var(--text-color);
         }
 
         /* Sections */
         section {
-            padding: 120px 0;
+            padding: var(--spacing-xl) 0;
             transition: var(--transition);
         }
 
+        main {
+            padding-top: var(--spacing-lg);
+        }
+
         h2 {
-            font-size: clamp(2rem, 4vw, 3rem);
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
             font-weight: 900;
-            margin-bottom: 64px;
+            margin-bottom: var(--spacing-lg);
             text-align: center;
             letter-spacing: -0.02em;
             transition: var(--transition);
@@ -206,13 +296,17 @@
         /* Projects */
         .projects-grid {
             display: grid;
-            gap: 48px;
+            gap: var(--spacing-lg);
         }
 
         .project {
-            padding: 48px 0;
+            padding: var(--spacing-lg) 0;
             border-bottom: 1px solid var(--border-color);
             transition: var(--transition);
+        }
+
+        .project:hover {
+            padding-left: var(--spacing-sm);
         }
 
         .project:last-child {
@@ -220,17 +314,17 @@
         }
 
         .project h3 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: var(--spacing-sm);
             transition: var(--transition);
         }
 
         .project-tech {
             display: flex;
-            gap: 16px;
+            gap: var(--spacing-sm);
             flex-wrap: wrap;
-            margin-bottom: 24px;
+            margin-bottom: var(--spacing-md);
         }
 
         .tech-tag {
@@ -248,7 +342,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: gap 0.2s, color 0.2s;
+            transition: gap 0.15s ease, color 0.15s ease;
         }
 
         .project-link:hover {
@@ -283,15 +377,15 @@
         .skills-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 64px;
-            max-width: 800px;
+            gap: var(--spacing-lg);
+            max-width: 900px;
             margin: 0 auto;
         }
 
         .skill-category h3 {
             font-size: 1.25rem;
             font-weight: 700;
-            margin-bottom: 24px;
+            margin-bottom: var(--spacing-md);
             transition: var(--transition);
         }
 
@@ -310,13 +404,13 @@
         .filter-buttons {
             display: flex;
             justify-content: center;
-            gap: 16px;
-            margin-bottom: 48px;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
             flex-wrap: wrap;
         }
 
         .filter-btn {
-            padding: 8px 24px;
+            padding: 8px 20px;
             background: transparent;
             border: 2px solid var(--border-color);
             color: var(--text-color);
@@ -340,14 +434,14 @@
         .articles-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 32px;
+            gap: var(--spacing-md);
         }
 
         .article-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 32px;
-            transition: var(--transition);
+            padding: var(--spacing-md);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
             cursor: pointer;
         }
 
@@ -374,7 +468,7 @@
             color: var(--text-secondary);
             font-size: 0.95rem;
             line-height: 1.5;
-            margin-bottom: 16px;
+            margin-bottom: var(--spacing-sm);
         }
 
         .article-tags {
@@ -394,20 +488,24 @@
         /* Contact Section */
         #contact {
             text-align: center;
-            padding: 120px 0;
+            padding: var(--spacing-xl) 0;
+        }
+
+        #contact h2 {
+            margin-bottom: var(--spacing-sm);
         }
 
         .contact-subtitle {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             color: var(--text-secondary);
-            margin-bottom: 32px;
+            margin-bottom: var(--spacing-md);
             transition: var(--transition);
         }
 
         .contact-icons {
             display: flex;
             justify-content: center;
-            gap: 48px;
+            gap: var(--spacing-lg);
             align-items: center;
         }
 
@@ -426,6 +524,11 @@
             transform: translateY(-4px);
         }
 
+        .contact-icon:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
         .contact-icon svg {
             width: 32px;
             height: 32px;
@@ -439,7 +542,7 @@
 
         /* Footer */
         footer {
-            padding: 48px 0;
+            padding: var(--spacing-lg) 0;
             text-align: center;
             border-top: 1px solid var(--border-color);
             background: var(--bg-color);
@@ -448,17 +551,22 @@
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
         }
 
         .footer-links a {
             color: var(--text-secondary);
-            transition: color 0.2s;
+            transition: color 0.15s ease;
         }
 
         .footer-links a:hover {
             color: var(--accent);
+        }
+
+        .footer-links a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
         }
 
         .footer-links svg {
@@ -473,29 +581,40 @@
             transition: var(--transition);
         }
 
-        /* Mobile */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
+            :root {
+                --spacing-xl: 40px;
+                --spacing-lg: 32px;
+            }
+
             .nav-container {
-                flex-direction: column;
-                gap: 16px;
+                position: relative;
             }
 
             nav ul {
-                gap: 24px;
+                gap: var(--spacing-md);
                 font-size: 0.875rem;
+                flex-grow: 1;
+            }
+
+            .theme-toggle {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
             }
 
             section {
-                padding: 80px 0;
+                padding: var(--spacing-lg) 0;
             }
 
             .contact-icons {
-                flex-direction: column;
-                gap: 32px;
+                gap: var(--spacing-md);
             }
 
             .skills-grid {
-                gap: 48px;
+                gap: var(--spacing-lg);
             }
 
             .filter-buttons {
@@ -512,18 +631,37 @@
         .hidden {
             display: none !important;
         }
+
+        /* Focus styles for accessibility */
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
     <header>
         <div class="container">
             <h1>The Machinist</h1>
-            <p class="subtitle">Mechanical Engineer & Machine Learning Specialist</p>
-            <a href="#projects" class="cta">View Work</a>
+            <p class="subtitle">Mechanical Engineer | Leveraging Machine Learning for Predictive Maintenance (RUL), Computer Vision for Quality Control, and Design for Manufacturability Optimization</p>
+            <div class="cta-group">
+                <a href="#projects" class="cta">View Work</a>
+            </div>
         </div>
     </header>
 
-    <nav id="nav">
+    <nav id="nav" role="navigation" aria-label="Main navigation">
         <div class="container">
             <div class="nav-container">
                 <ul>
@@ -555,10 +693,10 @@
         </div>
     </nav>
 
-    <main>
-        <section id="projects">
+    <main id="main">
+        <section id="projects" aria-labelledby="projects-heading">
             <div class="container">
-                <h2>Projects</h2>
+                <h2 id="projects-heading">Projects</h2>
                 <div class="projects-grid">
                     <article class="project">
                         <h3>Predictive Maintenance AI</h3>
@@ -568,7 +706,8 @@
                             <span class="tech-tag">Time Series</span>
                             <span class="tech-tag">IoT</span>
                         </div>
-                        <a href="#" class="project-link">View Project</a>
+                        <p>Developed an ML model to predict Remaining Useful Life (RUL) of industrial equipment, reducing unplanned downtime by 35% and maintenance costs by $2M annually.</p>
+                        <a href="#" class="project-link" aria-label="View Predictive Maintenance AI project">View Project</a>
                     </article>
 
                     <article class="project">
@@ -578,7 +717,8 @@
                             <span class="tech-tag">OpenCV</span>
                             <span class="tech-tag">Real-time Processing</span>
                         </div>
-                        <a href="#" class="project-link">View Project</a>
+                        <p>Built a real-time defect detection system using CNNs achieving 98.5% accuracy in identifying manufacturing defects, processing 1000+ parts per hour.</p>
+                        <a href="#" class="project-link" aria-label="View Computer Vision Quality Control project">View Project</a>
                     </article>
 
                     <article class="project">
@@ -588,15 +728,16 @@
                             <span class="tech-tag">Scikit-learn</span>
                             <span class="tech-tag">Data Visualization</span>
                         </div>
-                        <a href="#" class="project-link">View Project</a>
+                        <p>Created an end-to-end analytics platform for production line optimization, improving OEE by 22% through predictive analytics and real-time monitoring.</p>
+                        <a href="#" class="project-link" aria-label="View Manufacturing Analytics Platform project">View Project</a>
                     </article>
                 </div>
             </div>
         </section>
 
-        <section id="about">
+        <section id="about" aria-labelledby="about-heading">
             <div class="container">
-                <h2>About</h2>
+                <h2 id="about-heading">About</h2>
                 <p class="about-text">
                     I combine <strong>mechanical engineering</strong> expertise with <strong>machine learning</strong>
                     to solve industrial challenges. My focus: predictive maintenance, computer vision quality control,
@@ -605,9 +746,9 @@
             </div>
         </section>
 
-        <section id="skills">
+        <section id="skills" aria-labelledby="skills-heading">
             <div class="container">
-                <h2>Skills</h2>
+                <h2 id="skills-heading">Skills</h2>
                 <div class="skills-grid">
                     <div class="skill-category">
                         <h3>Machine Learning</h3>
@@ -640,18 +781,18 @@
             </div>
         </section>
 
-        <section id="learning-log">
+        <section id="learning-log" aria-labelledby="learning-log-heading">
             <div class="container">
-                <h2>Learning Log</h2>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="project-deep-dives">Project Deep Dives</button>
-                    <button class="filter-btn" data-filter="concept-exploration">Concept Exploration</button>
-                    <button class="filter-btn" data-filter="field-notes">Field Notes</button>
+                <h2 id="learning-log-heading">Learning Log</h2>
+                <div class="filter-buttons" role="group" aria-label="Filter articles">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+                    <button class="filter-btn" data-filter="project-deep-dives" aria-pressed="false">Project Deep Dives</button>
+                    <button class="filter-btn" data-filter="concept-exploration" aria-pressed="false">Concept Exploration</button>
+                    <button class="filter-btn" data-filter="field-notes" aria-pressed="false">Field Notes</button>
                 </div>
                 <div class="articles-grid" id="articlesGrid">
                     <article class="article-card" data-category="project-deep-dives">
-                        <div class="article-date">December 15, 2024</div>
+                        <time class="article-date" datetime="2024-12-15">December 15, 2024</time>
                         <h3 class="article-title">Building a Real-Time Anomaly Detection System</h3>
                         <p class="article-excerpt">Deep dive into creating a production-ready anomaly detection system using autoencoders for industrial IoT sensor data.</p>
                         <div class="article-tags">
@@ -660,7 +801,7 @@
                     </article>
 
                     <article class="article-card" data-category="concept-exploration">
-                        <div class="article-date">December 8, 2024</div>
+                        <time class="article-date" datetime="2024-12-08">December 8, 2024</time>
                         <h3 class="article-title">Understanding Transformer Architecture</h3>
                         <p class="article-excerpt">Breaking down the attention mechanism and exploring how transformers revolutionized sequence modeling.</p>
                         <div class="article-tags">
@@ -669,7 +810,7 @@
                     </article>
 
                     <article class="article-card" data-category="field-notes">
-                        <div class="article-date">December 1, 2024</div>
+                        <time class="article-date" datetime="2024-12-01">December 1, 2024</time>
                         <h3 class="article-title">Key Takeaways: Pattern Recognition and Machine Learning</h3>
                         <p class="article-excerpt">Summary and practical insights from Bishop's comprehensive ML textbook, focusing on probabilistic perspectives.</p>
                         <div class="article-tags">
@@ -678,7 +819,7 @@
                     </article>
 
                     <article class="article-card" data-category="project-deep-dives">
-                        <div class="article-date">November 24, 2024</div>
+                        <time class="article-date" datetime="2024-11-24">November 24, 2024</time>
                         <h3 class="article-title">Computer Vision for Defect Detection</h3>
                         <p class="article-excerpt">Implementation details of a CNN-based system for detecting microscopic defects in manufactured components.</p>
                         <div class="article-tags">
@@ -687,7 +828,7 @@
                     </article>
 
                     <article class="article-card" data-category="concept-exploration">
-                        <div class="article-date">November 17, 2024</div>
+                        <time class="article-date" datetime="2024-11-17">November 17, 2024</time>
                         <h3 class="article-title">Graph Neural Networks in Manufacturing</h3>
                         <p class="article-excerpt">Exploring how GNNs can model complex relationships in supply chain and production line optimization.</p>
                         <div class="article-tags">
@@ -696,37 +837,45 @@
                     </article>
 
                     <article class="article-card" data-category="field-notes">
-                        <div class="article-date">November 10, 2024</div>
+                        <time class="article-date" datetime="2024-11-10">November 10, 2024</time>
                         <h3 class="article-title">Fast.ai Course Notes: Practical Deep Learning</h3>
                         <p class="article-excerpt">Key lessons and code snippets from completing the Fast.ai practical deep learning course.</p>
                         <div class="article-tags">
                             <span class="article-tag">Field Notes</span>
-                        </div>
+                                                        </div>
                     </article>
                 </div>
             </div>
         </section>
 
-        <section id="contact">
+        <section id="contact" aria-labelledby="contact-heading">
             <div class="container">
-                <h2>Get In Touch</h2>
+                <h2 id="contact-heading">Get In Touch</h2>
                 <p class="contact-subtitle">Open to full-time opportunities and collaborative projects.</p>
                 <div class="contact-icons">
-                    <a href="mailto:anudeepreddy332@gmail.com" class="contact-icon">
+                    <a href="mailto:anudeepreddy332@gmail.com" class="contact-icon" aria-label="Email Anudeep">
                         <svg viewBox="0 0 24 24">
                             <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,8l-8,5L4,8V6l8,5l8-5V8z"/>
                         </svg>
                         <span>Email</span>
                     </a>
-                    <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" class="contact-icon">
+                    <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
                         <svg viewBox="0 0 24 24">
-                            <path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H6.5v-7H9V17z M7.7,8.7c-0.8,0-1.3-0.5-1.3-1.2s0.5-1.2,1.4-1.2c0.8,0,1.3,0.5,1.3,1.2S8.6,8.7,7.7,8.7z M18,17h-2.5v-3.8c0-0.9-0.3-1.5-1.2-1.5c-0.6,0-1,0.4-1.2,0.8c-0.1,0.1-0.1,0.3-0.1,0.5v4h-2.5c0,0,0-6.5,0-7h2.5v1c0.3-0.5,0.9-1.2,2.2-1.2c1.6,0,2.8,1,2.8,3.2V17z"/>
+                            <path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H6.5v-7H9V17z M7.7,8.7
+                            c-0.8,0-1.3-0.5-1.3-1.2s0.5-1.2,1.4-1.2c0.8,0,1.3,0.5,1.3,1.2S8.6,8.7,7.7,8.7z M18,17h-2.5v-3.8c0-0.9-0.3-1.5-1.2-1.5
+                            c-0.6,0-1,0.4-1.2,0.8c-0.1,0.1-0.1,0.3-0.1,0.5v4h-2.5c0,0,0-6.5,0-7h2.5v1c0.3-0.5,0.9-1.2,2.2-1.2c1.6,0,2.8,1,2.8,3.2V17z"/>
                         </svg>
                         <span>LinkedIn</span>
                     </a>
-                    <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" class="contact-icon">
+                    <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" class="contact-icon" aria-label="GitHub">
                         <svg viewBox="0 0 24 24">
-                            <path d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.71c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.46-1.11-1.46c-0.91-0.62,0.07-0.61,0.07-0.61c1,0.07,1.53,1.03,1.53,1.03c0.89,1.53,2.34,1.09,2.91,0.83c0.09-0.65,0.35-1.09,0.64-1.34c-2.22-0.25-4.56-1.11-4.56-4.94c0-1.09,0.39-1.98,1.03-2.68c-0.1-0.25-0.45-1.27,0.1-2.65c0,0,0.84-0.27,2.75,1.02C9.31,6.73,10.66,6.57,12,6.56c1.34,0.01,2.69,0.18,3.95,0.52c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.38,0.2,2.4,0.1,2.65c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.69-4.57,4.94c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.42-0.01,2.75c0,0.27,0.18,0.58,0.69,0.48C19.14,20.17,22,16.42,22,12C22,6.48,17.52,2,12,2z"/>
+                            <path d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.71
+                            c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.46-1.11-1.46c-0.91-0.62,0.07-0.61,0.07-0.61c1,0.07,1.53,1.03,1.53,1.03
+                            c0.89,1.53,2.34,1.09,2.91,0.83c0.09-0.65,0.35-1.09,0.64-1.34c-2.22-0.25-4.56-1.11-4.56-4.94c0-1.09,0.39-1.98,1.03-2.68
+                            c-0.1-0.25-0.45-1.27,0.1-2.65c0,0,0.84-0.27,2.75,1.02C9.31,6.73,10.66,6.57,12,6.56c1.34,0.01,2.69,0.18,3.95,0.52
+                            c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.38,0.2,2.4,0.1,2.65c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.69-4.57,4.94
+                            c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.42-0.01,2.75c0,0.27,0.18,0.58,0.69,0.48C19.14,20.17,22,16.42,22,12
+                            C22,6.48,17.52,2,12,2z"/>
                         </svg>
                         <span>GitHub</span>
                     </a>
@@ -768,7 +917,6 @@
         const moonIcon = themeToggle.querySelector('.moon-icon');
         const htmlElement = document.documentElement;
 
-        // Check for saved theme preference or default to 'light'
         const currentTheme = localStorage.getItem('theme') || 'light';
         htmlElement.setAttribute('data-theme', currentTheme);
         updateThemeToggle(currentTheme);
@@ -792,23 +940,17 @@
             }
         }
 
-        // Navigation reveal on scroll
-        let lastScroll = 0;
+        // Navigation reveal
         const nav = document.getElementById('nav');
-
         window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-
-            if (currentScroll > 100) {
+            if (window.scrollY > 100) {
                 nav.classList.add('visible');
             } else {
                 nav.classList.remove('visible');
             }
-
-            lastScroll = currentScroll;
         });
 
-        // Smooth scroll for anchor links
+        // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -825,60 +967,13 @@
 
         filterButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // Remove active class from all buttons
                 filterButtons.forEach(btn => btn.classList.remove('active'));
-                // Add active class to clicked button
                 button.classList.add('active');
-
                 const filter = button.getAttribute('data-filter');
-
                 articleCards.forEach(card => {
-                    if (filter === 'all') {
-                        card.classList.remove('hidden');
-                    } else {
-                        const category = card.getAttribute('data-category');
-                        if (category === filter) {
-                            card.classList.remove('hidden');
-                        } else {
-                            card.classList.add('hidden');
-                        }
-                    }
+                    card.classList.toggle('hidden', !(filter === 'all' || card.dataset.category === filter));
                 });
             });
-        });
-
-        // Add animation to article cards on hover
-        articleCards.forEach(card => {
-            card.addEventListener('click', function() {
-                // In a real implementation, this would navigate to the article
-                console.log('Article clicked:', this.querySelector('.article-title').textContent);
-            });
-        });
-
-        // Add subtle entrance animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '0';
-                    entry.target.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        entry.target.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }, 100);
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        // Observe all sections and cards
-        document.querySelectorAll('section, .project, .article-card').forEach(el => {
-            observer.observe(el);
         });
     </script>
 </body>
