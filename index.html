@@ -8,26 +8,22 @@
     <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing, RUL, Quality Control">
     <meta name="author" content="Anudeep Reddy">
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org">
     <meta property="og:title" content="The Machinist — Mechanical Engineer & ML Specialist">
     <meta property="og:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
     <meta property="og:image" content="https://themachinist.org/og-image.jpg">
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://themachinist.org">
     <meta property="twitter:title" content="The Machinist — Mechanical Engineer & ML Specialist">
     <meta property="twitter:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
     <meta property="twitter:image" content="https://themachinist.org/og-image.jpg">
 
-    <!-- Preconnect to font provider -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
-    <!-- Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -593,19 +589,19 @@
                 --spacing-lg: 32px;
             }
 
+            /* --- START: MODIFIED SECTION --- */
             .nav-container {
-                position: relative;
-                flex-wrap: wrap;
                 gap: var(--spacing-sm);
+                /* Removed 'flex-wrap: wrap' which caused the toggle to drop down. */
+                /* The container now correctly inherits 'justify-content: space-between' */
+                /* from the base style, placing the links and toggle at opposite ends. */
             }
 
             nav ul {
                 gap: var(--spacing-md);
                 font-size: 0.875rem;
-                flex-grow: 1;
-                order: 1;
-                width: 100%;
-                justify-content: center;
+                /* Removed 'width: 100%', 'flex-grow: 1', and 'order: 1'. */
+                /* This allows the list to size naturally and stay on the same line as the toggle. */
             }
 
             /* Rename "Learning Log" to "Log" on mobile */
@@ -623,13 +619,12 @@
             }
 
             .theme-toggle {
-                position: static;
-                transform: none;
-                order: 2;
                 width: 48px;
                 height: 24px;
-                margin-left: auto;
+                /* Removed positioning overrides like 'order', 'margin-left', and 'position'. */
+                /* The parent flex container now handles alignment correctly. */
             }
+            /* --- END: MODIFIED SECTION --- */
 
             .toggle-slider {
                 width: 16px;
