@@ -6,6 +6,39 @@
   <title>Spaceship Titanic SQL Case Study | The Machinist</title>
   <meta name="description" content="End-to-end SQL analysis uncovering the truth behind the Spaceship Titanic anomaly — CryoSleep, decks, planets, and survival patterns." />
 
+  <script>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme') || 'light';
+          document.documentElement.setAttribute('data-theme', savedTheme);
+          document.documentElement.classList.add('preloaded');
+          if (savedTheme === 'dark') {
+            document.documentElement.style.backgroundColor = '#0a0a0a';
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.style.backgroundColor = '#ffffff';
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {
+          console.error('Theme preload error:', e);
+        }
+      })();
+  </script>
+
+  <style>
+      /* Prevent flash of incorrect theme before preload runs */
+      html:not(.preloaded) {
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      html.preloaded {
+        visibility: visible !important;
+        opacity: 1 !important;
+        transition: opacity 240ms ease-in-out;
+      }
+  </style>
+
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
