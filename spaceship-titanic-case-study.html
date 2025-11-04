@@ -268,31 +268,7 @@
 </head>
 
 <body>
-  <nav id="nav" role="navigation" aria-label="Main navigation">
-    <div class="container">
-      <div class="nav-container">
-        <ul>
-          <li><a href="index.html#projects">Projects</a></li>
-          <li><a href="index.html#about">About</a></li>
-          <li><a href="index.html#skills">Skills</a></li>
-          <li><a href="index.html#learning-log">Learning Log</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-          <div class="toggle-slider">
-            <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display:block;">
-              <circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
-              <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display:none;">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </div>
-        </button>
-      </div>
-    </div>
-  </nav>
+  <div data-include="templates/nav.html"></div>
 
   <header>
     <h1>Spaceship Titanic: What Actually Happened</h1>
@@ -374,45 +350,9 @@
     <a href="index.html#learning-log" class="back-link">← Back to Learning Log</a>
   </main>
 
-  <footer>
-    <div class="container">
-      <div class="footer-links">
-        <a href="mailto:anudeepreddy332@gmail.com">Email</a>
-        <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener">GitHub</a>
-      </div>
-      <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
-    </div>
-  </footer>
+  <div data-include="templates/footer.html"></div>
 
-  <script>
-    const themeToggle = document.getElementById('themeToggle');
-    const sunIcon = themeToggle.querySelector('.sun-icon');
-    const moonIcon = themeToggle.querySelector('.moon-icon');
-    const html = document.documentElement;
-
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    html.setAttribute('data-theme', currentTheme);
-    updateTheme(currentTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const theme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      updateTheme(theme);
-    });
-
-    function updateTheme(theme) {
-      if (theme === 'dark') {
-        themeToggle.classList.add('active');
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'block';
-      } else {
-        themeToggle.classList.remove('active');
-        sunIcon.style.display = 'block';
-        moonIcon.style.display = 'none';
-      }
-    }
-  </script>
+  <script src="scripts/include.js"></script>
+  <script src="scripts/main.js"></script>
 </body>
 </html>

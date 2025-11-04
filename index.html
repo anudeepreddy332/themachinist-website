@@ -708,37 +708,7 @@
         </div>
     </header>
 
-    <nav id="nav" role="navigation" aria-label="Main navigation">
-        <div class="container">
-            <div class="nav-container">
-                <ul>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#skills">Skills</a></li>
-                    <li><a href="#learning-log">Learning Log</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-                    <div class="toggle-slider">
-                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
-                            <circle cx="12" cy="12" r="5"/>
-                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
-                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
-                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
-                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                        </svg>
-                    </div>
-                </button>
-            </div>
-        </div>
-    </nav>
+    <div data-include="templates/nav.html"></div>
 
     <main id="main">
         <section id="projects" aria-labelledby="projects-heading">
@@ -956,119 +926,9 @@
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <div class="footer-links">
-                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                </a>
-                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-                        <rect x="2" y="9" width="4" height="12"/>
-                        <circle cx="4" cy="4" r="2"/>
-                    </svg>
-                </a>
-                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-                    </svg>
-                </a>
-            </div>
-            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
-        </div>
-    </footer>
+    <div data-include="templates/footer.html"></div>
 
-    <!-- TODO: Move inline JS to main.js and load it with 'defer' -->
-    <script>
-        // Dark mode toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const sunIcon = themeToggle.querySelector('.sun-icon');
-        const moonIcon = themeToggle.querySelector('.moon-icon');
-        const htmlElement = document.documentElement;
-
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', currentTheme);
-        updateThemeToggle(currentTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const theme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            htmlElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            updateThemeToggle(theme);
-        });
-
-        function updateThemeToggle(theme) {
-            if (theme === 'dark') {
-                themeToggle.classList.add('active');
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'block';
-            } else {
-                themeToggle.classList.remove('active');
-                sunIcon.style.display = 'block';
-                moonIcon.style.display = 'none';
-            }
-        }
-
-        // Navigation reveal
-        const nav = document.getElementById('nav');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 100) {
-                nav.classList.add('visible');
-            } else {
-                nav.classList.remove('visible');
-            }
-        });
-
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-
-        // Learning Log filtering
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const articleCards = document.querySelectorAll('.article-card');
-
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                const filter = button.getAttribute('data-filter');
-                articleCards.forEach(card => {
-                    card.classList.toggle('hidden', !(filter === 'all' || card.dataset.category === filter));
-                });
-            });
-        });
-
-        function optimizeMobileNav() {
-            if (window.innerWidth <= 768) {
-                const learningLogLink = document.querySelector('nav a[href="#learning-log"]');
-                if (learningLogLink && !learningLogLink.dataset.originalText) {
-                    learningLogLink.dataset.originalText = learningLogLink.textContent;
-                    learningLogLink.textContent = 'Log';
-                }
-            } else {
-                const learningLogLink = document.querySelector('nav a[href="#learning-log"]');
-                if (learningLogLink && learningLogLink.dataset.originalText) {
-                    learningLogLink.textContent = learningLogLink.dataset.originalText;
-                    delete learningLogLink.dataset.originalText;
-                }
-            }
-        }
-
-        // Initialize on load and resize
-        optimizeMobileNav();
-        window.addEventListener('resize', optimizeMobileNav);
-
-    </script>
+    <script src="scripts/include.js"></script>
+    <script src="scripts/main.js"></script>
 </body>
 </html>
