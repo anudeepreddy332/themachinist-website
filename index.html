@@ -456,6 +456,20 @@
             border-color: var(--accent);
         }
 
+        .article-link-wrapper {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .article-card {
+            text-decoration: none;
+        }
+
+        .article-card .article-tag {
+            text-decoration: none;
+        }
+
         .article-date {
             font-size: 0.875rem;
             color: var(--text-secondary);
@@ -824,6 +838,19 @@
                     <button class="filter-btn" data-filter="field-notes" aria-pressed="false">Field Notes</button>
                 </div>
                 <div class="articles-grid" id="articlesGrid">
+                    <a href="spaceship-titanic-case-study.html" class="article-link-wrapper">
+                        <article class="article-card" data-category="project-deep-dives">
+                            <time class="article-date" datetime="2025-11-03">November 3, 2025</time>
+                            <h3 class="article-title">Spaceship Titanic SQL Case Study</h3>
+                            <p class="article-excerpt">
+                                SQL-powered analysis uncovering how CryoSleep dictated passenger outcomes,
+                                debunking “planet” and “deck” myths, and revealing one true spatial anomaly.
+                            </p>
+                            <div class="article-tags">
+                                <span class="article-tag">Project Deep Dives</span>
+                            </div>
+                        </article>
+                    </a>
                     <article class="article-card" data-category="project-deep-dives">
                         <time class="article-date" datetime="2025-11-03">November 3, 2025</time>
                         <h3 class="article-title">Spaceship Titanic SQL Case Study</h3>
