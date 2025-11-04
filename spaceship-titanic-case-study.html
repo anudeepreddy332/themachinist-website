@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spaceship Titanic SQL Case Study | The Machinist</title>
+    <meta name="description" content="End-to-end SQL analysis uncovering the truth behind the Spaceship Titanic anomaly — CryoSleep, decks, planets, and survival patterns." />
+
+    <!-- Fonts + Theme Variables -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Import same styles from index.html (unchanged theme) */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color, #ffffff);
+            color: var(--text-color, #111);
+            line-height: 1.6;
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --accent: #e74c3c;
+            --text-secondary: #666;
+            --border-color: #e5e5e5;
+            --section-bg: #fafafa;
+        }
+        [data-theme="dark"] {
+            --bg-color: #0a0a0a;
+            --text-color: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --section-bg: #1a1a1a;
+            --border-color: #2a2a2a;
+        }
+        header, footer { text-align: center; padding: 40px 16px; }
+        header h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
+        header p { color: var(--text-secondary); font-size: 1.1rem; }
+        main { max-width: 800px; margin: 0 auto; padding: 24px; }
+        h2, h3 { color: var(--text-color); }
+        h2 { font-size: 1.75rem; margin-top: 2rem; margin-bottom: 1rem; }
+        h3 { font-size: 1.3rem; margin-top: 1.5rem; }
+        p, li { margin-bottom: 1rem; color: var(--text-secondary); }
+        ul { padding-left: 20px; }
+        hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+        img {
+            display: block;
+            max-width: 100%;
+            border-radius: 6px;
+            margin: 24px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: var(--section-bg); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Spaceship Titanic: What Actually Happened</h1>
+        <p><em>An end-to-end SQL investigation into the anomaly.</em></p>
+    </header>
+
+    <main>
+        <h2>⚡ TL;DR</h2>
+        <p>CryoSleep saved you — <strong>82% transported vs 33% awake</strong>.<br>
+        Every “pattern” (planet, deck, spending, destination) traced back to <strong>CryoSleep adoption</strong>.<br>
+        One exception: <strong>Starboard side</strong> had a <strong>10% directional advantage</strong> — independent of CryoSleep.</p>
+
+        <hr>
+
+        <h2>🧩 Setup</h2>
+        <p>Year 2912. Spaceship Titanic carrying 8,693 passengers hits a spacetime anomaly.
+        Half the ship gets transported to another dimension. We have the manifest — time to decode the pattern.</p>
+
+        <ul>
+            <li><strong>Dataset:</strong> Kaggle Spaceship Titanic (training set)</li>
+            <li><strong>Tools:</strong> PostgreSQL + Python</li>
+            <li><strong>Goal:</strong> Find what predicted transportation</li>
+        </ul>
+
+        <hr>
+
+        <h2>🧰 Method Overview</h2>
+        <table>
+            <tr><th>Stage</th><th>Tool</th><th>Purpose</th></tr>
+            <tr><td>Data loading</td><td>PostgreSQL</td><td>Schema & safe imports</td></tr>
+            <tr><td>Cleaning</td><td>SQL scripts</td><td>Type casting, feature engineering</td></tr>
+            <tr><td>Analysis</td><td>SQL</td><td>Aggregations & correlations</td></tr>
+            <tr><td>Visualization</td><td>Python (matplotlib/seaborn)</td><td>Charts & validation</td></tr>
+        </table>
+
+        <h2>🧊 CryoSleep Dominates Everything</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_impact.png" alt="CryoSleep Impact Chart">
+        <p>CryoSleep passengers were <strong>2.5× more likely</strong> to be transported — strongest variable in the data.</p>
+
+        <h2>🌍 Europa’s Advantage (or not)</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/planet_transport.png" alt="Planet Transport Rates">
+        <p>Europa’s 65% transport rate wasn’t biological — it came from higher CryoSleep usage.</p>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_homeplanet.png" alt="CryoSleep by Planet">
+
+        <h2>🛌 Deck Differences</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/deck_analysis.png" alt="Deck Analysis">
+        <p>Deck B had a 73% transport rate, but Deck G (same CryoSleep rate) only 52%. Location mattered.</p>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_deck.png" alt="CryoSleep by Deck">
+
+        <h2>👶 Kids Had Higher Transport Rates</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/age_demographics.png" alt="Age Demographics">
+        <p>Kids (0–11) had a 70% transport rate — likely prioritized for CryoSleep.</p>
+
+        <h2>💸 Spending Didn’t Matter</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/spending_analysis.png" alt="Spending Analysis">
+        <p>Spending = activity indicator. Awake passengers using amenities were most exposed.</p>
+
+        <h2>⚖️ The Starboard Mystery</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/side_transport.png" alt="Port vs Starboard">
+        <p><strong>Starboard side:</strong> 10-point survival advantage. The only true independent signal.</p>
+
+        <h2>🪐 Destination Effects</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/destination_transport.png" alt="Destination Transport Rates">
+        <p>Longer trips → more CryoSleep → higher transport rates. Distance reinforced the main effect.</p>
+
+        <h2>🧠 What We Learned</h2>
+        <ul>
+            <li>CryoSleep = 82% survival, Awake = 33%</li>
+            <li>Planet/Deck/Destination effects vanish once CryoSleep is controlled</li>
+            <li>Starboard side remains independently significant</li>
+        </ul>
+
+        <h2>🧾 Bottom Line</h2>
+        <p>If you were in CryoSleep, you vanished.<br>
+        If you were awake in the spa, you stayed.<br>
+        The rest were shadows of CryoSleep usage — and the port side’s still cursed.</p>
+
+        <a href="index.html#learning-log" class="back-link">← Back to Learning Log</a>
+    </main>
+
+    <footer>
+        <p>© 2025 The Machinist. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Inherit dark mode from index
+        const html = document.documentElement;
+        const theme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', theme);
+    </script>
+</body>
+</html>
