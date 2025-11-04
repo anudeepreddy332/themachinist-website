@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.outerHTML = data;
         includesLoaded++;
         if (includesLoaded === includes.length) {
-          initThemeToggle(); // Reinitialize dark mode toggle once all includes are loaded
+          initThemeToggle(); // Initialize dark mode toggle after all includes are injected
         }
       })
       .catch(err => console.error(err));
@@ -21,22 +21,37 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initThemeToggle() {
-  // Restore saved theme
+  const html = document.documentElement;
   const savedTheme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
+  html.setAttribute('data-theme', savedTheme);
 
-  // Find the toggle button
   const themeToggle = document.querySelector('.theme-toggle');
   if (!themeToggle) return;
 
-  if (savedTheme === 'dark') {
-    themeToggle.classList.add('active');
-  }
+  const sunIcon = themeToggle.querySelector('.sun-icon');
+  const moonIcon = themeToggle.querySelector('.moon-icon');
 
+  // Initial state
+  updateToggle(savedTheme);
+
+  // Listen for toggle clicks
   themeToggle.addEventListener('click', () => {
-    const isActive = themeToggle.classList.toggle('active');
-    const newTheme = isActive ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
+    updateToggle(newTheme);
   });
+
+  function updateToggle(theme) {
+    if (theme === 'dark') {
+      themeToggle.classList.add('active');
+      if (sunIcon) sunIcon.style.display = 'none';
+      if (moonIcon) moonIcon.style.display = 'block';
+    } else {
+      themeToggle.classList.remove('active');
+      if (sunIcon) sunIcon.style.display = 'block';
+      if (moonIcon) moonIcon.style.display = 'none';
+    }
+  }
 }

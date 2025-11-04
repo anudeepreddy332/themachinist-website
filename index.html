@@ -1034,44 +1034,58 @@
         if (window.scrollY > 80) nav.classList.add('visible');
     })();
 
-    // Dark mode toggle
+    // Dark mode toggle (enhanced: instant load, synced icons, cross-tab)
     (function() {
-        const toggle = document.getElementById('themeToggle');
-        const sunIcon = document.getElementById('sunIcon');
-        const moonIcon = document.getElementById('moonIcon');
-        // Helper to set theme
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            if (theme === 'dark') {
-                toggle.classList.add('active');
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'block';
-            } else {
-                toggle.classList.remove('active');
-                sunIcon.style.display = 'block';
-                moonIcon.style.display = 'none';
-            }
+      const html = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const sunIcon = document.getElementById('sunIcon');
+      const moonIcon = document.getElementById('moonIcon');
+
+      function setTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+
+        // Reset visibility before switching (fixes stuck icon state)
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'none';
+
+        if (theme === 'dark') {
+          toggle.classList.add('active');
+          moonIcon.style.display = 'block';
+          html.style.backgroundColor = '#0a0a0a';
+          html.style.colorScheme = 'dark';
+        } else {
+          toggle.classList.remove('active');
+          sunIcon.style.display = 'block';
+          html.style.backgroundColor = '#ffffff';
+          html.style.colorScheme = 'light';
         }
-        // Detect system preference (only on first load)
-        let userTheme = localStorage.getItem('theme');
-        if (!userTheme) {
-            userTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      // Initial theme detection (uses saved or system preference)
+      const savedTheme = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      setTheme(savedTheme);
+
+      // Toggle click + keyboard support
+      function toggleTheme() {
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+      }
+      toggle.addEventListener('click', toggleTheme);
+      toggle.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleTheme();
         }
-        setTheme(userTheme);
-        // Toggle on click/keyboard
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            setTheme(next);
-            localStorage.setItem('theme', next);
+      });
+
+      // ✅ Cross-tab theme sync (instant update across open tabs)
+      window.addEventListener('storage', e => {
+        if (e.key === 'theme' && e.newValue) {
+          setTheme(e.newValue);
         }
-        toggle.addEventListener('click', toggleTheme);
-        toggle.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleTheme();
-            }
-        });
+      });
     })();
 
     // Learning Log filtering

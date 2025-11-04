@@ -387,5 +387,38 @@
 
   <script src="scripts/include.js"></script>
   <script src="scripts/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const themeToggle = document.getElementById("themeToggle");
+      const sunIcon = themeToggle?.querySelector(".sun-icon");
+      const moonIcon = themeToggle?.querySelector(".moon-icon");
+      const html = document.documentElement;
+
+      // Set theme instantly without flicker
+      const currentTheme = localStorage.getItem("theme") || "light";
+      html.setAttribute("data-theme", currentTheme);
+      updateToggleState(currentTheme);
+
+      themeToggle?.addEventListener("click", () => {
+        const newTheme = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateToggleState(newTheme);
+      });
+
+      function updateToggleState(theme) {
+        if (!themeToggle) return;
+        if (theme === "dark") {
+          themeToggle.classList.add("active");
+          if (sunIcon) sunIcon.style.display = "none";
+          if (moonIcon) moonIcon.style.display = "block";
+        } else {
+          themeToggle.classList.remove("active");
+          if (sunIcon) sunIcon.style.display = "block";
+          if (moonIcon) moonIcon.style.display = "none";
+        }
+      }
+    });
+  </script>
 </body>
 </html>
