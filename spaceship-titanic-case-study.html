@@ -1,424 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spaceship Titanic SQL Case Study | The Machinist</title>
-  <meta name="description" content="End-to-end SQL analysis uncovering the truth behind the Spaceship Titanic anomaly — CryoSleep, decks, planets, and survival patterns." />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceship Titanic SQL Case Study | The Machinist</title>
+    <meta name="description" content="End-to-end SQL analysis uncovering the truth behind the Spaceship Titanic anomaly — CryoSleep, decks, planets, and survival patterns.">
 
-  <script>
-      (function() {
-        try {
-          const savedTheme = localStorage.getItem('theme') || 'light';
-          document.documentElement.setAttribute('data-theme', savedTheme);
-          document.documentElement.classList.add('preloaded');
-          if (savedTheme === 'dark') {
-            document.documentElement.style.backgroundColor = '#0a0a0a';
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
-            document.documentElement.style.backgroundColor = '#ffffff';
-            document.documentElement.style.colorScheme = 'light';
-          }
-        } catch (e) {
-          console.error('Theme preload error:', e);
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      })();
-  </script>
 
-  <style>
-      /* Prevent flash of incorrect theme before preload runs */
-      html:not(.preloaded) {
-        visibility: hidden !important;
-        opacity: 0 !important;
-      }
-      html.preloaded {
-        visibility: visible !important;
-        opacity: 1 !important;
-        transition: opacity 240ms ease-in-out;
-      }
-  </style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --text-secondary: #666666;
+            --accent: #e74c3c;
+            --border-color: #e5e5e5;
+            --section-bg: #fafafa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --max-width: 1100px;
+            --transition: all 0.15s ease;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 40px;
+            --spacing-xl: 60px;
+        }
 
+        [data-theme="dark"] {
+            --bg-color: #0a0a0a;
+            --text-color: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #e74c3c;
+            --border-color: #2a2a2a;
+            --section-bg: #1a1a1a;
+            --card-bg: #1a1a1a;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+        html {
+            scroll-behavior: smooth;
+        }
 
-  <style>
-    :root {
-      --bg-color: #ffffff;
-      --text-color: #111111;
-      --text-secondary: #666666;
-      --accent: #e74c3c;
-      --border-color: #e5e5e5;
-      --section-bg: #fafafa;
-      --card-bg: #ffffff;
-      --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --transition: all 0.15s ease;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
+            transition: var(--transition);
+        }
 
-    [data-theme="dark"] {
-      --bg-color: #0a0a0a;
-      --text-color: #f0f0f0;
-      --text-secondary: #a0a0a0;
-      --accent: #e74c3c;
-      --border-color: #2a2a2a;
-      --section-bg: #1a1a1a;
-      --card-bg: #1a1a1a;
-      --card-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    }
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--accent);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-      line-height: 1.6;
-      margin: 0;
-      transition: var(--transition);
-    }
+        .skip-link:focus {
+            top: 0;
+        }
 
-    /* Navigation (copied from index.html) */
-    nav {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: var(--bg-color);
-      z-index: 100;
-      padding: 16px 0;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--bg-color);
+            z-index: 100;
+            padding: var(--spacing-md) 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+        }
 
-    .nav-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 40px;
-      align-items: center;
-      margin: 0;
-      padding: 0;
-    }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: center;
+        }
 
-    nav a {
-      color: var(--text-color);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.15s ease;
-    }
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.15s ease;
+            position: relative;
+        }
 
-    nav a:hover {
-      color: var(--accent);
-    }
+        nav ul li a {
+            white-space: nowrap;
+        }
 
-    .theme-toggle {
-      position: relative;
-      width: 56px;
-      height: 28px;
-      background: var(--border-color);
-      border-radius: 30px;
-      cursor: pointer;
-      transition: var(--transition);
-      border: 2px solid var(--border-color);
-      flex-shrink: 0;
-    }
+        nav a:hover {
+            color: var(--accent);
+        }
 
-    .theme-toggle.active {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
+        nav a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
 
-    .toggle-slider {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: var(--bg-color);
-      border-radius: 50%;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        .theme-toggle {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            background: var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
 
-    .theme-toggle.active .toggle-slider {
-      transform: translateX(28px);
-    }
+        .theme-toggle.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
 
-    .toggle-icon {
-      width: 12px;
-      height: 12px;
-      fill: var(--text-color);
-      transition: fill 0.2s ease;
-    }
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    header {
-      text-align: center;
-      padding: calc(100px + 40px) 16px 40px;
-      background: var(--section-bg);
-    }
+        .theme-toggle.active .toggle-slider {
+            transform: translateX(28px);
+        }
 
-    header h1 {
-      font-size: 2.5rem;
-      font-weight: 900;
-      margin-bottom: 10px;
-    }
+        .toggle-icon {
+            width: 12px;
+            height: 12px;
+            fill: var(--text-color);
+            transition: fill 0.2s ease;
+        }
 
-    header p {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      font-style: italic;
-    }
+        header {
+            text-align: center;
+            padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg);
+            background: var(--section-bg);
+        }
 
-    main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 24px;
-    }
+        header h1 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 900;
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.02em;
+        }
 
-    h2 {
-      font-size: 1.75rem;
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      color: var(--text-color);
-      font-weight: 900;
-    }
+        header p {
+            color: var(--text-secondary);
+            font-size: clamp(1rem, 2vw, 1.125rem);
+            font-style: italic;
+        }
 
-    h3 {
-      font-size: 1.3rem;
-      margin-top: 1.5rem;
-      color: var(--text-color);
-      font-weight: 700;
-    }
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--spacing-xl) var(--spacing-md);
+        }
 
-    p, li {
-      margin-bottom: 1rem;
-      color: var(--text-secondary);
-    }
+        h2 {
+            font-size: clamp(1.5rem, 3vw, 1.75rem);
+            font-weight: 900;
+            margin-top: var(--spacing-xl);
+            margin-bottom: var(--spacing-md);
+            letter-spacing: -0.02em;
+            color: var(--text-color);
+        }
 
-    ul {
-      padding-left: 20px;
-    }
+        h2:first-child {
+            margin-top: 0;
+        }
 
-    hr {
-      border: none;
-      border-top: 1px solid var(--border-color);
-      margin: 2rem 0;
-    }
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-color);
+        }
 
-    img {
-      display: block;
-      max-width: 100%;
-      border-radius: 6px;
-      margin: 24px auto;
-      box-shadow: var(--card-shadow);
-    }
+        p {
+            margin-bottom: var(--spacing-md);
+            color: var(--text-secondary);
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1.5rem;
-    }
+        ul {
+            padding-left: 20px;
+            margin-bottom: var(--spacing-md);
+        }
 
-    th, td {
-      border: 1px solid var(--border-color);
-      padding: 8px;
-      text-align: left;
-    }
+        li {
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+        }
 
-    th {
-      background: var(--section-bg);
-      color: var(--text-color);
-      font-weight: 600;
-    }
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: var(--spacing-xl) 0;
+        }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
-      transition: opacity 0.15s ease;
-    }
+        img {
+            display: block;
+            max-width: 100%;
+            border-radius: 6px;
+            margin: var(--spacing-md) auto;
+            box-shadow: var(--card-shadow);
+        }
 
-    a:hover {
-      opacity: 0.8;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-lg);
+        }
 
-    footer {
-      padding: 40px 0;
-      text-align: center;
-      border-top: 1px solid var(--border-color);
-      background: var(--bg-color);
-      margin-top: 40px;
-    }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
 
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      margin-bottom: 16px;
-    }
+        th {
+            background: var(--section-bg);
+            font-weight: 600;
+            color: var(--text-color);
+        }
 
-    .footer-links a {
-      color: var(--text-secondary);
-      transition: color 0.15s ease;
-    }
+        td {
+            color: var(--text-secondary);
+        }
 
-    .footer-links a:hover {
-      color: var(--accent);
-    }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: opacity 0.15s ease;
+        }
 
-    .copyright {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
+        a:hover {
+            opacity: 0.8;
+        }
 
-    .back-link {
-      display: inline-block;
-      margin-top: 2rem;
-      font-weight: 600;
-      color: var(--accent);
-    }
+        a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
 
-    @media (max-width: 768px) {
-      nav ul {
-        gap: 20px;
-        font-size: 0.875rem;
-      }
+        .back-link {
+            display: inline-block;
+            margin-top: var(--spacing-xl);
+            color: var(--accent);
+            font-weight: 600;
+        }
 
-      header {
-        padding: 100px 16px 32px;
-      }
-    }
-  </style>
+        footer {
+            padding: var(--spacing-lg) 0;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            transition: color 0.15s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-links svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .copyright {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --spacing-xl: 40px;
+                --spacing-lg: 32px;
+            }
+
+            .nav-container {
+                justify-content: space-between;
+                align-items: center;
+                gap: var(--spacing-sm);
+            }
+
+            nav ul {
+                gap: var(--spacing-md);
+                font-size: 0.875rem;
+                flex-wrap: nowrap;
+            }
+
+            nav ul li:nth-child(4) a {
+                font-size: 0;
+            }
+
+            nav ul li:nth-child(4) a::before {
+                content: "Log";
+                font-size: 0.875rem;
+            }
+
+            .theme-toggle {
+                width: 48px;
+                height: 24px;
+            }
+
+            .toggle-slider {
+                width: 16px;
+                height: 16px;
+            }
+
+            .theme-toggle.active .toggle-slider {
+                transform: translateX(24px);
+            }
+
+            .toggle-icon {
+                width: 10px;
+                height: 10px;
+            }
+        }
+
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <div data-include="templates/nav.html"></div>
+    <a href="#main" class="skip-link">Skip to main content</a>
 
-  <header>
-    <h1>Spaceship Titanic: What Actually Happened</h1>
-    <p>An end-to-end SQL investigation into the anomaly.</p>
-  </header>
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="index.html#projects">Projects</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#skills">Skills</a></li>
+                    <li><a href="index.html#learning-log">Learning Log</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-  <main>
-    <h2>⚡ TL;DR</h2>
-    <p>CryoSleep saved you — <strong>82% transported vs 33% awake</strong>.<br>
-    Every “pattern” (planet, deck, spending, destination) traced back to <strong>CryoSleep adoption</strong>.<br>
-    One exception: <strong>Starboard side</strong> had a <strong>10% directional advantage</strong> — independent of CryoSleep.</p>
+    <header>
+        <h1>Spaceship Titanic: What Actually Happened</h1>
+        <p>An end-to-end SQL investigation into the anomaly.</p>
+    </header>
 
-    <hr />
+    <main id="main">
+        <h2>⚡ TL;DR</h2>
+        <p>CryoSleep saved you — <strong>82% transported vs 33% awake</strong>.<br>
+        Every "pattern" (planet, deck, spending, destination) traced back to <strong>CryoSleep adoption</strong>.<br>
+        One exception: <strong>Starboard side</strong> had a <strong>10% directional advantage</strong> — independent of CryoSleep.</p>
 
-    <h2>🧩 Setup</h2>
-    <p>Year 2912. Spaceship Titanic carrying 8,693 passengers hits a spacetime anomaly.
-    Half the ship gets transported to another dimension. We have the manifest — time to decode the pattern.</p>
+        <hr>
 
-    <ul>
-      <li><strong>Dataset:</strong> Kaggle Spaceship Titanic (training set)</li>
-      <li><strong>Tools:</strong> PostgreSQL + Python</li>
-      <li><strong>Goal:</strong> Find what predicted transportation</li>
-    </ul>
+        <h2>🧩 Setup</h2>
+        <p>Year 2912. Spaceship Titanic carrying 8,693 passengers hits a spacetime anomaly.
+        Half the ship gets transported to another dimension. We have the manifest — time to decode the pattern.</p>
 
-    <hr />
+        <ul>
+            <li><strong>Dataset:</strong> Kaggle Spaceship Titanic (training set)</li>
+            <li><strong>Tools:</strong> PostgreSQL + Python</li>
+            <li><strong>Goal:</strong> Find what predicted transportation</li>
+        </ul>
 
-    <h2>🧰 Method Overview</h2>
-    <table>
-      <tr><th>Stage</th><th>Tool</th><th>Purpose</th></tr>
-      <tr><td>Data loading</td><td>PostgreSQL</td><td>Schema & safe imports</td></tr>
-      <tr><td>Cleaning</td><td>SQL scripts</td><td>Type casting, feature engineering</td></tr>
-      <tr><td>Analysis</td><td>SQL</td><td>Aggregations & correlations</td></tr>
-      <tr><td>Visualization</td><td>Python (matplotlib/seaborn)</td><td>Charts & validation</td></tr>
-    </table>
+        <hr>
 
-    <h2>🧊 CryoSleep Dominates Everything</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_impact.png" alt="CryoSleep Impact Chart" />
-    <p>CryoSleep passengers were <strong>2.5× more likely</strong> to be transported — strongest variable in the data.</p>
+        <h2>🧰 Method Overview</h2>
+        <table>
+            <tr><th>Stage</th><th>Tool</th><th>Purpose</th></tr>
+            <tr><td>Data loading</td><td>PostgreSQL</td><td>Schema & safe imports</td></tr>
+            <tr><td>Cleaning</td><td>SQL scripts</td><td>Type casting, feature engineering</td></tr>
+            <tr><td>Analysis</td><td>SQL</td><td>Aggregations & correlations</td></tr>
+            <tr><td>Visualization</td><td>Python (matplotlib/seaborn)</td><td>Charts & validation</td></tr>
+        </table>
 
-    <h2>🌍 Europa’s Advantage (or not)</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/planet_transport.png" alt="Planet Transport Rates" />
-    <p>Europa’s 65% transport rate wasn’t biological — it came from higher CryoSleep usage.</p>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_homeplanet.png" alt="CryoSleep by Planet" />
+        <h2>🧊 CryoSleep Dominates Everything</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_impact.png" alt="CryoSleep Impact Chart">
+        <p>CryoSleep passengers were <strong>2.5× more likely</strong> to be transported — strongest variable in the data.</p>
 
-    <h2>🛌 Deck Differences</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/deck_analysis.png" alt="Deck Analysis" />
-    <p>Deck B had a 73% transport rate, but Deck G (same CryoSleep rate) only 52%. Location mattered.</p>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_deck.png" alt="CryoSleep by Deck" />
+        <h2>🌍 Europa's Advantage (or not)</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/planet_transport.png" alt="Planet Transport Rates">
+        <p>Europa's 65% transport rate wasn't biological — it came from higher CryoSleep usage.</p>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_homeplanet.png" alt="CryoSleep by Planet">
 
-    <h2>👶 Kids Had Higher Transport Rates</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/age_demographics.png" alt="Age Demographics" />
-    <p>Kids (0–11) had a 70% transport rate — likely prioritized for CryoSleep.</p>
+        <h2>🛌 Deck Differences</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/deck_analysis.png" alt="Deck Analysis">
+        <p>Deck B had a 73% transport rate, but Deck G (same CryoSleep rate) only 52%. Location mattered.</p>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/cryosleep_by_deck.png" alt="CryoSleep by Deck">
 
-    <h2>💸 Spending Didn’t Matter</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/spending_analysis.png" alt="Spending Analysis" />
-    <p>Spending = activity indicator. Awake passengers using amenities were most exposed.</p>
+        <h2>👶 Kids Had Higher Transport Rates</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/age_demographics.png" alt="Age Demographics">
+        <p>Kids (0–11) had a 70% transport rate — likely prioritized for CryoSleep.</p>
 
-    <h2>⚖️ The Starboard Mystery</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/side_transport.png" alt="Port vs Starboard" />
-    <p><strong>Starboard side:</strong> 10-point survival advantage. The only true independent signal.</p>
+        <h2>💸 Spending Didn't Matter</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/spending_analysis.png" alt="Spending Analysis">
+        <p>Spending = activity indicator. Awake passengers using amenities were most exposed.</p>
 
-    <h2>🪐 Destination Effects</h2>
-    <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/destination_transport.png" alt="Destination Transport Rates" />
-    <p>Longer trips → more CryoSleep → higher transport rates. Distance reinforced the main effect.</p>
+        <h2>⚖️ The Starboard Mystery</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/side_transport.png" alt="Port vs Starboard">
+        <p><strong>Starboard side:</strong> 10-point survival advantage. The only true independent signal.</p>
 
-    <h2>🧠 What We Learned</h2>
-    <ul>
-      <li>CryoSleep = 82% survival, Awake = 33%</li>
-      <li>Planet/Deck/Destination effects vanish once CryoSleep is controlled</li>
-      <li>Starboard side remains independently significant</li>
-    </ul>
+        <h2>🪐 Destination Effects</h2>
+        <img src="images/project-deep-dives/spaceship-titanic-sql-case-study/destination_transport.png" alt="Destination Transport Rates">
+        <p>Longer trips → more CryoSleep → higher transport rates. Distance reinforced the main effect.</p>
 
-    <h2>🧾 Bottom Line</h2>
-    <p>If you were in CryoSleep, you vanished.<br />
-    If you were awake in the spa, you stayed.<br />
-    The rest were shadows of CryoSleep usage.<br />
-    PS: The port side’s still cursed.</p>
+        <h2>🧠 What We Learned</h2>
+        <ul>
+            <li>CryoSleep = 82% survival, Awake = 33%</li>
+            <li>Planet/Deck/Destination effects vanish once CryoSleep is controlled</li>
+            <li>Starboard side remains independently significant</li>
+        </ul>
 
-    <a href="index.html#learning-log" class="back-link">← Back to Learning Log</a>
-  </main>
+        <h2>🧾 Bottom Line</h2>
+        <p>If you were in CryoSleep, you vanished.<br>
+        If you were awake in the spa, you stayed.<br>
+        The rest were shadows of CryoSleep usage.<br>
+        PS: The port side is still cursed.</p>
 
-  <div data-include="templates/footer.html"></div>
+        <a href="index.html#learning-log" class="back-link">← Back to Learning Log</a>
+    </main>
 
-  <script src="scripts/include.js"></script>
-  <script src="scripts/main.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const themeToggle = document.getElementById("themeToggle");
-      const sunIcon = themeToggle?.querySelector(".sun-icon");
-      const moonIcon = themeToggle?.querySelector(".moon-icon");
-      const html = document.documentElement;
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
 
-      // Set theme instantly without flicker
-      const currentTheme = localStorage.getItem("theme") || "light";
-      html.setAttribute("data-theme", currentTheme);
-      updateToggleState(currentTheme);
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = themeToggle.querySelector('.sun-icon');
+        const moonIcon = themeToggle.querySelector('.moon-icon');
+        const htmlElement = document.documentElement;
 
-      themeToggle?.addEventListener("click", () => {
-        const newTheme = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        html.setAttribute("data-theme", newTheme);
-        localStorage.setItem("theme", newTheme);
-        updateToggleState(newTheme);
-      });
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateThemeToggle(currentTheme);
 
-      function updateToggleState(theme) {
-        if (!themeToggle) return;
-        if (theme === "dark") {
-          themeToggle.classList.add("active");
-          if (sunIcon) sunIcon.style.display = "none";
-          if (moonIcon) moonIcon.style.display = "block";
-        } else {
-          themeToggle.classList.remove("active");
-          if (sunIcon) sunIcon.style.display = "block";
-          if (moonIcon) moonIcon.style.display = "none";
+        themeToggle.addEventListener('click', () => {
+            const theme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeToggle(theme);
+        });
+
+        function updateThemeToggle(theme) {
+            if (theme === 'dark') {
+                themeToggle.classList.add('active');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                themeToggle.classList.remove('active');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
         }
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>

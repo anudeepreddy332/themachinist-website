@@ -3,55 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- TODO: Add dynamic <title> per section when routing is added -->
-    <title>The Machinist — Mechanical Engineer & Machine Learning Specialist | Predictive Maintenance, Computer Vision</title>
-    <meta name="description" content="Portfolio of Anudeep Reddy — Mechanical Engineer & Machine Learning Specialist. Projects in predictive maintenance (RUL), computer vision for quality control, and manufacturability optimization.">
+    <title>The Machinist – Mechanical Engineer & Machine Learning Specialist | Predictive Maintenance, Computer Vision</title>
+    <meta name="description" content="Portfolio of Anudeep Reddy – Mechanical Engineer & Machine Learning Specialist. Projects in predictive maintenance (RUL), computer vision for quality control, and manufacturability optimization.">
     <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing, RUL, Quality Control">
     <meta name="author" content="Anudeep Reddy">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org">
-    <meta property="og:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="og:title" content="The Machinist – Mechanical Engineer & ML Specialist">
     <meta property="og:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
     <meta property="og:image" content="https://themachinist.org/og-image.jpg">
 
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://themachinist.org">
-    <meta property="twitter:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="twitter:title" content="The Machinist – Mechanical Engineer & ML Specialist">
     <meta property="twitter:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
     <meta property="twitter:image" content="https://themachinist.org/og-image.jpg">
-
-    <script>
-      (function() {
-        try {
-          const savedTheme = localStorage.getItem('theme') || 'light';
-          document.documentElement.setAttribute('data-theme', savedTheme);
-          document.documentElement.classList.add('preloaded');
-          if (savedTheme === 'dark') {
-            document.documentElement.style.backgroundColor = '#0a0a0a';
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
-            document.documentElement.style.backgroundColor = '#ffffff';
-            document.documentElement.style.colorScheme = 'light';
-          }
-        } catch (e) {
-          console.error('Theme preload error:', e);
-        }
-      })();
-    </script>
-
-    <style>
-      /* Prevent flash of incorrect theme before preload runs */
-      html:not(.preloaded) {
-        visibility: hidden !important;
-        opacity: 0 !important;
-      }
-      html.preloaded {
-        visibility: visible !important;
-        opacity: 1 !important;
-        transition: opacity 240ms ease-in-out;
-      }
-    </style>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,7 +96,6 @@
             transition: var(--transition);
         }
 
-        /* Skip Link - Accessibility */
         .skip-link {
             position: absolute;
             top: -40px;
@@ -151,7 +117,6 @@
             padding: 0 var(--spacing-md);
         }
 
-        /* Header */
         header {
             min-height: 100vh;
             display: flex;
@@ -212,7 +177,6 @@
             outline-offset: 2px;
         }
 
-        /* Navigation */
         nav {
             position: fixed;
             top: 0;
@@ -254,7 +218,6 @@
             position: relative;
         }
 
-        /* Prevent navigation links from wrapping */
         nav ul li a {
             white-space: nowrap;
         }
@@ -268,7 +231,6 @@
             outline-offset: 4px;
         }
 
-        /* Dark Mode Toggle */
         .theme-toggle {
             position: relative;
             width: 56px;
@@ -311,7 +273,6 @@
             transition: fill 0.2s ease;
         }
 
-        /* Sections */
         section {
             padding: var(--spacing-xl) 0;
             transition: var(--transition);
@@ -330,7 +291,6 @@
             transition: var(--transition);
         }
 
-        /* Projects */
         .projects-grid {
             display: grid;
             gap: var(--spacing-lg);
@@ -391,7 +351,6 @@
             content: '→';
         }
 
-        /* About */
         #about {
             background: var(--section-bg);
         }
@@ -410,7 +369,6 @@
             font-weight: 600;
         }
 
-        /* Skills */
         .skills-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -433,7 +391,6 @@
             transition: var(--transition);
         }
 
-        /* Learning Log */
         #learning-log {
             background: var(--section-bg);
         }
@@ -478,28 +435,17 @@
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             padding: var(--spacing-md);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
         }
 
         .article-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--card-shadow);
             border-color: var(--accent);
-        }
-
-        .article-link-wrapper {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .article-card {
-            text-decoration: none;
-        }
-
-        .article-card .article-tag {
-            text-decoration: none;
         }
 
         .article-date {
@@ -534,9 +480,14 @@
             background: var(--accent);
             color: #ffffff;
             border-radius: 2px;
+            text-decoration: none;
+            transition: opacity 0.15s ease;
         }
 
-        /* Contact Section */
+        .article-card:hover .article-tag {
+            opacity: 0.9;
+        }
+
         #contact {
             text-align: center;
             padding: var(--spacing-xl) 0;
@@ -591,7 +542,6 @@
             font-weight: 500;
         }
 
-        /* Footer */
         footer {
             padding: var(--spacing-lg) 0;
             text-align: center;
@@ -632,7 +582,6 @@
             transition: var(--transition);
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
             :root {
                 --spacing-xl: 40px;
@@ -649,11 +598,6 @@
                 gap: var(--spacing-md);
                 font-size: 0.875rem;
                 flex-wrap: nowrap;
-            }
-
-            /* Rename "Learning Log" to "Log" on mobile */
-            nav ul li:nth-child(4) a::after {
-                content: "Log";
             }
 
             nav ul li:nth-child(4) a {
@@ -706,18 +650,15 @@
             }
         }
 
-        /* Hidden class for filtering */
         .hidden {
             display: none !important;
         }
 
-        /* Focus styles for accessibility */
         *:focus-visible {
             outline: 2px solid var(--accent);
             outline-offset: 2px;
         }
 
-        /* Reduced motion for accessibility */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -740,36 +681,34 @@
         </div>
     </header>
 
-    <!-- Navigation Bar -->
-    <nav id="navbar">
-        <div class="container nav-container">
-            <ul>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#learning-log">Learning Log</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="theme-toggle" id="themeToggle" tabindex="0" aria-label="Toggle dark mode" role="button">
-                <span class="toggle-slider">
-                    <!-- Sun/Moon SVG icons (inline for accessibility and animation) -->
-                    <svg class="toggle-icon" id="sunIcon" viewBox="0 0 24 24" style="display:block;">
-                        <circle cx="12" cy="12" r="5"/>
-                        <g>
-                            <line x1="12" y1="1" x2="12" y2="3"/>
-                            <line x1="12" y1="21" x2="12" y2="23"/>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                            <line x1="1" y1="12" x2="3" y2="12"/>
-                            <line x1="21" y1="12" x2="23" y2="12"/>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                        </g>
-                    </svg>
-                    <svg class="toggle-icon" id="moonIcon" viewBox="0 0 24 24" style="display:none;">
-                        <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0021 12.79z"/>
-                    </svg>
-                </span>
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#learning-log">Learning Log</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
             </div>
         </div>
     </nav>
@@ -872,84 +811,44 @@
                     <button class="filter-btn" data-filter="field-notes" aria-pressed="false">Field Notes</button>
                 </div>
                 <div class="articles-grid" id="articlesGrid">
-                    <a href="spaceship-titanic-case-study.html" class="article-link-wrapper">
-                        <article class="article-card" data-category="project-deep-dives">
-                            <time class="article-date" datetime="2025-11-03">November 3, 2025</time>
-                            <h3 class="article-title">Spaceship Titanic SQL Case Study</h3>
-                            <p class="article-excerpt">
-                                SQL-powered analysis uncovering how CryoSleep dictated passenger outcomes,
-                                debunking “planet” and “deck” myths, and revealing one true spatial anomaly.
-                            </p>
-                            <div class="article-tags">
-                                <span class="article-tag">Project Deep Dives</span>
-                            </div>
-                        </article>
-                    </a>
-                    <article class="article-card" data-category="project-deep-dives">
+                    <a href="spaceship-titanic-case-study.html" class="article-card" data-category="project-deep-dives">
                         <time class="article-date" datetime="2025-11-03">November 3, 2025</time>
                         <h3 class="article-title">Spaceship Titanic SQL Case Study</h3>
                         <p class="article-excerpt">
                             SQL-powered analysis uncovering how CryoSleep dictated passenger outcomes,
-                            debunking “planet” and “deck” myths, and revealing one true spatial anomaly.
+                            debunking "planet" and "deck" myths, and revealing one true spatial anomaly.
                         </p>
-                        <div class="article-tags">
-                            <a href="spaceship-titanic-case-study.html" class="article-tag">Project Deep Dives</a>
-                        </div>
-                    </article>
-
-                    <article class="article-card" data-category="project-deep-dives">
-                        <time class="article-date" datetime="2024-12-15">December 15, 2024</time>
-                        <h3 class="article-title">Building a Real-Time Anomaly Detection System</h3>
-                        <p class="article-excerpt">Deep dive into creating a production-ready anomaly detection system using autoencoders for industrial IoT sensor data.</p>
                         <div class="article-tags">
                             <span class="article-tag">Project Deep Dives</span>
                         </div>
-                    </article>
+                    </a>
 
-                    <article class="article-card" data-category="concept-exploration">
-                        <time class="article-date" datetime="2024-12-08">December 8, 2024</time>
-                        <h3 class="article-title">Understanding Transformer Architecture</h3>
-                        <p class="article-excerpt">Breaking down the attention mechanism and exploring how transformers revolutionized sequence modeling.</p>
-                        <div class="article-tags">
-                            <span class="article-tag">Concept Exploration</span>
-                        </div>
-                    </article>
-
-                    <article class="article-card" data-category="field-notes">
-                        <time class="article-date" datetime="2024-12-01">December 1, 2024</time>
-                        <h3 class="article-title">Key Takeaways: Pattern Recognition and Machine Learning</h3>
-                        <p class="article-excerpt">Summary and practical insights from Bishop's comprehensive ML textbook, focusing on probabilistic perspectives.</p>
-                        <div class="article-tags">
-                            <span class="article-tag">Field Notes</span>
-                        </div>
-                    </article>
-
-                    <article class="article-card" data-category="project-deep-dives">
+                    <a href="#" class="article-card" data-category="project-deep-dives">
                         <time class="article-date" datetime="2024-11-24">November 24, 2024</time>
                         <h3 class="article-title">Computer Vision for Defect Detection</h3>
                         <p class="article-excerpt">Implementation details of a CNN-based system for detecting microscopic defects in manufactured components.</p>
                         <div class="article-tags">
                             <span class="article-tag">Project Deep Dives</span>
                         </div>
-                    </article>
+                    </a>
 
-                    <article class="article-card" data-category="concept-exploration">
+                    <a href="#" class="article-card" data-category="concept-exploration">
                         <time class="article-date" datetime="2024-11-17">November 17, 2024</time>
                         <h3 class="article-title">Graph Neural Networks in Manufacturing</h3>
                         <p class="article-excerpt">Exploring how GNNs can model complex relationships in supply chain and production line optimization.</p>
                         <div class="article-tags">
                             <span class="article-tag">Concept Exploration</span>
                         </div>
-                    </article>
+                    </a>
 
-                    <article class="article-card" data-category="field-notes">
+                    <a href="#" class="article-card" data-category="field-notes">
                         <time class="article-date" datetime="2024-11-10">November 10, 2024</time>
                         <h3 class="article-title">Fast.ai Course Notes: Practical Deep Learning</h3>
                         <p class="article-excerpt">Key lessons and code snippets from completing the Fast.ai practical deep learning course.</p>
                         <div class="article-tags">
                             <span class="article-tag">Field Notes</span>
-                                                        </div>
-                    </article>
+                        </div>
+                    </a>
                 </div>
             </div>
         </section>
@@ -990,125 +889,116 @@
         </section>
     </main>
 
-    <!-- Footer -->
     <footer>
-        <div class="footer-links">
-            <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
-                <svg viewBox="0 0 24 24"><path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,8l-8,5L4,8V6l8,5l8-5V8z"/></svg>
-            </a>
-            <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
-                <svg viewBox="0 0 24 24"><path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H6.5v-7H9V17z M7.7,8.7
-                c-0.8,0-1.3-0.5-1.3-1.2s0.5-1.2,1.4-1.2c0.8,0,1.3,0.5,1.3,1.2S8.6,8.7,7.7,8.7z M18,17h-2.5v-3.8c0-0.9-0.3-1.5-1.2-1.5
-                c-0.6,0-1,0.4-1.2,0.8c-0.1,0.1-0.1,0.3-0.1,0.5v4h-2.5c0,0,0-6.5,0-7h2.5v1c0.3-0.5,0.9-1.2,2.2-1.2c1.6,0,2.8,1,2.8,3.2V17z"/></svg>
-            </a>
-            <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
-                <svg viewBox="0 0 24 24"><path d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.71
-                c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.46-1.11-1.46c-0.91-0.62,0.07-0.61,0.07-0.61c1,0.07,1.53,1.03,1.53,1.03
-                c0.89,1.53,2.34,1.09,2.91,0.83c0.09-0.65,0.35-1.09,0.64-1.34c-2.22-0.25-4.56-1.11-4.56-4.94c0-1.09,0.39-1.98,1.03-2.68
-                c-0.1-0.25-0.45-1.27,0.1-2.65c0,0,0.84-0.27,2.75,1.02C9.31,6.73,10.66,6.57,12,6.56c1.34,0.01,2.69,0.18,3.95,0.52
-                c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.38,0.2,2.4,0.1,2.65c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.69-4.57,4.94
-                c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.42-0.01,2.75c0,0.27,0.18,0.58,0.69,0.48C19.14,20.17,22,16.42,22,12
-                C22,6.48,17.52,2,12,2z"/></svg>
-            </a>
-        </div>
-        <div class="copyright">
-            &copy; 2024 Anudeep Reddy. All rights reserved.
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Navigation and Dark Mode Scripts -->
     <script>
-    // Navigation bar show/hide on scroll
-    (function() {
-        const nav = document.getElementById('navbar');
-        let lastScrollY = window.scrollY;
-        function toggleNav() {
-            if (window.scrollY > 80) {
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = themeToggle.querySelector('.sun-icon');
+        const moonIcon = themeToggle.querySelector('.moon-icon');
+        const htmlElement = document.documentElement;
+
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateThemeToggle(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const theme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeToggle(theme);
+        });
+
+        function updateThemeToggle(theme) {
+            if (theme === 'dark') {
+                themeToggle.classList.add('active');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                themeToggle.classList.remove('active');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
                 nav.classList.add('visible');
             } else {
                 nav.classList.remove('visible');
             }
-        }
-        window.addEventListener('scroll', toggleNav, { passive: true });
-        // On load, show nav if not at top
-        if (window.scrollY > 80) nav.classList.add('visible');
-    })();
+        });
 
-    // Dark mode toggle (enhanced: instant load, synced icons, cross-tab)
-    (function() {
-      const html = document.documentElement;
-      const toggle = document.getElementById('themeToggle');
-      const sunIcon = document.getElementById('sunIcon');
-      const moonIcon = document.getElementById('moonIcon');
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
 
-      function setTheme(theme) {
-        html.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const articleCards = document.querySelectorAll('.article-card');
 
-        // Reset visibility before switching (fixes stuck icon state)
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'none';
-
-        if (theme === 'dark') {
-          toggle.classList.add('active');
-          moonIcon.style.display = 'block';
-          html.style.backgroundColor = '#0a0a0a';
-          html.style.colorScheme = 'dark';
-        } else {
-          toggle.classList.remove('active');
-          sunIcon.style.display = 'block';
-          html.style.backgroundColor = '#ffffff';
-          html.style.colorScheme = 'light';
-        }
-      }
-
-      // Initial theme detection (uses saved or system preference)
-      const savedTheme = localStorage.getItem('theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      setTheme(savedTheme);
-
-      // Toggle click + keyboard support
-      function toggleTheme() {
-        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        setTheme(next);
-      }
-      toggle.addEventListener('click', toggleTheme);
-      toggle.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          toggleTheme();
-        }
-      });
-
-      // ✅ Cross-tab theme sync (instant update across open tabs)
-      window.addEventListener('storage', e => {
-        if (e.key === 'theme' && e.newValue) {
-          setTheme(e.newValue);
-        }
-      });
-    })();
-
-    // Learning Log filtering
-    (function() {
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const articles = document.querySelectorAll('.article-card');
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                filterBtns.forEach(b => b.setAttribute('aria-pressed', 'false'));
-                btn.classList.add('active');
-                btn.setAttribute('aria-pressed', 'true');
-                const filter = btn.getAttribute('data-filter');
-                articles.forEach(card => {
-                    if (filter === 'all' || card.getAttribute('data-category') === filter) {
-                        card.classList.remove('hidden');
-                    } else {
-                        card.classList.add('hidden');
-                    }
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-pressed', 'false');
+                });
+                button.classList.add('active');
+                button.setAttribute('aria-pressed', 'true');
+                const filter = button.getAttribute('data-filter');
+                articleCards.forEach(card => {
+                    card.classList.toggle('hidden', !(filter === 'all' || card.dataset.category === filter));
                 });
             });
         });
-    })();
+
+        function optimizeMobileNav() {
+            if (window.innerWidth <= 768) {
+                const learningLogLink = document.querySelector('nav a[href="#learning-log"]');
+                if (learningLogLink && !learningLogLink.dataset.originalText) {
+                    learningLogLink.dataset.originalText = learningLogLink.textContent;
+                    learningLogLink.textContent = 'Log';
+                }
+            } else {
+                const learningLogLink = document.querySelector('nav a[href="#learning-log"]');
+                if (learningLogLink && learningLogLink.dataset.originalText) {
+                    learningLogLink.textContent = learningLogLink.dataset.originalText;
+                    delete learningLogLink.dataset.originalText;
+                }
+            }
+        }
+
+        optimizeMobileNav();
+        window.addEventListener('resize', optimizeMobileNav);
     </script>
 </body>
 </html>
