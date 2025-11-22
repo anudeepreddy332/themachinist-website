@@ -388,7 +388,7 @@ p {
     color: var(--text-secondary);
 }
 
-ul {
+ul, ol {
     padding-left: 20px;
     margin-bottom: var(--spacing-md);
 }
@@ -586,7 +586,7 @@ a:focus {
 .article-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     cursor: pointer;
     text-decoration: none;
@@ -811,6 +811,9 @@ footer {
     /* Case study mobile h2 clamp preserved */
     h2 {
         font-size: clamp(1.5rem, 3vw, 1.75rem);
+    }
+    .article-card {
+        padding: var(--spacing-sm);
     }
 }
 
