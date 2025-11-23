@@ -42,13 +42,20 @@ if (nav) {
     window.addEventListener('scroll', handleScroll);
 }
 
-// Smooth Scroll for Anchor Links
+// Smooth Scroll for Anchor Links with offset for fixed nav
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const navHeight = document.getElementById('nav')?.offsetHeight || 80;
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
+            const offsetPosition = targetPosition - navHeight - 20; // 20px extra breathing room
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
         }
     });
 });
