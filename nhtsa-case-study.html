@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Recalls: 20 Vehicles, 1,000+ Complaints, Zero Action | The Machinist</title>
+    <meta name="description" content="SQL-powered investigation revealing 20 vehicles with 1,000+ complaints and zero manufacturer recalls. $304M in potential savings uncovered through PostgreSQL analysis and Tableau visualization.">
+    <meta name="keywords" content="SQL, Data Analysis, PostgreSQL, Tableau, NHTSA, Vehicle Safety, Data Engineering, Business Intelligence">
+    <meta name="author" content="Anudeep Reddy">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://themachinist.org/nhtsa-silent-recalls-case-study">
+    <meta property="og:title" content="Silent Recalls: How I Found 20 Vehicles with 1,000+ Complaints and Zero Action">
+    <meta property="og:description" content="PostgreSQL analysis of 500K NHTSA complaints reveals $304M in potential savings manufacturers are ignoring.">
+    <meta property="og:image" content="https://themachinist.org/images/portfolio-projects/nhtsa-defect-analysis/NHTSA_Silent_Recall_Analysis%20Dashboard.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Code block styling */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border-left: 4px solid #007acc;
+        }
+
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+
+        .code-label {
+            background: #007acc;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Header title sizing */
+        header h1 {
+            font-size: clamp(1.75rem, 4vw, 2.5rem) !important;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+
+        /* Image sizing improvements */
+        main img {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 2rem auto;
+            display: block;
+        }
+
+        /* Section spacing */
+        main > * {
+            margin-bottom: 1.5rem;
+        }
+
+        main h2 {
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        main h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        main p {
+            margin-bottom: 1.25rem;
+        }
+
+        main pre {
+            margin: 0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .code-block {
+                padding: 1rem;
+                font-size: 0.85rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            main img {
+                margin: 1.5rem auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul>
+                    <li><a href="index.html#projects">Projects</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#skills">Skills</a></li>
+                    <li><a href="index.html#learning-log">Learning Log</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="index.html#projects">Projects</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#skills">Skills</a>
+            <a href="index.html#learning-log">Learning Log</a>
+            <a href="index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header style="text-align: center; padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg); background: var(--section-bg);">
+        <div class="container">
+            <h1>Silent Recalls: How I Found 20 Vehicles with 1,000+ Complaints and Zero Manufacturer Action</h1>
+            <p style="color: var(--text-secondary); font-size: clamp(1rem, 2vw, 1.125rem); font-style: italic;">Using SQL to uncover $304M in potential savings manufacturers are ignoring</p>
+        </div>
+    </header>
+
+    <main id="main">
+        <h2>TL;DR</h2>
+        <p><strong>20 vehicle models with 200+ complaints each, zero recalls issued.</strong><br>
+        Analyzed 500K+ NHTSA complaints using <strong>PostgreSQL</strong> and built a <strong>Tableau dashboard</strong> revealing $3.04B in total costs from top 10 failing components.<br>
+        <strong>Key finding:</strong> 2017 Chevy Volt has 1,145 complaints with complaint rates <em>rising</em> in Q4 2024 as vehicles age, a ticking time bomb.<br>
+        <strong>Business case:</strong> 10% reduction in top component failures = <strong>$304M annual savings</strong>.</p>
+
+        <hr>
+
+        <h2>The Problem</h2>
+        <p>Here's something that shouldn't happen: a car gets <strong>1,145 complaints</strong> about its electrical system failing, and the manufacturer does nothing. No recall, no fix, no acknowledgment. That car is the <strong>2017 Chevrolet Volt</strong>, and it's not alone.</p>
+
+        <p>I analyzed half a million NHTSA safety complaints and found <strong>20 vehicle models</strong> with over 200 complaints each and <strong>zero recalls issued</strong>. Even more troubling: for many of these vehicles, complaint rates are <em>increasing</em> as the cars age, not decreasing.</p>
+
+        <p>This isn't just bad for consumers, it's expensive for manufacturers. Using industry-standard cost estimates, I calculated that the top 10 failing components have generated <strong>$3.04 billion</strong> in total costs (complaints, crashes, injuries). A proactive 10% reduction in these complaints would save manufacturers <strong>$304 million annually</strong>. Yet most are sitting on their hands.</p>
+
+        <p>These are <strong>"The Silent Recalls"</strong>, defects everyone can see except the companies responsible for fixing them.</p>
+
+        <hr>
+
+        <h2>What I Found</h2>
+
+        <h3>The Worst Offenders</h3>
+        <p><strong>Top 5 vehicles with zero recalls (2015-2024):</strong></p>
+        <ol>
+            <li><strong>2017 Chevrolet Volt</strong> — 1,145 complaints (electrical system failures)</li>
+            <li><strong>2020 Subaru Forester</strong> — 779 complaints</li>
+            <li><strong>2022 Ford Maverick Hybrid</strong> — 700 complaints</li>
+            <li><strong>2010 Ford Fusion Hybrid</strong> — 631 complaints</li>
+            <li><strong>2023 Ford Maverick Hybrid</strong> — 451 complaints</li>
+        </ol>
+
+        <h3>The Costliest Components</h3>
+        <p><strong>Top 5 failing components and estimated costs:</strong></p>
+        <table>
+            <tr><th>Component</th><th>Complaints</th><th>Injuries</th><th>Estimated Cost</th></tr>
+            <tr><td>Air Bags</td><td>15,195</td><td>4,979</td><td><strong>$811M</strong></td></tr>
+            <tr><td>Service Brakes</td><td>28,092</td><td>1,777 crashes</td><td><strong>$479M</strong></td></tr>
+            <tr><td>Engine</td><td>67,468</td><td>878</td><td><strong>$476M</strong></td></tr>
+            <tr><td>Electrical System</td><td>55,048</td><td>1,183</td><td><strong>$463M</strong></td></tr>
+            <tr><td>Power Train</td><td>47,981</td><td>727</td><td><strong>$382M</strong></td></tr>
+        </table>
+        <p><em>Cost model: $5K per complaint, $50K per crash, $100K per injury</em></p>
+
+        <h3>The Trend Nobody's Talking About</h3>
+        <p>The 2017 Chevy Volt's complaint rate is <strong>rising in Q4 2024</strong>, even though fewer Volts are on the road. The defect gets worse as the cars age. This is a classic sign of a systemic failure that manufacturers hope will just go away.</p>
+        <p>It won't.</p>
+
+        <hr>
+
+        <h2>My Approach: Following the Money</h2>
+        <p>I wanted to answer three questions:</p>
+        <ol>
+            <li>Which vehicles have massive complaint volumes with zero manufacturer response?</li>
+            <li>What components fail most often, and what do they actually cost?</li>
+            <li>Are these problems improving or accelerating over time?</li>
+        </ol>
+        <p>To find out, I built an end-to-end analytics pipeline using <strong>PostgreSQL</strong> for data engineering and <strong>Tableau</strong> for visualization.</p>
+
+        <hr>
+
+        <h2>Step 1: Wrangling 500,000 Messy Government Records</h2>
+        <p>The NHTSA publishes complaint data as raw tab-delimited text files (LATIN1 encoding, no less). I downloaded three datasets:</p>
+        <ul>
+            <li><strong>FLAT_CMPL.txt</strong>: 500K+ consumer complaints (1995-2024)</li>
+            <li><strong>FLAT_RCL.txt</strong>: 50K+ manufacturer recalls (2010-2024)</li>
+            <li><strong>Safercar_data.csv</strong>: Vehicle safety ratings</li>
+        </ul>
+
+        <p>Data quality was a disaster. Model names were inconsistent ("F-150" vs "F150"), 15% of complaints had <code>MAKE = 'UNKNOWN'</code>, and component descriptions used cryptic hierarchies. I spent hours normalizing before analysis could begin.</p>
+
+        <h3>The ETL Pipeline</h3>
+        <p>Created a PostgreSQL database and ingested the raw files using bulk <code>COPY</code>:</p>
+
+        <div class="code-block">
+            <span class="code-label">Bash / SQL</span>
+            <code>createdb nhtsa_defects
+psql -d nhtsa_defects -c "\copy flat_cmpl FROM 'FLAT_CMPL.txt'
+  WITH (FORMAT csv, DELIMITER E'\t', QUOTE E'\b', HEADER false, NULL '', ENCODING 'LATIN1');"</code>
+        </div>
+
+        <p>The <code>QUOTE E'\b'</code> trick disabled CSV quoting, critical because complaint narratives contained embedded quotes that broke standard parsers.</p>
+
+        <p>After ingesting 500K rows, I ran validation queries:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>-- Top complained vehicles in 2020
+SELECT MAKETXT, MODELTXT, COUNT(*) AS complaints
+FROM flat_cmpl
+WHERE YEARTXT = '2020'
+GROUP BY MAKETXT, MODELTXT
+ORDER BY complaints DESC
+LIMIT 10;</code>
+        </div>
+
+        <p><strong>Immediate red flags:</strong> Ford Escape (1,793 complaints), Ford Explorer (1,464), Subaru Outback (1,113).</p>
+
+        <hr>
+
+        <h2>Step 2: The Silent Recall Detection Query</h2>
+        <p>To find vehicles with high complaints but zero recalls, I needed to join complaints and recalls tables on <code>(MAKE, MODEL, YEAR)</code>. I used a <code>LEFT JOIN</code> to capture complaints even when no recall existed.</p>
+
+        <p>I created a reusable view:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>CREATE VIEW vehicle_risk_summary AS
+SELECT
+  c.MAKETXT,
+  c.MODELTXT,
+  c.YEARTXT,
+  COUNT(DISTINCT c.CMPLID) AS total_complaints,
+  COUNT(DISTINCT r.CAMPNO) AS total_recalls
+FROM flat_cmpl c
+LEFT JOIN flat_rcl r
+  ON c.MAKETXT = r.MAKETXT
+  AND c.MODELTXT = r.MODELTXT
+  AND c.YEARTXT = r.YEARTXT
+WHERE c.YEARTXT BETWEEN '2015' AND '2024'
+  AND c.MAKETXT NOT IN ('UNKNOWN', 'FIRESTONE', 'GOODYEAR')
+GROUP BY c.MAKETXT, c.MODELTXT, c.YEARTXT;</code>
+        </div>
+
+        <p>Then queried for the worst offenders:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>SELECT * FROM vehicle_risk_summary
+WHERE total_recalls = 0
+ORDER BY total_complaints DESC
+LIMIT 20;</code>
+        </div>
+
+        <h3>The Results: The Silent Recall List</h3>
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/Top-10-Silent-Recall-Candidates-Chart.png" alt="Top 10 Silent Recall Candidates">
+        <p>Twenty vehicles, over 200 complaints each, zero manufacturer action. This became the foundation of my dashboard.</p>
+
+        <hr>
+
+        <h2>Step 3: Component Failure Analysis (The 80/20 Rule)</h2>
+        <p>I applied the Pareto Principle: 80% of problems come from 20% of components. To test this, I aggregated complaints by component and calculated crash/injury rates:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>CREATE TABLE component_analysis AS
+SELECT
+  COMPDESC,
+  COUNT(*) AS total_complaints,
+  SUM(CASE WHEN CRASH = 'Y' THEN 1 ELSE 0 END) AS crash_related,
+  SUM(INJURED) AS total_injuries,
+  SUM(DEATHS) AS total_deaths
+FROM flat_cmpl
+WHERE YEARTXT BETWEEN '2015' AND '2024'
+GROUP BY COMPDESC
+ORDER BY total_complaints DESC
+LIMIT 50;</code>
+        </div>
+
+        <h3>The Top Failing Components</h3>
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/Component-Pareto-Analysis-Chart.png" alt="Component Pareto Analysis">
+        <p>Just <strong>10 components</strong> accounted for <strong>65% of all complaints</strong> and an estimated <strong>$3.04 billion</strong> in total costs.</p>
+
+        <hr>
+
+        <h2>Step 4: The Financial Model</h2>
+        <p>I built a cost calculator to quantify the business case for early intervention:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>WITH component_costs AS (
+  SELECT
+    COMPDESC,
+    COUNT(*) AS total_complaints,
+    SUM(CASE WHEN CRASH = 'Y' THEN 1 ELSE 0 END) AS crash_count,
+    SUM(INJURED) AS total_injuries,
+    (COUNT(*) * 5000 +
+     SUM(CASE WHEN CRASH = 'Y' THEN 1 ELSE 0 END) * 50000 +
+     SUM(INJURED) * 100000)::bigint AS estimated_cost
+  FROM flat_cmpl
+  WHERE YEARTXT BETWEEN '2015' AND '2024'
+  GROUP BY COMPDESC
+)
+SELECT
+  COMPDESC,
+  TO_CHAR(estimated_cost, 'FM$999,999,999') AS total_cost,
+  TO_CHAR(estimated_cost * 0.10, 'FM$999,999,999') AS potential_annual_savings
+FROM component_costs
+ORDER BY estimated_cost DESC
+LIMIT 10;</code>
+        </div>
+
+        <p><strong>Key Finding:</strong> A 10% reduction in complaints on the top 10 components = <strong>$304 million saved annually</strong>. That's not theory, that's math based on real data.</p>
+
+        <hr>
+
+        <h2>Step 5: Trend Analysis (Are Things Getting Better or Worse?)</h2>
+        <p>Static numbers don't show the full picture. I created a time-series dataset grouping complaints by year and quarter:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>CREATE TABLE complaint_trends AS
+SELECT
+  MAKETXT,
+  MODELTXT,
+  YEARTXT,
+  EXTRACT(YEAR FROM TO_DATE(LDATE, 'YYYYMMDD')) AS complaint_year,
+  EXTRACT(QUARTER FROM TO_DATE(LDATE, 'YYYYMMDD')) AS complaint_quarter,
+  COUNT(*) AS complaint_count
+FROM flat_cmpl
+WHERE YEARTXT BETWEEN '2015' AND '2024'
+  AND LDATE ~ '^\d{8}$'
+  AND MAKETXT IN ('FORD', 'CHEVROLET', 'SUBARU', 'HONDA', 'TOYOTA')
+GROUP BY MAKETXT, MODELTXT, YEARTXT, complaint_year, complaint_quarter
+ORDER BY complaint_year DESC, complaint_quarter DESC;</code>
+        </div>
+
+        <h3>The Alarming Trend</h3>
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/Complaint-Trends-Over-Time.png" alt="Complaint trends showing 2017 Chevy Volt rising in Q4 2024">
+        <p>This chart revealed the most concerning finding: <strong>2017 Chevy Volt complaints are rising in Q4 2024</strong>, even as overall volume declines. The cars are aging (7-8 years old), and electrical defects are worsening with time. This is a ticking time bomb.</p>
+
+        <p>In contrast, the <strong>2022 Ford Maverick Hybrid</strong> saw a sharp complaint drop after 2024, likely because Ford quietly fixed the issue in newer production runs (but never recalled earlier models).</p>
+
+        <hr>
+
+        <h2>The Dashboard: Making It Actionable</h2>
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/NHTSA_Silent_Recall_Analysis Dashboard.png" alt="Interactive Tableau dashboard showing silent recalls">
+
+        <p>I built a Tableau dashboard with three key views:</p>
+        <ul>
+            <li><strong>Chart 1: Silent Recall Risk Matrix</strong> — Top 10 vehicles with zero recalls, color-coded by severity. The executive summary that spots the problem in 10 seconds.</li>
+            <li><strong>Chart 2: Component Pareto Analysis</strong> — Failing components ranked by total cost, color-coded by injuries. Answers: "Which fixes give us the biggest ROI?"</li>
+            <li><strong>Chart 3: Quarterly Complaint Trends</strong> — Multi-line time series showing complaint rates over time. Answers: "Is it getting better or worse?"</li>
+        </ul>
+
+        <p><strong><a href="https://public.tableau.com/app/profile/anudeep.reddy.mutyala/viz/NHTSA_Silent_Recall_Analysis/Dashboard1" target="_blank" rel="noopener">→ View the Live Dashboard on Tableau Public</a></strong></p>
+
+        <hr>
+
+        <h2>Advanced SQL: The Technical Deep Dive</h2>
+
+        <h3>Query 1: Repeat Offenders (Window Functions)</h3>
+        <p>Some models appear in the top 10 complaints list year after year, a sign of chronic manufacturing defects. I used <code>ROW_NUMBER()</code> with <code>PARTITION BY</code> to rank models per year:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>WITH yearly_aggregates AS (
+  SELECT MAKETXT, MODELTXT, YEARTXT, COUNT(*) AS complaints
+  FROM flat_cmpl
+  WHERE YEARTXT BETWEEN '2015' AND '2024'
+  GROUP BY MAKETXT, MODELTXT, YEARTXT
+),
+yearly_rankings AS (
+  SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY YEARTXT ORDER BY complaints DESC) AS rank_in_year
+  FROM yearly_aggregates
+)
+SELECT
+  MAKETXT,
+  MODELTXT,
+  COUNT(DISTINCT YEARTXT) AS years_in_top10,
+  SUM(complaints) AS total_complaints
+FROM yearly_rankings
+WHERE rank_in_year <= 10
+GROUP BY MAKETXT, MODELTXT
+HAVING COUNT(DISTINCT YEARTXT) >= 3
+ORDER BY years_in_top10 DESC;</code>
+        </div>
+
+        <p><strong>Result:</strong> The <strong>Ford F-150</strong> appeared in the top 10 for <strong>8 consecutive years</strong> (11,837 total complaints). Not a fluke, it's systemic.</p>
+
+        <h3>Query 2: The Financial Impact Model (CTEs)</h3>
+        <p>Multi-level CTE to calculate costs and savings:</p>
+
+        <div class="code-block">
+            <span class="code-label">SQL</span>
+            <code>WITH component_costs AS (
+  SELECT
+    COMPDESC,
+    COUNT(*) AS complaints,
+    (COUNT(*) * 5000 +
+     SUM(CASE WHEN CRASH = 'Y' THEN 1 ELSE 0 END) * 50000 +
+     SUM(INJURED) * 100000)::bigint AS estimated_cost
+  FROM flat_cmpl
+  WHERE YEARTXT BETWEEN '2015' AND '2024'
+  GROUP BY COMPDESC
+)
+SELECT
+  COMPDESC,
+  TO_CHAR(estimated_cost, 'FM$999,999,999') AS total_cost,
+  TO_CHAR(estimated_cost * 0.10, 'FM$999,999,999') AS savings_if_reduced_10pct
+FROM component_costs
+ORDER BY estimated_cost DESC
+LIMIT 10;</code>
+        </div>
+
+        <p>This query powers the "$304M savings" calculation.</p>
+
+        <hr>
+
+        <h2>Key Findings</h2>
+
+        <h3>1. The 2017 Chevy Volt Is a Liability</h3>
+        <p>GM has ignored 1,145 complaints. Quarterly rates are <em>rising</em>, which means the defect worsens with age. If this escalates to a mandatory recall:</p>
+        <ul>
+            <li><strong>Recall costs:</strong> ~$500/vehicle × 50K units = $25M</li>
+            <li><strong>Litigation risk:</strong> Class actions average $50-100M</li>
+            <li><strong>Reputational damage:</strong> See Toyota's unintended acceleration crisis</li>
+        </ul>
+        <p><strong>Recommendation:</strong> Issue a voluntary service bulletin now.</p>
+
+        <h3>2. Air Bags Are an $811M Problem</h3>
+        <p>15,195 complaints, 4,979 injuries. Modern airbag systems are failing at scale.</p>
+        <p><strong>Recommendation:</strong> Prioritize airbag diagnostics in investigations.</p>
+
+        <h3>3. Ford Dominates the Repeat Offenders List</h3>
+        <p>F-150, Explorer, and Maverick Hybrid all appear multiple times. This suggests systemic quality control issues, not isolated defects.</p>
+        <p><strong>Recommendation:</strong> Audit Ford's supplier contracts and manufacturing processes.</p>
+
+        <hr>
+
+        <h2>What I Learned</h2>
+
+        <h3>SQL Mastery</h3>
+        <ul>
+            <li>Window functions (<code>ROW_NUMBER</code>, <code>PARTITION BY</code>) for ranking</li>
+            <li>CTEs for complex multi-step calculations</li>
+            <li>Encoding handling (LATIN1 for legacy data)</li>
+            <li>Bulk data ingestion (500K rows in seconds)</li>
+        </ul>
+
+        <h3>Data Storytelling</h3>
+        <p>Numbers don't persuade, narratives do. Framing this as "Silent Recalls" makes it urgent and actionable.</p>
+
+        <h3>Business Acumen</h3>
+        <p>Cost-benefit analysis is the language of executives. Translating complaints into dollars ($304M savings) turns a data project into a business case.</p>
+
+        <hr>
+
+        <h2>Future Enhancements</h2>
+        <p>With more time, I'd add:</p>
+        <ol>
+            <li><strong>NLP on Complaint Text</strong>: Extract keywords from narratives ("fire," "stall," "smoke") using SpaCy</li>
+            <li><strong>Predictive Modeling</strong>: Train a classifier to predict recall likelihood based on complaint patterns</li>
+            <li><strong>Real-Time API</strong>: Automate data refresh using NHTSA's API</li>
+            <li><strong>Supplier Analysis</strong>: Map components to suppliers (Takata, Bosch) to identify vendor-level issues</li>
+        </ol>
+
+        <hr>
+
+        <h2>Tech Stack</h2>
+        <ul>
+            <li><strong>Database:</strong> PostgreSQL (window functions, CTEs, bulk data ingestion)</li>
+            <li><strong>Visualization:</strong> Tableau Public (interactive dashboards)</li>
+            <li><strong>Languages:</strong> SQL, Python</li>
+            <li><strong>Data Sources:</strong> NHTSA Office of Defects Investigation (public domain)</li>
+        </ul>
+
+        <hr>
+
+        <h2>Bottom Line</h2>
+        <p>This started as a SQL exercise. It became a safety investigation.</p>
+
+        <p>I uncovered 20 vehicles with hundreds of complaints and zero action. I quantified the cost: <strong>$304 million</strong> in potential savings for proactive manufacturers. And I built a dashboard that makes the problem impossible to ignore.</p>
+
+        <p><strong>For hiring managers:</strong> This is production-level data engineering.<br>
+        <strong>For manufacturers:</strong> This is your wake-up call.<br>
+        <strong>For consumers:</strong> Check NHTSA complaints before buying used.</p>
+
+        <p><strong><a href="https://public.tableau.com/app/profile/anudeep.reddy.mutyala/viz/NHTSA_Silent_Recall_Analysis/Dashboard1" target="_blank" rel="noopener">→ Explore the Full Dashboard</a></strong></p>
+        <p><strong><a href="https://github.com/anudeepreddy332/nhtsa-defect-analysis" target="_blank" rel="noopener">→ View the Code on GitHub</a></strong></p>
+
+        <a href="index.html#projects" class="back-link">← Back to Projects</a>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shared.js"></script>
+</body>
+</html>
