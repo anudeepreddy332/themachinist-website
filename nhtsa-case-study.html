@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Silent Recalls: Live Vehicle Safety Monitoring | The Machinist</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <meta name="description" content="Production-grade ETL pipeline monitoring NHTSA complaints with live risk tracking (2020-2024). Automated detection of vehicles with dangerous complaint-to-recall ratios. GMC Sierra 1500: 445 complaints, zero recalls.">
     <meta name="keywords" content="Data Engineering, ETL Pipeline, PostgreSQL, Python, Real-time Monitoring, Vehicle Safety, NHTSA, Streamlit">
     <meta name="author" content="Anudeep Reddy">
@@ -249,7 +255,7 @@
 
     <main id="main">
         <div class="tldr-box">
-            <strong>TL;DR:</strong> Built an automated ETL pipeline monitoring hundreds of thousands of NHTSA complaints, with live risk tracking focused on 2020–2024 model years. Found GMC Sierra 1500 (2021) with 445 complaints and zero recalls. System sends automated alerts when risk thresholds are breached. Not a static analysis project—this is production-grade safety intelligence.
+            <strong>TL;DR:</strong> Built an automated ETL pipeline monitoring hundreds of thousands of NHTSA complaints, with live risk tracking focused on 2020–2024 model years. Found GMC Sierra 1500 (2021) with 445 complaints and zero recalls. System sends automated alerts when risk thresholds are breached. This is a production-grade safety intelligence project.
         </div>
 
         <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/overview_dash_1.png" alt="Live dashboard showing zero-recall high-risk vehicles and complaint-to-recall ratios" style="margin-top: 2rem;">
@@ -276,7 +282,7 @@
                 <div class="metric-label">Worst Complaint-to-Recall Ratio<br>Honda Accord 2020</div>
             </div>
             <div class="metric-card">
-                <div class="metric-value">500K+</div>
+                <div class="metric-value">100K+</div>
                 <div class="metric-label">NHTSA Complaints Monitored<br>Continuous Updates</div>
             </div>
             <div class="metric-card">
@@ -311,7 +317,7 @@
 
         <hr>
 
-        <h2>The Approach: Production ETL, Not a Jupyter Notebook</h2>
+        <h2>The Approach: A Production-grade ETL Pipeline</h2>
 
         <p>Most data projects end with a dashboard. This one starts there.</p>
 
@@ -443,12 +449,15 @@
 
         <p>This view answers: <em>Where is manufacturer response disproportionately low?</em></p>
 
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/Complaints_per_recall_bar_chart.png" alt="Bar chart showing top silent recall candidates by complaint-to-recall ratio">
+
         <p><strong>3. Component Failure Analysis</strong><br>
         Aggregates complaints by vehicle system. Engine failures dominate (2,519 complaints), followed by electrical systems (2,209) and powertrains (1,926).</p>
 
         <p>This view answers: <em>What breaks most often, and how severe are the consequences?</em></p>
 
-        <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/Complaints_per_recall_bar_chart.png" alt="Bar chart showing top silent recall candidates by complaint-to-recall ratio">
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/comp_failure_analysis.png" alt="Component Pareto Chart">
+
 
         <h3>Automated Alerting: Only When It Matters</h3>
 
@@ -474,6 +483,9 @@
         <p>The system also includes long-term analytical modules:</p>
 
         <p><strong>Persistent Risk Detection:</strong> Identifies vehicles that appear in the top complaint volumes across multiple years. Ford F-150 appeared in the top 10 for 8 consecutive years (2015–2022). This isn't a fluke, it's systemic.</p>
+
+        <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/repeat_offender_vehicles.png" alt="Top Repeat Offenders">
+
 
         <p><strong>Economic Impact Modeling:</strong> Estimates the financial cost of unresolved component failures using industry-standard coefficients ($5K per complaint, $50K per crash, $100K per injury). The top 10 failing components have generated an estimated $3.04 billion in total costs.</p>
 
@@ -762,7 +774,7 @@ workflow_dispatch:  # Manual trigger available</code>
 
         <h3>Alerting Is Only Useful If It Prevents Fatigue</h3>
 
-        <p>Early versions of the alert system sent emails every week. Stakeholders ignored them. Hash-based change detection solved this—alerts fire only when risk profiles meaningfully change.</p>
+        <p>Early versions of the alert system sent emails every week. There are high chances for them to be ignored by the stakeholders. Using hash-based change detection ensures that alerts fire only when risk profiles meaningfully change. No unnecessary spamming.</p>
 
         <h3>Normalized Metrics Matter More Than Raw Counts</h3>
 
@@ -770,7 +782,7 @@ workflow_dispatch:  # Manual trigger available</code>
 
         <h3>Visualization Is Communication</h3>
 
-        <p>The same analysis presented as raw SQL output vs an interactive dashboard has 10x different impact. Executives don't read queries. They need to see the problem in 10 seconds.</p>
+        <p>The same analysis presented as raw SQL output vs an interactive dashboard has 10x different impact. Executives don't have all day. They need to see the problem in 10 seconds.</p>
 
         <hr>
 
@@ -810,8 +822,6 @@ workflow_dispatch:  # Manual trigger available</code>
         <h2>The Bottom Line: This Is Infrastructure, Not a Dashboard</h2>
 
         <p>Most data projects end with a static report. This one runs continuously, ingesting new data every week, recalculating risk scores, and alerting when thresholds are breached.</p>
-
-        <p>It's not a Jupyter notebook. It's a monitoring system.</p>
 
         <p>The GMC Sierra 1500 has 445 complaints and zero recalls. The system flagged it. The dashboard displays it. The alerts notify stakeholders. What happens next depends on whether manufacturers choose to act or wait until regulators force their hand.</p>
 
