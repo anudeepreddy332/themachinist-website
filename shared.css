@@ -71,7 +71,7 @@ nav {
     position: fixed;
     top: 0;
     width: 100%;
-    background: var(--bg-color);
+    background: var(--section-bg);
     z-index: 100;
     padding: var(--spacing-md) 0;
     opacity: 0;

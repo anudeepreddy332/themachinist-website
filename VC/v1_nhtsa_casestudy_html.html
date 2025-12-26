@@ -89,7 +89,7 @@
         }
 
         .tldr-box {
-            background: transparent;
+            background: var(--section-bg);
             border-left: 4px solid var(--accent-color);
             padding: 1.5rem;
             margin: 2rem 0;
@@ -108,7 +108,7 @@
         }
 
         .metric-card {
-            background: transparent;
+            background: var(--section-bg);
             padding: 1.5rem;
             border-radius: 8px;
             text-align: center;
@@ -135,7 +135,7 @@
         }
 
         table th {
-            background: transparent;
+            background: var(--section-bg);
             padding: 0.75rem;
             text-align: left;
             border-bottom: 2px solid var(--border-color);
@@ -148,11 +148,11 @@
         }
 
         table tr:hover {
-            background: transparent;
+            background: var(--section-bg);
         }
 
         .highlight-stat {
-            background: transparent;
+            background: var(--section-bg);
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             font-weight: 600;
@@ -240,7 +240,7 @@
         </div>
     </nav>
 
-    <header style="text-align: center; padding: calc(var(--spacing-lg) + 60px) var(--spacing-md) var(--spacing-md);">
+    <header style="text-align: center; padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg); background: var(--section-bg);">
         <div class="container">
             <h1>Silent Recalls: Live Vehicle Safety Monitoring</h1>
             <p style="color: var(--text-secondary); font-size: clamp(1rem, 2vw, 1.125rem); font-style: italic;">Production-grade ETL detecting what manufacturers won't acknowledge</p>
@@ -255,7 +255,7 @@
         <img src="images/portfolio-projects/nhtsa-defect-analysis/dashboard/overview_dash_1.png" alt="Live dashboard showing zero-recall high-risk vehicles and complaint-to-recall ratios" style="margin-top: 2rem;">
 
         <h2>The Problem: When 445 Complaints Don't Trigger a Single Recall</h2>
-
+        
         <p>In January 2025, the 2021 GMC Sierra 1500 had accumulated 445 consumer safety complaints filed with the National Highway Traffic Safety Administration. The number of manufacturer recalls issued? Zero.</p>
 
         <p>This isn't an isolated incident. Toyota's 2024 Tundra sits at 245 complaints with no recalls. The Honda Accord 2020 has a complaint-to-recall ratio of 171.5:1, meaning for every official recall action, there are 171 unresolved consumer safety reports.</p>
@@ -646,219 +646,4 @@
             <li><code>vehicle_risk_scores</code>: Risk categorization</li>
             <li><code>component_analysis</code>: Pareto of top 50 components</li>
             <li><code>yearly_trends</code>: Time series (2020–2024)</li>
-            <li><code>repeat_offenders</code>: Vehicles in top complaints ≥3 years</li>
-            <li><code>component_cost_impact</code>: Economic modeling</li>
-        </ul>
-
-        <p>Views are materialized for dashboard performance. The ETL refreshes them automatically after each data load.</p>
-
-        <h3>The ETL Orchestration</h3>
-
-        <p>GitHub Actions runs the pipeline on a weekly schedule:</p>
-
-        <div class="code-block">
-            <span class="code-label">YAML</span>
-            <code>schedule:
-  - cron: '30 3 * * 1'  # Every Monday 9:00 AM IST
-workflow_dispatch:  # Manual trigger available</code>
-        </div>
-
-        <p>The pipeline executes these steps:</p>
-        <ol>
-            <li>Identify high-risk vehicles (complaint-based)</li>
-            <li>Fetch new complaints (NHTSA API)</li>
-            <li>Deduplicate via ODI tracking</li>
-            <li>Fetch new recalls (NHTSA API)</li>
-            <li>Insert data (idempotent)</li>
-            <li>Refresh analytical tables</li>
-            <li>Evaluate risk thresholds</li>
-            <li>Send alerts (if state changed)</li>
-            <li>Dashboard auto-updates</li>
-        </ol>
-
-        <p>Each step includes error handling and logging. If the API fails, the pipeline falls back to FTP ingestion.</p>
-
-        <h3>Key Engineering Decisions</h3>
-
-        <p><strong>Why PostgreSQL over NoSQL?</strong><br>
-        Relational joins are critical for this analysis (complaints ↔ recalls ↔ vehicles). Analytical queries need SQL window functions and CTEs.</p>
-
-        <p><strong>Why Supabase over self-hosted?</strong><br>
-        Zero ops overhead. Connection pooling and backups handled automatically. Free tier sufficient for this workload.</p>
-
-        <p><strong>Why Streamlit over React?</strong><br>
-        Speed of iteration. Dashboard updates require zero frontend code. Interactive filters and charts work out of the box.</p>
-
-        <p><strong>Why GitHub Actions over Airflow?</strong><br>
-        Simplicity. This pipeline has one DAG. GitHub Actions provides sufficient scheduling and observability without infrastructure overhead.</p>
-
-        <h3>Code Quality Standards</h3>
-
-        <ul>
-            <li>Idempotent inserts (safe reruns)</li>
-            <li>State management (no reprocessing)</li>
-            <li>Connection pooling (efficient database access)</li>
-            <li>Error handling (graceful failures)</li>
-            <li>Logging (audit trail for debugging)</li>
-            <li>Hash-based alerting (prevent duplicates)</li>
-        </ul>
-
-        <p>This isn't a prototype. It's production-ready infrastructure.</p>
-
-        <hr>
-
-        <h2>Business Impact: Why This Matters Beyond the Dashboard</h2>
-
-        <h3>For Manufacturers: Early Detection Prevents Costly Recalls</h3>
-
-        <p>Mandatory recalls are expensive:</p>
-        <ul>
-            <li>Average cost: $500–$1,000 per vehicle</li>
-            <li>Legal liability: Class actions average $50–100M</li>
-            <li>Reputational damage: See Toyota's unintended acceleration crisis</li>
-        </ul>
-
-        <p>Proactive intervention using complaint data costs significantly less. A voluntary service bulletin addressing the GMC Sierra 1500's issues would cost an estimated $25M. A mandatory recall after litigation escalates? $100M+.</p>
-
-        <h3>For Insurance Companies: Better Risk Pricing</h3>
-
-        <p>Current vehicle insurance pricing uses historical claim data. This system provides forward-looking risk signals. An insurer could:</p>
-        <ul>
-            <li>Price higher premiums for high-risk models (Jeep Wrangler 2021)</li>
-            <li>Offer discounts for vehicles with strong safety records</li>
-            <li>Adjust reserves based on emerging complaint trends</li>
-        </ul>
-
-        <p>The complaint-to-recall ratio is a leading indicator of future claim frequency.</p>
-
-        <h3>For Regulators: Data-Driven Investigations</h3>
-
-        <p>NHTSA has limited bandwidth to investigate every complaint. This system prioritizes which vehicles warrant deeper scrutiny. Instead of reactive investigations after crashes accumulate, regulators can intervene early based on complaint velocity and severity.</p>
-
-        <h3>For Consumers: Informed Purchase Decisions</h3>
-
-        <p>Before buying a used 2021 GMC Sierra 1500, a consumer can check this dashboard and see 445 unresolved complaints. That's information that changes behavior.</p>
-
-        <hr>
-
-        <h2>What I Learned: Technical and Strategic Lessons</h2>
-
-        <h3>Data Engineering Is 80% Plumbing, 20% Analysis</h3>
-
-        <p>The hardest parts weren't the SQL queries or dashboard design. They were:</p>
-        <ul>
-            <li>Handling encoding issues (LATIN1 vs UTF-8)</li>
-            <li>Normalizing inconsistent model names</li>
-            <li>Building idempotent ETL logic</li>
-            <li>Implementing state management</li>
-            <li>Debugging connection pooling issues</li>
-        </ul>
-
-        <p>Production systems require unglamorous infrastructure work that never makes it into case studies.</p>
-
-        <h3>Stateful Pipelines Are Non-Negotiable for Real-Time Systems</h3>
-
-        <p>A batch script that fetches all data every week is wasteful and fragile. Stateful incremental loads are more complex to build but essential for reliability.</p>
-
-        <h3>Alerting Is Only Useful If It Prevents Fatigue</h3>
-
-        <p>Early versions of the alert system sent emails every week. Stakeholders ignored them. Hash-based change detection solved this—alerts fire only when risk profiles meaningfully change.</p>
-
-        <h3>Normalized Metrics Matter More Than Raw Counts</h3>
-
-        <p>Complaint volume alone is a poor risk signal. High-volume vehicles naturally accumulate more complaints. The ratio of complaints to recalls normalizes for this and surfaces the real outliers.</p>
-
-        <h3>Visualization Is Communication</h3>
-
-        <p>The same analysis presented as raw SQL output vs an interactive dashboard has 10x different impact. Executives don't read queries. They need to see the problem in 10 seconds.</p>
-
-        <hr>
-
-        <h2>Future Enhancements: What's Next</h2>
-
-        <h3>NLP on Complaint Narratives</h3>
-
-        <p>Each complaint includes a free-text description of the issue. Extracting keywords ("fire," "stall," "smoke") using SpaCy or BERT would enable:</p>
-        <ul>
-            <li>Topic modeling (cluster similar complaints)</li>
-            <li>Sentiment analysis (detect urgent vs routine reports)</li>
-            <li>Automated tagging (classify by failure mode)</li>
-        </ul>
-
-        <h3>Predictive Modeling</h3>
-
-        <p>Train a classifier to predict recall likelihood based on:</p>
-        <ul>
-            <li>Complaint velocity (rate of new complaints)</li>
-            <li>Severity metrics (crash/injury counts)</li>
-            <li>Component failure patterns</li>
-            <li>Manufacturer response time</li>
-        </ul>
-
-        <p>This would shift from reactive monitoring to proactive prediction.</p>
-
-        <h3>Supplier Analysis</h3>
-
-        <p>Map components to suppliers (Takata, Bosch, Continental). If a supplier's airbag module appears in 5 different vehicle models with high complaint rates, that's a vendor quality issue, not a vehicle-specific defect.</p>
-
-        <h3>Real-Time API for Third-Party Integration</h3>
-
-        <p>Package the risk scoring logic as a REST API. Insurance companies, automotive journalists, and consumer safety organizations could query vehicle risk scores programmatically.</p>
-
-        <hr>
-
-        <h2>The Bottom Line: This Is Infrastructure, Not a Dashboard</h2>
-
-        <p>Most data projects end with a static report. This one runs continuously, ingesting new data every week, recalculating risk scores, and alerting when thresholds are breached.</p>
-
-        <p>It's not a Jupyter notebook. It's a monitoring system.</p>
-
-        <p>The GMC Sierra 1500 has 445 complaints and zero recalls. The system flagged it. The dashboard displays it. The alerts notify stakeholders. What happens next depends on whether manufacturers choose to act or wait until regulators force their hand.</p>
-
-        <p>For consumers, this is transparency. For manufacturers, this is an early warning system. For regulators, this is prioritization intelligence.</p>
-
-        <p>And for me? It's proof that production-grade data engineering isn't about fancy algorithms. It's about reliability, automation, and solving real problems with infrastructure that runs while you sleep.</p>
-
-        <hr>
-
-        <h2>Tech Stack</h2>
-
-        <ul>
-            <li><strong>Data Engineering:</strong> Python (psycopg2, requests, state management)</li>
-            <li><strong>Database:</strong> PostgreSQL (Supabase cloud, connection pooling)</li>
-            <li><strong>Orchestration:</strong> GitHub Actions (scheduled workflows)</li>
-            <li><strong>Visualization:</strong> Streamlit + Plotly (interactive charts)</li>
-            <li><strong>Deployment:</strong> Streamlit Cloud (free tier)</li>
-            <li><strong>Alerting:</strong> SMTP email with hash-based deduplication</li>
-        </ul>
-
-        <hr>
-
-        <div style="text-align: center; margin: 3rem 0;">
-            <p><strong><a href="https://nhtsa-silent-recall.streamlit.app" target="_blank" rel="noopener" style="font-size: 1.25rem;">→ View the Live Dashboard</a></strong></p>
-            <p><strong><a href="https://github.com/anudeepreddy332/nhtsa-defect-analysis" target="_blank" rel="noopener" style="font-size: 1.25rem;">→ Explore the Code on GitHub</a></strong></p>
-        </div>
-
-        <a href="index.html#projects" class="back-link">← Back to Projects</a>
-    </main>
-
-    <footer>
-        <div class="container">
-            <div class="footer-links">
-                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
-                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                </a>
-                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
-                    <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                </a>
-                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-                </a>
-            </div>
-            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="shared.js"></script>
-</body>
-</html>
+            <li><code>repeat_offenders</code>

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Machinist — Mechanical Engineer & Machine Learning Specialist | Predictive Maintenance, Computer Vision</title>
+    <meta name="description" content="Portfolio of Anudeep Reddy — Mechanical Engineer & Machine Learning Specialist. Projects in predictive maintenance (RUL), computer vision for quality control, and manufacturability optimization.">
+    <meta name="keywords" content="Mechanical Engineer, Machine Learning, AI, Predictive Maintenance, Computer Vision, Manufacturing, RUL, Quality Control">
+    <meta name="author" content="Anudeep Reddy">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://themachinist.org">
+    <meta property="og:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="og:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
+    <meta property="og:image" content="https://themachinist.org/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://themachinist.org">
+    <meta property="twitter:title" content="The Machinist — Mechanical Engineer & ML Specialist">
+    <meta property="twitter:description" content="Portfolio of Anudeep Reddy. Projects in predictive maintenance, computer vision for quality control, and manufacturability optimization.">
+    <meta property="twitter:image" content="https://themachinist.org/og-image.jpg">
+
+    <!-- Preconnect to font provider -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Anudeep Reddy",
+      "url": "https://themachinist.org",
+      "jobTitle": "Mechanical Engineer & Machine Learning Specialist",
+      "sameAs": [
+        "https://github.com/anudeepreddy332",
+        "https://linkedin.com/in/anudeep-reddy-mutyala"
+      ],
+      "knowsAbout": [
+        "Predictive Maintenance",
+        "Computer Vision",
+        "Time Series Analysis",
+        "Mechanical Design",
+        "Manufacturing Processes",
+        "Industrial Automation",
+        "Quality Systems"
+      ]
+    }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --text-secondary: #666666;
+            --accent: #e74c3c;
+            --border-color: #e5e5e5;
+            --section-bg: #fafafa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --max-width: 1100px;
+            --transition: all 0.15s ease;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 40px;
+            --spacing-xl: 60px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0a0a0a;
+            --text-color: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #e74c3c;
+            --border-color: #2a2a2a;
+            --section-bg: #1a1a1a;
+            --card-bg: #1a1a1a;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        /* Skip Link - Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--accent);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Header */
+        header {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding: var(--spacing-xl) var(--spacing-md);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--spacing-sm);
+            transition: var(--transition);
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: var(--spacing-lg);
+            transition: var(--transition);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta {
+            display: inline-block;
+            background: var(--accent);
+            color: #ffffff;
+            padding: 14px 28px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
+        }
+
+        .cta:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--bg-color);
+            z-index: 100;
+            padding: var(--spacing-md) 0;
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: var(--transition);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.15s ease;
+            position: relative;
+        }
+
+        /* Prevent navigation links from wrapping */
+        nav ul li a {
+            white-space: nowrap;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        nav a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        /* Dark Mode Toggle */
+        .theme-toggle {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            background: var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .theme-toggle.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle.active .toggle-slider {
+            transform: translateX(28px);
+        }
+
+        .toggle-icon {
+            width: 12px;
+            height: 12px;
+            fill: var(--text-color);
+        }
+
+        /* Sections */
+        section {
+            padding: var(--spacing-xl) 0;
+            transition: var(--transition);
+        }
+
+        main {
+            padding-top: var(--spacing-lg);
+        }
+
+        h2 {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 900;
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+            letter-spacing: -0.02em;
+            transition: var(--transition);
+        }
+
+        /* Projects */
+        .projects-grid {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+
+        .project {
+            padding: var(--spacing-lg) 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .project:hover {
+            padding-left: var(--spacing-sm);
+        }
+
+        .project:last-child {
+            border-bottom: none;
+        }
+
+        .project h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            transition: var(--transition);
+        }
+
+        .project-tech {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .tech-tag {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .project-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: gap 0.15s ease, color 0.15s ease;
+        }
+
+        .project-link:hover {
+            gap: 16px;
+            color: var(--accent);
+        }
+
+        .project-link::after {
+            content: '→';
+        }
+
+        /* About */
+        #about {
+            background: var(--section-bg);
+        }
+
+        .about-text {
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.125rem;
+            text-align: center;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .about-text strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .skill-category h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            transition: var(--transition);
+        }
+
+        .skill-list {
+            list-style: none;
+            color: var(--text-secondary);
+            line-height: 2;
+            transition: var(--transition);
+        }
+
+        /* Learning Log */
+        #learning-log {
+            background: var(--section-bg);
+        }
+
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .article-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-md);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--accent);
+        }
+
+        .article-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-color);
+        }
+
+        .article-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .article-tag {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            background: var(--accent);
+            color: #ffffff;
+            border-radius: 2px;
+        }
+
+        /* Contact Section */
+        #contact {
+            text-align: center;
+            padding: var(--spacing-xl) 0;
+        }
+
+        #contact h2 {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .contact-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+            transition: var(--transition);
+        }
+
+        .contact-icons {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            align-items: center;
+        }
+
+        .contact-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .contact-icon:hover {
+            color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .contact-icon:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        .contact-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: currentColor;
+        }
+
+        .contact-icon span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        footer {
+            padding: var(--spacing-lg) 0;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            transition: color 0.15s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-links a:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        .footer-links svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .copyright {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            :root {
+                --spacing-xl: 40px;
+                --spacing-lg: 32px;
+            }
+
+            .nav-container {
+                position: relative;
+            }
+
+            nav ul {
+                gap: var(--spacing-md);
+                font-size: 0.875rem;
+                flex-grow: 1;
+            }
+
+            .theme-toggle {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            section {
+                padding: var(--spacing-lg) 0;
+            }
+
+            .contact-icons {
+                gap: var(--spacing-md);
+            }
+
+            .skills-grid {
+                gap: var(--spacing-lg);
+            }
+
+            .filter-buttons {
+                justify-content: stretch;
+            }
+
+            .filter-btn {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+
+        /* Hidden class for filtering */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Focus styles for accessibility */
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <header>
+        <div class="container">
+            <h1>The Machinist</h1>
+            <p class="subtitle">Mechanical Engineer | Leveraging Machine Learning for Predictive Maintenance (RUL), Computer Vision for Quality Control, and Design for Manufacturability Optimization</p>
+            <div class="cta-group">
+                <a href="#projects" class="cta">View Work</a>
+            </div>
+        </div>
+    </header>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#learning-log">Learning Log</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        <section id="projects" aria-labelledby="projects-heading">
+            <div class="container">
+                <h2 id="projects-heading">Projects</h2>
+                <div class="projects-grid">
+                    <article class="project">
+                        <h3>Predictive Maintenance</h3>
+                        <div class="project-tech">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">TensorFlow</span>
+                            <span class="tech-tag">Time Series</span>
+                            <span class="tech-tag">IoT</span>
+                        </div>
+                        <p>Developed an ML model to predict Remaining Useful Life (RUL) of industrial equipment, reducing unplanned downtime by 35% and maintenance costs by $2M annually.</p>
+                        <a href="#" class="project-link" aria-label="View Predictive Maintenance project">View Project</a>
+                    </article>
+
+                    <article class="project">
+                        <h3>Computer Vision Quality Control</h3>
+                        <div class="project-tech">
+                            <span class="tech-tag">PyTorch</span>
+                            <span class="tech-tag">OpenCV</span>
+                            <span class="tech-tag">Real-time Processing</span>
+                        </div>
+                        <p>Built a real-time defect detection system using CNNs achieving 98.5% accuracy in identifying manufacturing defects, processing 1000+ parts per hour.</p>
+                        <a href="#" class="project-link" aria-label="View Computer Vision Quality Control project">View Project</a>
+                    </article>
+
+                    <article class="project">
+                        <h3>Manufacturing Analytics Platform</h3>
+                        <div class="project-tech">
+                            <span class="tech-tag">Pandas</span>
+                            <span class="tech-tag">Scikit-learn</span>
+                            <span class="tech-tag">Data Visualization</span>
+                        </div>
+                        <p>Created an end-to-end analytics platform for production line optimization, improving OEE by 22% through predictive analytics and real-time monitoring.</p>
+                        <a href="#" class="project-link" aria-label="View Manufacturing Analytics Platform project">View Project</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" aria-labelledby="about-heading">
+            <div class="container">
+                <h2 id="about-heading">About</h2>
+                <p class="about-text">
+                    I combine <strong>mechanical engineering</strong> expertise with <strong>machine learning</strong>
+                    to solve industrial challenges. My focus: Predictive Maintenance, Computer Vision for Quality Control,
+                    and Data-Driven Manufacturing Optimization that delivers measurable ROI.
+                </p>
+            </div>
+        </section>
+
+        <section id="skills" aria-labelledby="skills-heading">
+            <div class="container">
+                <h2 id="skills-heading">Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>Machine Learning</h3>
+                        <ul class="skill-list">
+                            <li>TensorFlow & PyTorch</li>
+                            <li>Computer Vision</li>
+                            <li>Time Series Analysis</li>
+                            <li>Predictive Modeling</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Engineering</h3>
+                        <ul class="skill-list">
+                            <li>Mechanical Design</li>
+                            <li>Manufacturing Processes</li>
+                            <li>Industrial Automation</li>
+                            <li>Quality Systems</li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Data & Analytics</h3>
+                        <ul class="skill-list">
+                            <li>Python & SQL</li>
+                            <li>Statistical Analysis</li>
+                            <li>Data Visualization</li>
+                            <li>Business Intelligence</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="learning-log" aria-labelledby="learning-log-heading">
+            <div class="container">
+                <h2 id="learning-log-heading">Learning Log</h2>
+                <div class="filter-buttons" role="group" aria-label="Filter articles">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+                    <button class="filter-btn" data-filter="project-deep-dives" aria-pressed="false">Project Deep Dives</button>
+                    <button class="filter-btn" data-filter="concept-exploration" aria-pressed="false">Concept Exploration</button>
+                    <button class="filter-btn" data-filter="field-notes" aria-pressed="false">Field Notes</button>
+                </div>
+                <div class="articles-grid" id="articlesGrid">
+                    <article class="article-card" data-category="project-deep-dives">
+                        <time class="article-date" datetime="2024-12-15">December 15, 2024</time>
+                        <h3 class="article-title">Building a Real-Time Anomaly Detection System</h3>
+                        <p class="article-excerpt">Deep dive into creating a production-ready anomaly detection system using autoencoders for industrial IoT sensor data.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Project Deep Dives</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="concept-exploration">
+                        <time class="article-date" datetime="2024-12-08">December 8, 2024</time>
+                        <h3 class="article-title">Understanding Transformer Architecture</h3>
+                        <p class="article-excerpt">Breaking down the attention mechanism and exploring how transformers revolutionized sequence modeling.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Concept Exploration</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="field-notes">
+                        <time class="article-date" datetime="2024-12-01">December 1, 2024</time>
+                        <h3 class="article-title">Key Takeaways: Pattern Recognition and Machine Learning</h3>
+                        <p class="article-excerpt">Summary and practical insights from Bishop's comprehensive ML textbook, focusing on probabilistic perspectives.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Field Notes</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="project-deep-dives">
+                        <time class="article-date" datetime="2024-11-24">November 24, 2024</time>
+                        <h3 class="article-title">Computer Vision for Defect Detection</h3>
+                        <p class="article-excerpt">Implementation details of a CNN-based system for detecting microscopic defects in manufactured components.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Project Deep Dives</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="concept-exploration">
+                        <time class="article-date" datetime="2024-11-17">November 17, 2024</time>
+                        <h3 class="article-title">Graph Neural Networks in Manufacturing</h3>
+                        <p class="article-excerpt">Exploring how GNNs can model complex relationships in supply chain and production line optimization.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Concept Exploration</span>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-category="field-notes">
+                        <time class="article-date" datetime="2024-11-10">November 10, 2024</time>
+                        <h3 class="article-title">Fast.ai Course Notes: Practical Deep Learning</h3>
+                        <p class="article-excerpt">Key lessons and code snippets from completing the Fast.ai practical deep learning course.</p>
+                        <div class="article-tags">
+                            <span class="article-tag">Field Notes</span>
+                                                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" aria-labelledby="contact-heading">
+            <div class="container">
+                <h2 id="contact-heading">Get In Touch</h2>
+                <p class="contact-subtitle">Open to full-time opportunities and collaborative projects.</p>
+                <div class="contact-icons">
+                    <a href="mailto:anudeepreddy332@gmail.com" class="contact-icon" aria-label="Email Anudeep">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z M20,8l-8,5L4,8V6l8,5l8-5V8z"/>
+                        </svg>
+                        <span>Email</span>
+                    </a>
+                    <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M9,17H6.5v-7H9V17z M7.7,8.7
+                            c-0.8,0-1.3-0.5-1.3-1.2s0.5-1.2,1.4-1.2c0.8,0,1.3,0.5,1.3,1.2S8.6,8.7,7.7,8.7z M18,17h-2.5v-3.8c0-0.9-0.3-1.5-1.2-1.5
+                            c-0.6,0-1,0.4-1.2,0.8c-0.1,0.1-0.1,0.3-0.1,0.5v4h-2.5c0,0,0-6.5,0-7h2.5v1c0.3-0.5,0.9-1.2,2.2-1.2c1.6,0,2.8,1,2.8,3.2V17z"/>
+                        </svg>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" class="contact-icon" aria-label="GitHub">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.71
+                            c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.46-1.11-1.46c-0.91-0.62,0.07-0.61,0.07-0.61c1,0.07,1.53,1.03,1.53,1.03
+                            c0.89,1.53,2.34,1.09,2.91,0.83c0.09-0.65,0.35-1.09,0.64-1.34c-2.22-0.25-4.56-1.11-4.56-4.94c0-1.09,0.39-1.98,1.03-2.68
+                            c-0.1-0.25-0.45-1.27,0.1-2.65c0,0,0.84-0.27,2.75,1.02C9.31,6.73,10.66,6.57,12,6.56c1.34,0.01,2.69,0.18,3.95,0.52
+                            c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.38,0.2,2.4,0.1,2.65c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.69-4.57,4.94
+                            c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.42-0.01,2.75c0,0.27,0.18,0.58,0.69,0.48C19.14,20.17,22,16.42,22,12
+                            C22,6.48,17.52,2,12,2z"/>
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = themeToggle.querySelector('.sun-icon');
+        const moonIcon = themeToggle.querySelector('.moon-icon');
+        const htmlElement = document.documentElement;
+
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateThemeToggle(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const theme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeToggle(theme);
+        });
+
+        function updateThemeToggle(theme) {
+            if (theme === 'dark') {
+                themeToggle.classList.add('active');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                themeToggle.classList.remove('active');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        // Navigation reveal
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                nav.classList.add('visible');
+            } else {
+                nav.classList.remove('visible');
+            }
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Learning Log filtering
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const articleCards = document.querySelectorAll('.article-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const filter = button.getAttribute('data-filter');
+                articleCards.forEach(card => {
+                    card.classList.toggle('hidden', !(filter === 'all' || card.dataset.category === filter));
+                });
+            });
+        });
+    </script>
+</body>
+</html>
