@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>California Housing Price Prediction — ML Deep Dive | The Machinist</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <meta name="description" content="A hands-on ML learning series documenting the full journey of building a California housing price predictor — concept by concept, decision by decision.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+
+    <style>
+        /* ── Chapter Navigation ── */
+        .chapter-nav {
+            position: sticky;
+            top: 80px;
+            background: var(--card-bg, #fff);
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            z-index: 90;
+            padding: 0;
+        }
+        .chapter-nav .container {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .chapter-nav .container::-webkit-scrollbar { display: none; }
+        .chapter-nav a {
+            white-space: nowrap;
+            padding: 14px 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-muted, #6b7280);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            letter-spacing: 0.02em;
+        }
+        .chapter-nav a:hover,
+        .chapter-nav a.active {
+            color: var(--accent, #000);
+            border-bottom-color: var(--accent, #000);
+        }
+
+        /* ── Series Header ── */
+        .series-header {
+            text-align: center;
+            padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg);
+            background: var(--section-bg);
+        }
+        .series-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted, #6b7280);
+            margin-bottom: 16px;
+        }
+        .series-header h1 {
+            margin-bottom: 16px;
+        }
+        .series-header p {
+            max-width: 600px;
+            margin: 0 auto;
+            color: var(--text-muted, #6b7280);
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+        .series-meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .series-meta span {
+            font-size: 0.82rem;
+            color: var(--text-muted, #6b7280);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── System Map ── */
+        .system-map {
+            margin: 48px 0;
+            padding: 32px;
+            background: var(--card-bg, #f9fafb);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 12px;
+        }
+        .system-map h3 {
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted, #6b7280);
+        }
+        .pipeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            row-gap: 12px;
+        }
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+        .pipeline-node {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            background: var(--section-bg);
+            border: 1px solid var(--border-color, #e5e7eb);
+            color: var(--text-color, #111);
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .pipeline-node.active {
+            background: var(--accent, #111);
+            color: var(--bg-color, #fff);
+            border-color: var(--accent, #111);
+        }
+        .pipeline-arrow {
+            padding: 0 8px;
+            color: var(--text-muted, #9ca3af);
+            font-size: 1rem;
+        }
+
+        /* ── Chapter Sections ── */
+        .chapter {
+            padding: 64px 0;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+        }
+        .chapter:last-of-type {
+            border-bottom: none;
+        }
+        .chapter-header {
+            margin-bottom: 48px;
+        }
+        .chapter-number {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted, #6b7280);
+            margin-bottom: 8px;
+        }
+        .chapter-header h2 {
+            margin-bottom: 0;
+        }
+
+        /* ── Section Blocks ── */
+        .section-block {
+            margin-bottom: 40px;
+        }
+        .section-block h3 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #9ca3af);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color, #f3f4f6);
+        }
+        .section-block p,
+        .section-block ul,
+        .section-block ol {
+            color: var(--text-color, #374151);
+            line-height: 1.75;
+        }
+
+        /* ── Code Blocks ── */
+        pre {
+            background: var(--code-bg, #1e1e2e);
+            color: #cdd6f4;
+            padding: 20px 24px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.7;
+            margin: 16px 0;
+            border: 1px solid var(--border-color, #313244);
+        }
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+        p code, li code {
+            background: var(--code-inline-bg, #f3f4f6);
+            color: var(--code-inline-color, #e83e8c);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.875em;
+        }
+        [data-theme="dark"] p code,
+        [data-theme="dark"] li code {
+            background: #2a2a3e;
+            color: #f38ba8;
+        }
+
+        /* ── Code with annotation ── */
+        .code-block {
+            margin: 16px 0 24px;
+        }
+        .code-annotation {
+            font-size: 0.85rem;
+            color: var(--text-muted, #6b7280);
+            padding: 10px 0 0 4px;
+            line-height: 1.6;
+        }
+
+        /* ── Chapter Footer (Takeaway + Tags) ── */
+        .chapter-footer {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color, #e5e7eb);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 640px) {
+            .chapter-footer { grid-template-columns: 1fr; }
+        }
+        .takeaway-box {
+            background: var(--section-bg);
+            border-left: 3px solid var(--accent, #111);
+            padding: 20px 24px;
+            border-radius: 0 8px 8px 0;
+        }
+        .takeaway-box .label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #9ca3af);
+            margin-bottom: 8px;
+        }
+        .takeaway-box p {
+            font-size: 0.92rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin: 0;
+            color: var(--text-color, #111);
+        }
+        .tags-box .label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #9ca3af);
+            margin-bottom: 10px;
+        }
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            background: var(--card-bg, #f3f4f6);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 20px;
+            color: var(--text-muted, #6b7280);
+            font-weight: 500;
+        }
+        .connected-box {
+            grid-column: 1 / -1;
+        }
+        .connected-box .label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #9ca3af);
+            margin-bottom: 10px;
+        }
+        .connected-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .connected-link {
+            font-size: 0.82rem;
+            color: var(--text-color, #374151);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+        .connected-link:hover { text-decoration: underline; }
+
+        /* ── Alert / Note boxes ── */
+        .note-box {
+            background: var(--section-bg);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            font-size: 0.88rem;
+            color: var(--text-muted, #6b7280);
+            line-height: 1.65;
+        }
+        .note-box strong {
+            color: var(--text-color, #111);
+        }
+
+        /* ── Data table ── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            margin: 16px 0;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 10px 16px;
+            background: var(--section-bg);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted, #6b7280);
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+        }
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color, #f3f4f6);
+            color: var(--text-color, #374151);
+        }
+
+        /* ── Series outro ── */
+        .series-outro {
+            text-align: center;
+            padding: 64px var(--spacing-md);
+            background: var(--section-bg);
+            border-top: 1px solid var(--border-color, #e5e7eb);
+        }
+        .series-outro p {
+            color: var(--text-muted, #6b7280);
+            font-style: italic;
+            max-width: 560px;
+            margin: 0 auto 24px;
+            line-height: 1.75;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul>
+                    <li><a href="index.html#projects">Projects</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#skills">Skills</a></li>
+                    <li><a href="index.html#learning-log">Learning Log</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="index.html#projects">Projects</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#skills">Skills</a>
+            <a href="index.html#learning-log">Learning Log</a>
+            <a href="index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Series Header -->
+    <header class="series-header">
+        <div class="container">
+            <span class="series-label">Project Deep Dive · Machine Learning</span>
+            <h1>California Housing Price Prediction</h1>
+            <p>A hands-on ML learning series — building a housing price predictor concept by concept, decision by decision. Documented for absolute beginners.</p>
+            <div class="series-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <time datetime="2026-03-10">March 2026</time>
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    5 Chapters
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    ~20 min read
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Chapter Navigation -->
+    <nav class="chapter-nav" aria-label="Chapter navigation">
+        <div class="container">
+            <a href="#ch1">Ch 1 — Loading Data</a>
+            <a href="#ch2">Ch 2 — EDA</a>
+            <a href="#ch3">Ch 3 — Visualization</a>
+            <a href="#ch4">Ch 4 — Feature Engineering</a>
+            <a href="#ch5">Ch 5 — Stratified Sampling</a>
+        </div>
+    </nav>
+
+    <main id="main">
+        <div class="container">
+
+            <!-- System Map -->
+            <div class="system-map">
+                <h3>ML Pipeline — Where We Are</h3>
+                <div class="pipeline">
+                    <div class="pipeline-step">
+                        <div class="pipeline-node active">1. Load Data</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node active">2. EDA</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node active">3. Visualize</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node active">4. Feature Engineering</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node active">5. Sampling</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node">6. Model Training</div>
+                        <span class="pipeline-arrow">→</span>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-node">7. Evaluation</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- CHAPTER 1                                   -->
+            <!-- ═══════════════════════════════════════════ -->
+            <section class="chapter" id="ch1">
+                <div class="chapter-header">
+                    <div class="chapter-number">Chapter 1</div>
+                    <h2>Loading the Dataset</h2>
+                </div>
+
+                <div class="section-block">
+                    <h3>What problem triggered this step?</h3>
+                    <p>Before building any model, we need data. The project goal is to predict median house prices across California districts using census statistics — population, income levels, room counts, and geographic coordinates.</p>
+                    <p>The first practical question was: <em>how do we load this dataset and inspect its structure so we can start reasoning about it?</em> At this stage we are not training models. We simply want to get the data into a workable form.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What is this concept?</h3>
+                    <p>This step is called <strong>data ingestion</strong> — reading the dataset, verifying it loaded correctly, and confirming its structure makes sense. In any ML project, this is non-negotiable. If the data loads wrong, every downstream step breaks silently.</p>
+                    <p>In this dataset: each <strong>row</strong> is one California district, and each <strong>column</strong> is a feature describing that district.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>How does it apply here?</h3>
+                    <p>The dataset contains: <code>longitude</code>, <code>latitude</code>, <code>housing_median_age</code>, <code>total_rooms</code>, <code>population</code>, <code>median_income</code>, and our target variable: <code>median_house_value</code>. Everything except the target becomes an input feature for prediction.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>The code — explained</h3>
+
+                    <div class="code-block">
+                        <pre><code>import pandas as pd
+import numpy as np</code></pre>
+                        <p class="code-annotation">Standard imports. Pandas handles the dataframe. NumPy handles numerical operations.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df = pd.read_csv("/path/to/housing.csv")</code></pre>
+                        <p class="code-annotation">Loads the CSV into a Pandas DataFrame — essentially a spreadsheet in Python memory.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df.index = range(1, len(df) + 1)</code></pre>
+                        <p class="code-annotation">Resets the row index to start at 1 instead of 0. Not required for modeling, but improves readability during exploration.</p>
+                    </div>
+
+                    <div class="note-box">
+                        <strong>Real error encountered:</strong> The notebook initially threw a <code>FileNotFoundError</code>. The fix was checking the actual working directory with <code>os.getcwd()</code> and correcting the relative path. A simple mistake that blocks everything downstream.
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>What could go wrong?</h3>
+                    <ul>
+                        <li>File path errors (what actually happened here)</li>
+                        <li>Encoding problems with special characters</li>
+                        <li>Corrupted CSV files or missing headers</li>
+                        <li>Incorrect column types inferred by pandas</li>
+                    </ul>
+                    <p>All of these must be caught before they become invisible bugs deeper in the pipeline.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What assumption are we making?</h3>
+                    <p>We assume each row is an <em>independent</em> district and that the dataset is reasonably representative of California housing. These assumptions matter when we evaluate model performance.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What did we observe?</h3>
+                    <p>The dataset loads successfully with <strong>20,640 rows and 10 columns</strong> — a moderate-sized dataset well suited for experimentation.</p>
+                </div>
+
+                <div class="chapter-footer">
+                    <div class="takeaway-box">
+                        <div class="label">Key Takeaway</div>
+                        <p>Before any ML work begins, the dataset must be cleanly loaded and structurally understood. Everything else depends on this.</p>
+                    </div>
+                    <div class="tags-box">
+                        <div class="label">Concepts Introduced</div>
+                        <div class="tag-list">
+                            <span class="tag">#data_ingestion</span>
+                            <span class="tag">#pandas_dataframe</span>
+                            <span class="tag">#dataset_structure</span>
+                        </div>
+                    </div>
+                    <div class="connected-box">
+                        <div class="label">Connected To</div>
+                        <div class="connected-links">
+                            <a href="#ch2" class="connected-link">→ Chapter 2: EDA</a>
+                            <a href="#ch5" class="connected-link">→ Chapter 5: Data Preparation</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- CHAPTER 2                                   -->
+            <!-- ═══════════════════════════════════════════ -->
+            <section class="chapter" id="ch2">
+                <div class="chapter-header">
+                    <div class="chapter-number">Chapter 2</div>
+                    <h2>First Exploratory Data Analysis</h2>
+                </div>
+
+                <div class="section-block">
+                    <h3>What problem triggered this step?</h3>
+                    <p>Once the dataset loaded, the next question became: <em>what does this data actually look like?</em> Before building models, we need to understand how many features exist, whether there are missing values, and what the scale and distribution of each feature looks like. Without this, model building is guesswork.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What is this concept?</h3>
+                    <p><strong>Exploratory Data Analysis (EDA)</strong> is the practice of systematically examining a dataset before modelling it. It answers questions like: Are there missing values? Are features skewed? Are values capped? Are there obvious patterns?</p>
+                    <p>EDA is what prevents you from building a model on misunderstood data.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>How does it apply here?</h3>
+                    <p>The housing dataset includes variables like population and room counts that vary dramatically across districts. Understanding these distributions tells us whether to scale features, whether to engineer new ones, and how to split the dataset fairly later on.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>The code — explained</h3>
+
+                    <div class="code-block">
+                        <pre><code>df.head(5)</code></pre>
+                        <p class="code-annotation">Prints the first five rows. Lets you visually verify columns loaded correctly and values look plausible.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df.describe()</code></pre>
+                        <p class="code-annotation">Produces statistical summaries — mean, median, standard deviation, min, max. This is where you catch skewed distributions and capped values before they become model problems.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df.shape  # (20640, 10)</code></pre>
+                        <p class="code-annotation">Confirms the dataset dimensions: 20,640 rows, 10 columns.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df.info()</code></pre>
+                        <p class="code-annotation">Shows column types, non-null counts, and memory usage. Critical discovery: <code>total_bedrooms</code> has missing values.</p>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>What assumption are we making?</h3>
+                    <p>We assume the statistical summaries reflect the true structure of the data. But some values may be censored — and we confirmed this: <code>median_house_value</code> appears capped around <strong>$500,000</strong>. This is a limitation to carry forward into model evaluation.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What did we observe?</h3>
+                    <ul>
+                        <li>20,640 districts total</li>
+                        <li><code>total_bedrooms</code> has missing values — must be handled before modeling</li>
+                        <li>Several features are highly right-skewed</li>
+                        <li>Target variable appears capped at ~$500k</li>
+                    </ul>
+                </div>
+
+                <div class="chapter-footer">
+                    <div class="takeaway-box">
+                        <div class="label">Key Takeaway</div>
+                        <p>EDA prevents blind model building by surfacing data quality issues and structural patterns before you write a single line of modeling code.</p>
+                    </div>
+                    <div class="tags-box">
+                        <div class="label">Concepts Introduced</div>
+                        <div class="tag-list">
+                            <span class="tag">#EDA</span>
+                            <span class="tag">#missing_values</span>
+                            <span class="tag">#statistical_summary</span>
+                            <span class="tag">#data_inspection</span>
+                        </div>
+                    </div>
+                    <div class="connected-box">
+                        <div class="label">Connected To</div>
+                        <div class="connected-links">
+                            <a href="#ch3" class="connected-link">→ Chapter 3: Visualization</a>
+                            <a href="#ch5" class="connected-link">→ Chapter 5: Data Preparation</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- CHAPTER 3                                   -->
+            <!-- ═══════════════════════════════════════════ -->
+            <section class="chapter" id="ch3">
+                <div class="chapter-header">
+                    <div class="chapter-number">Chapter 3</div>
+                    <h2>Visualizing the Data</h2>
+                </div>
+
+                <div class="section-block">
+                    <h3>What problem triggered this step?</h3>
+                    <p>Statistics tell one story. Visuals tell another. Some patterns — especially geographic ones — are invisible in a table but immediately obvious in a chart. The question here was: <em>what can we see in this data that summary stats can't show us?</em></p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What is this concept?</h3>
+                    <p><strong>Data visualization</strong> uses charts and plots to reveal structure that numbers obscure — skewed distributions, geographic clusters, nonlinear relationships, and density patterns. Many of the most important ML insights come from looking at the data rather than computing it.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>How does it apply here?</h3>
+                    <p>The housing dataset includes <code>longitude</code> and <code>latitude</code>. That means we can literally plot California's geography and see whether location correlates with price. If it does, we should see spatial clustering — and we do.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>The code — explained</h3>
+
+                    <div class="code-block">
+                        <pre><code>df.hist(bins=50, figsize=(12, 8))</code></pre>
+                        <p class="code-annotation">Generates histograms for every numerical feature at once. Reveals skew, caps, and unusual distributions across the whole dataset in a single call.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df.plot(kind='scatter', x='longitude', y='latitude', alpha=0.1)</code></pre>
+                        <p class="code-annotation">Each dot is a district plotted by geographic coordinates. The <code>alpha=0.1</code> transparency means overlapping dots create darker regions — density becomes visible without any extra computation.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>housing.plot(
+    kind="scatter",
+    x="longitude",
+    y="latitude",
+    alpha=0.4,
+    s=housing["population"] / 100,  # dot size = population
+    label="population",
+    c="median_house_value",          # dot color = price
+    cmap="jet",
+    colorbar=True
+)</code></pre>
+                        <p class="code-annotation">Four variables in one chart. Position encodes geography. Dot size encodes population. Color encodes house price. Blue → green → yellow → red maps cheap → expensive.</p>
+                    </div>
+
+                    <table class="data-table">
+                        <tr><th>Visual Property</th><th>Variable Encoded</th></tr>
+                        <tr><td>X / Y position</td><td>Geographic coordinates (longitude, latitude)</td></tr>
+                        <tr><td>Dot size</td><td>Population</td></tr>
+                        <tr><td>Dot color</td><td>Median house value</td></tr>
+                        <tr><td>Color scale (jet)</td><td>Blue = cheap → Red = expensive</td></tr>
+                    </table>
+                </div>
+
+                <div class="section-block">
+                    <h3>What assumption are we making?</h3>
+                    <p>We assume geographic clustering reflects real market dynamics — proximity to the coast, urban economic activity, job density. These are reasonable assumptions about California real estate.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What did we observe?</h3>
+                    <p>Coastal districts are significantly more expensive. Dense urban clusters appear around Los Angeles and the Bay Area. Inland areas trend cheaper. <strong>Location is clearly a strong predictor</strong> — and this plot made it immediately obvious.</p>
+                </div>
+
+                <div class="chapter-footer">
+                    <div class="takeaway-box">
+                        <div class="label">Key Takeaway</div>
+                        <p>Geography strongly influences housing prices. Visualization made this obvious in seconds — something that would have taken much longer to confirm statistically alone.</p>
+                    </div>
+                    <div class="tags-box">
+                        <div class="label">Concepts Introduced</div>
+                        <div class="tag-list">
+                            <span class="tag">#data_visualization</span>
+                            <span class="tag">#scatter_plots</span>
+                            <span class="tag">#geospatial_patterns</span>
+                            <span class="tag">#multi_dim_viz</span>
+                        </div>
+                    </div>
+                    <div class="connected-box">
+                        <div class="label">Connected To</div>
+                        <div class="connected-links">
+                            <a href="#ch4" class="connected-link">→ Chapter 4: Feature Engineering</a>
+                            <a href="#ch2" class="connected-link">→ Chapter 2: EDA</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- CHAPTER 4                                   -->
+            <!-- ═══════════════════════════════════════════ -->
+            <section class="chapter" id="ch4">
+                <div class="chapter-header">
+                    <div class="chapter-number">Chapter 4</div>
+                    <h2>Feature Engineering</h2>
+                </div>
+
+                <div class="section-block">
+                    <h3>What problem triggered this step?</h3>
+                    <p>Correlation analysis revealed something surprising: many raw features had weak correlation with house prices. <code>total_rooms</code> barely moved the needle. <code>population</code> was almost flat. This suggested the raw features weren't expressing the real signal.</p>
+                    <p>The question became: <em>can we create better features from what we already have?</em></p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What is this concept?</h3>
+                    <p><strong>Feature engineering</strong> transforms raw variables into more informative representations. Often the best predictors aren't raw counts — they're ratios or densities that normalize for scale differences between districts.</p>
+                    <p>This is a core systems thinking insight: the same raw number means something entirely different depending on context.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>How does it apply here?</h3>
+                    <p>Consider two districts that both have 2,000 total rooms. One has 100 households. The other has 400. The raw count is identical — but one district is significantly more spacious. Without deriving <code>rooms_per_household</code>, the model can't distinguish them.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>The code — explained</h3>
+
+                    <div class="code-block">
+                        <pre><code>df['rooms_per_household'] = df['total_rooms'] / df['households']</code></pre>
+                        <p class="code-annotation">Average rooms per home. Normalizes for district size. Directly measures spaciousness rather than raw count.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df['bedrooms_per_room'] = df['total_bedrooms'] / df['total_rooms']</code></pre>
+                        <p class="code-annotation">What fraction of all rooms are bedrooms? Lower values suggest more living space. Higher values suggest cramped conditions.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>df['population_per_household'] = df['population'] / df['households']</code></pre>
+                        <p class="code-annotation">Population density per home. Captures household crowding more meaningfully than raw population.</p>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>What could go wrong?</h3>
+                    <ul>
+                        <li>Division by zero if denominators contain nulls or zeros</li>
+                        <li>Ratios can amplify noise in small districts</li>
+                        <li>Engineered features can become redundant with existing ones</li>
+                    </ul>
+                    <p>All engineered features must be validated empirically — intuition alone isn't enough.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What did we observe?</h3>
+                    <p>After engineering, correlation improved measurably. <code>bedrooms_per_room</code> in particular showed stronger correlation with <code>median_house_value</code> than the raw bedroom or room counts ever did. The ratio captured something the raw numbers couldn't.</p>
+                </div>
+
+                <div class="chapter-footer">
+                    <div class="takeaway-box">
+                        <div class="label">Key Takeaway</div>
+                        <p>Raw counts rarely capture meaningful structure. Feature engineering transforms data into predictive signals by encoding relationships, not just values.</p>
+                    </div>
+                    <div class="tags-box">
+                        <div class="label">Concepts Introduced</div>
+                        <div class="tag-list">
+                            <span class="tag">#feature_engineering</span>
+                            <span class="tag">#derived_features</span>
+                            <span class="tag">#correlation_analysis</span>
+                            <span class="tag">#ratios</span>
+                        </div>
+                    </div>
+                    <div class="connected-box">
+                        <div class="label">Connected To</div>
+                        <div class="connected-links">
+                            <a href="#ch3" class="connected-link">→ Chapter 3: Visualization</a>
+                            <a href="#ch5" class="connected-link">→ Chapter 5: Stratified Sampling</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════ -->
+            <!-- CHAPTER 5                                   -->
+            <!-- ═══════════════════════════════════════════ -->
+            <section class="chapter" id="ch5">
+                <div class="chapter-header">
+                    <div class="chapter-number">Chapter 5</div>
+                    <h2>Stratified Sampling</h2>
+                </div>
+
+                <div class="section-block">
+                    <h3>What problem triggered this step?</h3>
+                    <p>EDA revealed that <code>median_income</code> has the strongest single-feature correlation with house prices. This creates a sampling problem: if we randomly split the dataset into train and test sets, we might end up with different income distributions in each. A model trained on one income distribution and evaluated on another gives a misleading picture of real-world performance.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What is this concept?</h3>
+                    <p><strong>Stratified sampling</strong> ensures that important variables maintain the same proportional distribution across train and test sets. Instead of splitting purely at random, we split <em>within</em> predefined categories of the key variable — guaranteeing balance.</p>
+                    <p>This matters because ML models generalize based on the patterns they see in training. If the training distribution doesn't match the real-world distribution, the model is learning the wrong thing.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>The code — explained</h3>
+
+                    <div class="code-block">
+                        <pre><code>df['income_cat'] = pd.cut(
+    df['median_income'],
+    bins=[0, 1.5, 3.0, 4.5, 6.0, np.inf],
+    labels=[1, 2, 3, 4, 5]
+)</code></pre>
+                        <p class="code-annotation">Groups income into 5 categories based on the distribution observed in EDA. This is the variable we'll stratify on.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>from sklearn.model_selection import StratifiedShuffleSplit
+
+split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)</code></pre>
+                        <p class="code-annotation">One split, 80/20 ratio, fixed seed for reproducibility. <code>random_state=42</code> means anyone running this notebook gets the same split.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code>for train_index, test_index in split.split(df, df['income_cat']):
+    strat_train_set = df.iloc[train_index]
+    strat_test_set  = df.iloc[test_index]</code></pre>
+                        <p class="code-annotation">Executes the split while preserving income category proportions in both resulting sets.</p>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>What could go wrong?</h3>
+                    <p>If we stratify on the wrong variable — one that doesn't actually matter — we add complexity without benefit. The choice of stratification variable must be justified by correlation analysis, not intuition alone. We're justified here because income is the strongest predictor we found.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What assumption are we making?</h3>
+                    <p>We assume income distribution must remain consistent between train and test sets for evaluation to be meaningful. Given the strong correlation with the target, this assumption is clearly justified.</p>
+                </div>
+
+                <div class="section-block">
+                    <h3>What did we observe?</h3>
+                    <p>The train and test sets now maintain nearly identical income distributions. Evaluation will reflect how the model performs across the full range of income levels — not just whichever ones happened to cluster in a random split.</p>
+                </div>
+
+                <div class="chapter-footer">
+                    <div class="takeaway-box">
+                        <div class="label">Key Takeaway</div>
+                        <p>Stratified sampling prevents evaluation bias by ensuring the test set is truly representative — not just randomly selected.</p>
+                    </div>
+                    <div class="tags-box">
+                        <div class="label">Concepts Introduced</div>
+                        <div class="tag-list">
+                            <span class="tag">#stratified_sampling</span>
+                            <span class="tag">#train_test_split</span>
+                            <span class="tag">#sampling_bias</span>
+                            <span class="tag">#data_preparation</span>
+                        </div>
+                    </div>
+                    <div class="connected-box">
+                        <div class="label">Connected To</div>
+                        <div class="connected-links">
+                            <a href="#ch4" class="connected-link">→ Chapter 4: Feature Engineering</a>
+                            <span class="connected-link" style="opacity:0.5; cursor:default;">→ Chapter 6: Model Training (coming soon)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /container -->
+    </main>
+
+    <div class="series-outro">
+        <p>This series documents a live learning process. The goal isn't a polished tutorial — it's an honest record of how ML concepts connect to real implementation decisions, one step at a time.</p>
+        <a href="index.html#learning-log" class="back-link">← Back to Learning Log</a>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shared.js"></script>
+    <script>
+        // Active chapter highlight in sticky nav
+        const chapterLinks = document.querySelectorAll('.chapter-nav a');
+        const chapters = document.querySelectorAll('.chapter');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    chapterLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                    });
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+
+        chapters.forEach(ch => observer.observe(ch));
+    </script>
+</body>
+</html>
