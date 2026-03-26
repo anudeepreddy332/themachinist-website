@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Scaling | The Machinist</title>
+    <script>
+        (function() {
+            const t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta name="description" content="A systems-thinking deep dive into feature scaling — why the math demands it, which method to choose, and how to implement it correctly without leaking data.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --orange: #f97316;
+            --orange-subtle: rgba(249,115,22,0.08);
+            --orange-border: rgba(249,115,22,0.25);
+            --red: #ef4444;
+            --red-subtle: rgba(239,68,68,0.08);
+            --green: #10b981;
+            --green-subtle: rgba(16,185,129,0.08);
+            --blue: #3b82f6;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --card: #f9fafb;
+            --code-bg: #16161e;
+            --code-text: #c0caf5;
+        }
+        [data-theme="dark"] {
+            --orange-subtle: rgba(249,115,22,0.1);
+            --orange-border: rgba(249,115,22,0.3);
+            --red-subtle: rgba(239,68,68,0.1);
+            --green-subtle: rgba(16,185,129,0.1);
+            --muted: #9ca3af;
+            --border: #27272a;
+            --card: #18181b;
+        }
+
+        /* ── reading progress ── */
+        #reading-progress {
+            position: fixed; top: 0; left: 0;
+            height: 2px; width: 0%;
+            background: var(--orange);
+            z-index: 9999;
+            transition: width 0.08s linear;
+        }
+
+        /* ── article header ── */
+        .article-header {
+            padding: calc(var(--spacing-xl, 64px) + 68px) var(--spacing-md, 24px) 48px;
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .article-header .container { max-width: 720px; margin: 0 auto; }
+
+        .breadcrumb {
+            display: flex; align-items: center;
+            gap: 6px; flex-wrap: wrap;
+            font-size: 0.78rem; color: var(--muted);
+            margin-bottom: 22px;
+        }
+        .breadcrumb a { color: var(--muted); text-decoration: none; }
+        .breadcrumb a:hover { color: var(--text-color, #111); }
+        .breadcrumb span { opacity: 0.4; }
+        .breadcrumb strong { color: var(--text-color, #111); font-weight: 500; }
+
+        .article-header h1 {
+            font-size: clamp(1.55rem, 3.5vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
+        .article-header .subtitle {
+            font-size: 0.975rem;
+            color: var(--muted);
+            line-height: 1.75;
+            max-width: 580px;
+            margin-bottom: 24px;
+        }
+        .article-meta {
+            display: flex; gap: 18px; flex-wrap: wrap;
+            align-items: center;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            font-size: 0.78rem; color: var(--muted);
+        }
+        .article-meta span { display: flex; align-items: center; gap: 5px; }
+        .meta-badge {
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 3px;
+            background: var(--orange-subtle);
+            border: 1px solid var(--orange-border);
+            color: var(--orange);
+        }
+
+        /* ── sticky section nav ── */
+        .section-nav {
+            position: sticky; top: 68px;
+            background: var(--card-bg, #fff);
+            border-bottom: 1px solid var(--border);
+            z-index: 80; overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .section-nav::-webkit-scrollbar { display: none; }
+        .section-nav-inner {
+            display: flex;
+            max-width: 960px; margin: 0 auto;
+            padding: 0 24px;
+        }
+        .section-nav a {
+            white-space: nowrap;
+            padding: 11px 14px;
+            font-size: 0.78rem; font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .section-nav a:hover { color: var(--text-color, #111); }
+        .section-nav a.active {
+            color: var(--orange);
+            border-bottom-color: var(--orange);
+        }
+
+        /* ── article body ── */
+        .article-body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 52px 24px 80px;
+        }
+
+        /* ── typography ── */
+        .article-body p {
+            font-size: 0.96rem;
+            line-height: 1.82;
+            color: var(--text-color, #374151);
+            margin-bottom: 18px;
+        }
+        .article-body h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            margin: 44px 0 16px;
+            padding-top: 4px;
+            color: var(--text-color, #111);
+        }
+        .article-body h3 {
+            font-size: 0.96rem;
+            font-weight: 700;
+            margin: 30px 0 10px;
+            color: var(--text-color, #111);
+        }
+        .article-body ul, .article-body ol {
+            padding-left: 20px;
+            margin-bottom: 18px;
+        }
+        .article-body li {
+            font-size: 0.96rem;
+            line-height: 1.78;
+            color: var(--text-color, #374151);
+            margin-bottom: 5px;
+        }
+        .article-body strong { color: var(--text-color, #111); }
+
+        /* ── inline code ── */
+        .article-body p code,
+        .article-body li code,
+        .article-body td code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.82em;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: var(--text-color, #111);
+        }
+
+        /* ── code blocks ── */
+        .code-block { margin: 18px 0 26px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .code-header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .code-lang {
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px 22px;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.72;
+            margin: 0;
+        }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+        .code-note {
+            font-size: 0.82rem; color: var(--muted);
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 9px 16px;
+            line-height: 1.6;
+        }
+
+        /* ── section divider ── */
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 38px 0;
+        }
+
+        /* ── callout boxes ── */
+        .callout {
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 22px 0;
+            border: 1px solid;
+            font-size: 0.92rem;
+            line-height: 1.72;
+        }
+        .callout-label {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .callout p { margin: 0; }
+        .callout-key {
+            background: var(--orange-subtle);
+            border-color: var(--orange-border);
+            border-left: 3px solid var(--orange);
+        }
+        .callout-key .callout-label { color: var(--orange); }
+        .callout-warning {
+            background: var(--red-subtle);
+            border-color: rgba(239,68,68,0.2);
+            border-left: 3px solid var(--red);
+        }
+        .callout-warning .callout-label { color: var(--red); }
+        .callout-good {
+            background: var(--green-subtle);
+            border-color: rgba(16,185,129,0.2);
+            border-left: 3px solid var(--green);
+        }
+        .callout-good .callout-label { color: var(--green); }
+
+        /* ── tables ── */
+        .table-wrap { overflow-x: auto; margin: 18px 0 26px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        thead tr { border-bottom: 2px solid var(--border); }
+        th {
+            text-align: left; padding: 10px 14px;
+            font-weight: 700; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--muted);
+        }
+        td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text-color, #374151); }
+        tbody tr:last-child td { border-bottom: 1px solid var(--border); }
+        .yes { color: var(--green); font-weight: 700; }
+        .no  { color: var(--orange); font-weight: 600; }
+
+        /* ── viz block wrapper ── */
+        .viz-block {
+            margin: 24px 0 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+        }
+        .viz-header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 18px;
+        }
+        .viz-title {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .viz-body { padding: 24px 20px; background: var(--card-bg, #fff); }
+        canvas { display: block; max-width: 100%; }
+        .viz-caption {
+            font-size: 0.78rem; color: var(--muted);
+            text-align: center; margin-top: 12px;
+            line-height: 1.55;
+        }
+
+        /* ── pipeline map ── */
+        .pipeline-map { display: flex; flex-direction: column; gap: 1px; font-size: 0.85rem; }
+        .pipe-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 12px; border-radius: 5px;
+            color: var(--muted);
+        }
+        .pipe-item.highlight {
+            background: var(--text-color, #111);
+            color: var(--bg-color, #fff);
+            font-weight: 600;
+        }
+        [data-theme="dark"] .pipe-item.highlight { color: #0a0a0f; }
+        .pipe-item.sub {
+            padding-left: 32px; font-size: 0.82rem;
+        }
+        .pipe-item.sub-active {
+            color: var(--orange);
+            font-weight: 600;
+            border-left: 2px solid var(--orange);
+            padding-left: 30px;
+            background: var(--orange-subtle);
+        }
+        .pipe-connector {
+            padding-left: 23px; color: var(--border);
+            font-size: 0.75rem; line-height: 1;
+        }
+
+        /* ── distance comparison visual ── */
+        .distance-viz {
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 24px;
+            margin: 22px 0;
+        }
+        .distance-row { margin-bottom: 22px; }
+        .distance-row:last-of-type { margin-bottom: 0; }
+        .distance-feature {
+            font-size: 0.82rem; color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .distance-number {
+            font-size: 1.6rem; font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1; margin-bottom: 8px;
+        }
+        .distance-number.small { color: var(--blue); }
+        .distance-number.large { color: var(--red); }
+        .distance-track {
+            height: 5px; background: var(--border);
+            border-radius: 3px; overflow: visible;
+            position: relative;
+        }
+        .distance-fill {
+            height: 100%; border-radius: 3px;
+            position: relative;
+        }
+        .distance-fill.small-fill {
+            width: 100%;
+            background: var(--blue);
+        }
+        .distance-label-note {
+            font-size: 0.72rem; color: var(--muted);
+            margin-top: 4px;
+        }
+        .distance-vs {
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--muted); text-align: center;
+            padding: 6px 0; margin: 8px 0;
+        }
+
+        /* ── method cards ── */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px; margin: 22px 0;
+        }
+        .method-card {
+            border: 1px solid var(--border);
+            border-radius: 7px; padding: 16px 18px;
+            background: var(--card-bg, #fff);
+        }
+        .method-name {
+            font-size: 0.875rem; font-weight: 700;
+            margin-bottom: 5px; color: var(--text-color, #111);
+        }
+        .method-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; color: var(--muted);
+            background: var(--card);
+            padding: 5px 9px; border-radius: 4px;
+            margin: 7px 0; display: inline-block;
+        }
+        .method-use {
+            font-size: 0.8rem; color: var(--muted);
+            line-height: 1.62; margin-top: 7px;
+        }
+        .method-tag {
+            font-size: 0.66rem; font-weight: 700;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 2px 7px; border-radius: 3px;
+            margin-top: 9px; display: inline-block;
+        }
+        .tag-default { background: rgba(59,130,246,0.1); color: var(--blue); }
+        .tag-outliers { background: var(--red-subtle); color: var(--red); }
+        .tag-bounded { background: var(--green-subtle); color: var(--green); }
+        .tag-sparse { background: var(--orange-subtle); color: var(--orange); }
+        .tag-skew { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+        /* ── CSS decision tree ── */
+        .dtree { font-size: 0.84rem; line-height: 1.5; }
+        .dtree-node {
+            border: 1px solid var(--border);
+            border-radius: 5px; padding: 9px 14px;
+            color: var(--text-color, #374151);
+            background: var(--card-bg, #fff);
+            display: inline-block;
+        }
+        .dtree-node.question {
+            background: var(--card);
+            font-weight: 600;
+            border-style: dashed;
+        }
+        .dtree-node.result {
+            background: var(--text-color, #111);
+            color: var(--bg-color, #fff);
+            font-weight: 700;
+            border-color: var(--text-color, #111);
+        }
+        [data-theme="dark"] .dtree-node.result { color: #0a0a0f; }
+        .dtree-row { display: flex; justify-content: center; margin: 6px 0; }
+        .dtree-arrow { color: var(--muted); font-size: 0.9rem; margin: 2px 0; text-align: center; }
+        .dtree-branches {
+            display: flex; gap: 20px; justify-content: center;
+            flex-wrap: wrap;
+        }
+        .dtree-arm {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 4px;
+            flex: 1; min-width: 120px; max-width: 220px;
+        }
+        .dtree-label {
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        /* ── feedback loops ── */
+        .loops-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px; margin: 22px 0;
+        }
+        @media (max-width: 560px) { .loops-grid { grid-template-columns: 1fr; } }
+        .loop-col { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+        .loop-col-header {
+            padding: 10px 16px;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+        .loop-col-header.bad { color: var(--red); background: var(--red-subtle); }
+        .loop-col-header.good { color: var(--green); background: var(--green-subtle); }
+        .loop-col-body { padding: 16px; background: var(--card-bg, #fff); }
+        .loop-step {
+            display: flex; gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            align-items: flex-start;
+        }
+        .loop-step:last-child { border-bottom: none; }
+        .loop-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            flex-shrink: 0; margin-top: 6px;
+        }
+        .loop-dot.bad { background: var(--red); }
+        .loop-dot.good { background: var(--green); }
+        .loop-text { font-size: 0.84rem; line-height: 1.55; color: var(--text-color, #374151); }
+
+        /* ── production checklist ── */
+        .checklist { list-style: none; padding: 0; margin: 14px 0; }
+        .checklist li {
+            display: flex; align-items: flex-start;
+            gap: 10px; padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-color, #374151);
+            line-height: 1.55;
+        }
+        .checklist li:last-child { border-bottom: none; }
+        .check-box {
+            width: 16px; height: 16px;
+            border-radius: 3px;
+            border: 1.5px solid var(--border);
+            flex-shrink: 0; margin-top: 2px;
+        }
+
+        /* ── mental model ── */
+        .mental-model {
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--orange);
+            border-radius: 0 7px 7px 0;
+            padding: 24px 24px;
+            margin: 28px 0;
+            background: var(--orange-subtle);
+        }
+        .mental-model-label {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--orange); margin-bottom: 10px;
+        }
+        .mental-model p {
+            font-size: 0.95rem; line-height: 1.78;
+            margin: 0; color: var(--text-color, #374151);
+        }
+
+        /* ── next chapter ── */
+        .next-chapter {
+            margin-top: 56px;
+            padding-top: 36px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .next-chapter-meta { flex: 1; }
+        .next-chapter-label {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 4px;
+        }
+        .next-chapter-title {
+            font-size: 0.96rem; font-weight: 600;
+            color: var(--text-color, #111);
+        }
+        .btn-outline {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-color, #111);
+            border: 1px solid var(--border);
+            padding: 9px 16px; border-radius: 6px;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 7px;
+            white-space: nowrap;
+            transition: border-color 0.15s;
+        }
+        .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+
+        /* ── responsive ── */
+        @media (max-width: 640px) {
+            .article-body { padding: 36px 16px 60px; }
+            .article-header { padding: calc(var(--spacing-xl, 64px) + 60px) 16px 36px; }
+            .method-grid { grid-template-columns: 1fr; }
+            pre { font-size: 0.76rem; padding: 14px; }
+            .viz-body { padding: 16px 12px; }
+            .distance-number { font-size: 1.25rem; }
+            .dtree-branches { gap: 10px; }
+            .dtree-arm { min-width: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="reading-progress"></div>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul>
+                    <li><a href="../../index.html#projects">Projects</a></li>
+                    <li><a href="../../index.html#about">About</a></li>
+                    <li><a href="../../index.html#skills">Skills</a></li>
+                    <li><a href="../../index.html#learning-log">Learning Log</a></li>
+                    <li><a href="../../index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display:block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display:none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="../../index.html#projects">Projects</a>
+            <a href="../../index.html#about">About</a>
+            <a href="../../index.html#skills">Skills</a>
+            <a href="../../index.html#learning-log">Learning Log</a>
+            <a href="../../index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="article-header">
+        <div class="container">
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <a href="../../index.html#learning-log">Learning Log</a>
+                <span>/</span>
+                <a href="data-preprocessing.html">Data Preprocessing</a>
+                <span>/</span>
+                <strong>Feature Scaling</strong>
+            </nav>
+            <h1>Feature Scaling</h1>
+            <p class="subtitle">
+                Why the math demands it, when to apply it, which method to choose,
+                and how to implement it correctly without leaking data or
+                breaking your pipeline.
+            </p>
+            <div class="article-meta">
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <time datetime="2026-03-12">March 2026</time>
+                </span>
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    ~25 min read
+                </span>
+                <span class="meta-badge">Intermediate</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="section-nav" aria-label="Sections">
+        <div class="section-nav-inner">
+            <a href="#system-view">System View</a>
+            <a href="#core-problem">The Problem</a>
+            <a href="#methods">Methods</a>
+            <a href="#decision">Decision Tree</a>
+            <a href="#when-not">When Not To</a>
+            <a href="#failure-modes">Failure Modes</a>
+            <a href="#implementation">Implementation</a>
+            <a href="#deep-learning">Deep Learning</a>
+            <a href="#systems-thinking">Systems Thinking</a>
+            <a href="#quick-ref">Quick Reference</a>
+        </div>
+    </nav>
+
+    <main id="main">
+        <article class="article-body">
+
+            <!-- ═══ 1. SYSTEM VIEW ═══ -->
+            <section id="system-view">
+                <h2>1. The System View</h2>
+                <p>
+                    Before touching a single formula, zoom out.
+                    Feature scaling has one specific, non-negotiable place inside the ML pipeline —
+                    and understanding that position tells you a lot about why it exists.
+                </p>
+
+                <div class="viz-block">
+                    <div class="viz-header"><span class="viz-title">ML Pipeline — Where Feature Scaling Fits</span></div>
+                    <div class="viz-body">
+                        <div class="pipeline-map">
+                            <div class="pipe-item">World / Raw Data</div>
+                            <div class="pipe-connector">↓</div>
+                            <div class="pipe-item">Data Collection</div>
+                            <div class="pipe-connector">↓</div>
+                            <div class="pipe-item">EDA &mdash; understand, don't change</div>
+                            <div class="pipe-connector">↓</div>
+                            <div class="pipe-item highlight">Preprocessing</div>
+                            <div class="pipe-item sub-active">&#8627; Feature Scaling &larr; this chapter</div>
+                            <div class="pipe-item sub">&#8627; Feature Encoding</div>
+                            <div class="pipe-item sub">&#8627; Missing Data Handling</div>
+                            <div class="pipe-item sub">&#8627; Outlier Treatment</div>
+                            <div class="pipe-connector">↓</div>
+                            <div class="pipe-item">Feature Engineering</div>
+                            <div class="pipe-connector">↓</div>
+                            <div class="pipe-item">Model Training &rarr; Evaluation &rarr; Deployment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>
+                    Three layers that are easy to conflate but must stay separate:
+                    EDA is for understanding — you don't change the data.
+                    Feature scaling transforms numerical features so algorithms can operate correctly.
+                    Feature engineering creates new information from existing data.
+                </p>
+
+                <div class="callout callout-key">
+                    <div class="callout-label">Key System Insight</div>
+                    <p>
+                        Most ML algorithms have internal machinery — distance calculations, gradient updates,
+                        weight matrices — that is sensitive to the magnitude of numbers.
+                        Raw data doesn't care about magnitude.
+                        A salary of $80,000 and an age of 35 are both valid features,
+                        but to a gradient or a distance metric, $80,000 is an extremely loud number
+                        and 35 is barely a whisper. Feature scaling is the equalization layer.
+                    </p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 2. CORE PROBLEM ═══ -->
+            <section id="core-problem">
+                <h2>2. The Core Problem</h2>
+
+                <h3>2.1 The Distance Problem</h3>
+                <p>
+                    Many algorithms compute distances between data points.
+                    KNN asks which neighbors are closest.
+                    K-Means asks which cluster center is nearest.
+                    SVM builds a margin around a hyperplane.
+                    PCA finds the directions of maximum variance.
+                    They all use Euclidean distance or a variant of it.
+                </p>
+                <p>
+                    Now consider two unscaled features — age and salary — and what
+                    happens when you compute the distance between two people:
+                </p>
+
+                <div class="distance-viz">
+                    <div class="distance-row">
+                        <div class="distance-feature">Age difference &mdash; Person A: 25, Person B: 30</div>
+                        <div class="distance-number small">25</div>
+                        <div class="distance-track">
+                            <div class="distance-fill small-fill" style="width:100%; background: var(--blue); height:5px; border-radius:3px;"></div>
+                        </div>
+                        <div class="distance-label-note">This is the squared contribution to distance</div>
+                    </div>
+
+                    <div class="distance-vs">vs</div>
+
+                    <div class="distance-row">
+                        <div class="distance-feature">Salary difference &mdash; Person A: $30,000, Person B: $130,000</div>
+                        <div class="distance-number large">10,000,000,000</div>
+                        <div class="distance-track" style="margin-bottom:4px;">
+                            <div class="distance-fill" style="width:100%; background: var(--red); height:5px; border-radius:3px;"></div>
+                        </div>
+                        <div class="distance-label-note">Salary completely dominates — age effectively does not exist</div>
+                    </div>
+                </div>
+
+                <p>
+                    The age difference contributes 25 to the total distance.
+                    The salary difference contributes 10,000,000,000.
+                    Age is invisible to the algorithm — not because age is unimportant,
+                    but because its scale is smaller.
+                    This is not a flaw in the algorithm.
+                    It's a mismatch between what the algorithm assumes and what raw data delivers.
+                </p>
+
+                <h3>2.2 The Gradient Descent Problem</h3>
+                <p>
+                    Gradient-based algorithms optimize by taking steps down the loss surface.
+                    Without scaling, features with large magnitudes create a steep, elongated surface.
+                    Gradient descent oscillates across the steep walls instead of heading directly
+                    toward the minimum.
+                    With scaled features, the surface becomes a rounded bowl
+                    and gradient descent converges in a straight line.
+                </p>
+
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Loss Surface — Unscaled vs Scaled</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="lossSurfaceCanvas" height="200"></canvas>
+                        <p class="viz-caption">
+                            Left: unscaled features produce an elongated surface —
+                            gradient descent zigzags and converges slowly.<br>
+                            Right: scaled features produce a rounded bowl —
+                            gradient descent heads straight to the minimum.
+                        </p>
+                    </div>
+                </div>
+
+                <h3>2.3 The Weight Initialization Problem</h3>
+                <p>
+                    Neural networks initialize weights in small ranges, typically around 0 to 0.01.
+                    When input features carry magnitudes in the tens of thousands,
+                    the initial gradient updates are enormous.
+                    The network either diverges or takes an unreasonable number of steps to stabilize.
+                    Scaling brings inputs into the range the initialization scheme was designed for.
+                </p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 3. METHODS ═══ -->
+            <section id="methods">
+                <h2>3. The Methods</h2>
+                <p>
+                    Each scaling method answers a different question about your data.
+                    The right choice depends on your feature's distribution,
+                    whether outliers are present, and which algorithm you're using.
+                </p>
+
+                <div class="method-grid">
+                    <div class="method-card">
+                        <div class="method-name">Standardization (Z-score)</div>
+                        <div class="method-formula">x&prime; = (x &minus; &mu;) / &sigma;</div>
+                        <div class="method-use">Centers around zero, scales to unit variance. No fixed output range. The safe default for most situations.</div>
+                        <span class="method-tag tag-default">Default choice</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Min-Max Normalization</div>
+                        <div class="method-formula">x&prime; = (x &minus; x_min) / (x_max &minus; x_min)</div>
+                        <div class="method-use">Maps all values to [0, 1]. Preserves distribution shape. Extremely vulnerable to a single outlier.</div>
+                        <span class="method-tag tag-bounded">Bounded output</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Robust Scaling</div>
+                        <div class="method-formula">x&prime; = (x &minus; median) / IQR</div>
+                        <div class="method-use">Uses median and interquartile range — both resistant to outliers. Best for messy real-world financial or medical data.</div>
+                        <span class="method-tag tag-outliers">Outlier-resistant</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">MaxAbs Scaling</div>
+                        <div class="method-formula">x&prime; = x / |x_max|</div>
+                        <div class="method-use">Scales to [&minus;1, 1] without centering. Preserves zeros. The only correct option for sparse matrices like TF-IDF.</div>
+                        <span class="method-tag tag-sparse">Sparse data</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Log Transform</div>
+                        <div class="method-formula">x&prime; = log(x + 1)</div>
+                        <div class="method-use">Compresses large values, expands small ones. Makes right-skewed distributions more Gaussian. Often used as a pre-scaling step, not a standalone scaler.</div>
+                        <span class="method-tag tag-skew">Right-skewed</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Yeo-Johnson</div>
+                        <div class="method-formula">PowerTransformer(&lambda;)</div>
+                        <div class="method-use">Finds the optimal power parameter to push any distribution toward Gaussian. Handles zeros and negatives. A step up from log transform when log isn't enough.</div>
+                        <span class="method-tag tag-skew">Non-Gaussian</span>
+                    </div>
+                </div>
+
+                <h3>Before vs After — StandardScaler</h3>
+                <p>
+                    The distribution shape is preserved. The mean shifts to zero
+                    and the spread normalizes to unit variance.
+                    The values are now in a range the algorithm can reason about fairly.
+                </p>
+
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">StandardScaler — Raw Values vs Scaled Values</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="beforeAfterChart" height="190"></canvas>
+                        <p class="viz-caption">
+                            Same shape, different scale.
+                            Blue bars show raw age values.
+                            Orange bars show the same values after StandardScaler.
+                        </p>
+                    </div>
+                </div>
+
+                <h3>Why MinMax Breaks on Outliers</h3>
+
+                <div class="callout callout-warning">
+                    <div class="callout-label">Critical Limitation</div>
+                    <p>
+                        One extreme value collapses everything else to near-zero.
+                        Values of [20, 22, 24, 26, 1,000,000] become
+                        [0.000, 0.000002, 0.000004, 0.000006, 1.0].
+                        Four values become meaningless. If your data has any outliers at all,
+                        MinMax is the wrong choice.
+                    </p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 4. DECISION TREE ═══ -->
+            <section id="decision">
+                <h2>4. The Decision Framework</h2>
+                <p>
+                    Work through this decision path based on what your data actually looks like.
+                    The output of each branch is a concrete method recommendation.
+                </p>
+
+                <div class="viz-block">
+                    <div class="viz-header"><span class="viz-title">Scaler Selection — Decision Path</span></div>
+                    <div class="viz-body">
+                        <div class="dtree">
+
+                            <div class="dtree-row">
+                                <div class="dtree-node question">Is your data sparse — many zeros?</div>
+                            </div>
+                            <div class="dtree-arrow">↓</div>
+                            <div class="dtree-branches">
+                                <div class="dtree-arm">
+                                    <span class="dtree-label">Yes</span>
+                                    <div class="dtree-node result">MaxAbs Scaler</div>
+                                </div>
+                                <div class="dtree-arm">
+                                    <span class="dtree-label">No &rarr; continue</span>
+                                    <div class="dtree-node question">Heavy right skew / long tail?</div>
+                                    <div class="dtree-arrow">↓</div>
+                                    <div class="dtree-branches" style="gap:12px;">
+                                        <div class="dtree-arm">
+                                            <span class="dtree-label">Yes</span>
+                                            <div class="dtree-node result">Log Transform<br>then StandardScaler</div>
+                                        </div>
+                                        <div class="dtree-arm">
+                                            <span class="dtree-label">No &rarr; continue</span>
+                                            <div class="dtree-node question">Significant outliers present?</div>
+                                            <div class="dtree-arrow">↓</div>
+                                            <div class="dtree-branches" style="gap:12px;">
+                                                <div class="dtree-arm">
+                                                    <span class="dtree-label">Yes</span>
+                                                    <div class="dtree-node result">Robust Scaler</div>
+                                                </div>
+                                                <div class="dtree-arm">
+                                                    <span class="dtree-label">No &rarr; continue</span>
+                                                    <div class="dtree-node question">Need strict [0, 1] range?</div>
+                                                    <div class="dtree-arrow">↓</div>
+                                                    <div class="dtree-branches" style="gap:12px;">
+                                                        <div class="dtree-arm">
+                                                            <span class="dtree-label">Yes</span>
+                                                            <div class="dtree-node result">MinMax Scaler</div>
+                                                        </div>
+                                                        <div class="dtree-arm">
+                                                            <span class="dtree-label">No</span>
+                                                            <div class="dtree-node result">Standard Scaler</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 5. WHEN NOT TO ═══ -->
+            <section id="when-not">
+                <h2>5. When Not to Scale</h2>
+                <p>
+                    Some algorithms are completely immune to feature scaling.
+                    Understanding why matters more than memorizing a list.
+                </p>
+                <p>
+                    Tree-based models split on thresholds, not distances or gradients.
+                    The split point changes in value after scaling,
+                    but the relative ordering of values does not.
+                    The tree makes the exact same decisions.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python</span></div>
+                    <pre><code># Before scaling
+if salary > 50000: go_left()
+
+# After scaling (salary mapped to 0.23)
+if salary_scaled > 0.23: go_left()
+
+# Same split. Same result. Scaling has zero effect on tree models.</code></pre>
+                </div>
+
+                <div class="callout callout-key">
+                    <div class="callout-label">The One-Line Rule</div>
+                    <p>
+                        Scale when the algorithm cares about <em>distance</em> or <em>gradient magnitude</em>.
+                        Don't scale when it only cares about <em>ordering</em>.
+                    </p>
+                </div>
+
+                <p>
+                    <strong>Skip scaling for:</strong> Decision Trees, Random Forest,
+                    XGBoost / LightGBM / CatBoost, Naive Bayes, categorical features after encoding,
+                    binary features, and target variables in classification tasks.
+                </p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 6. FAILURE MODES ═══ -->
+            <section id="failure-modes">
+                <h2>6. Assumptions, Limitations, and Failure Modes</h2>
+
+                <h3>Assumptions</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Assumption</th>
+                                <th>What it means</th>
+                                <th>What breaks if violated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Features are numeric</td>
+                                <td>Scaling operates on numbers</td>
+                                <td>Encode categoricals first</td>
+                            </tr>
+                            <tr>
+                                <td>Algorithm is scale-sensitive</td>
+                                <td>Only worth doing if the model cares</td>
+                                <td>Wasted work on tree models</td>
+                            </tr>
+                            <tr>
+                                <td>Training ≈ production distribution</td>
+                                <td>Scaler params come from training data</td>
+                                <td>Distribution shift breaks the scaler silently</td>
+                            </tr>
+                            <tr>
+                                <td>No dominant outliers</td>
+                                <td>Especially for MinMax</td>
+                                <td>One extreme value corrupts the entire range</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Failure Mode 1 — Data Leakage</h3>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python — Wrong vs Right</span></div>
+                    <pre><code># WRONG — scaler sees test data before evaluation
+scaler.fit_transform(X_all)
+# then split...
+
+# RIGHT — fit on training data only
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+scaler.fit(X_train)
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled  = scaler.transform(X_test)   # no refitting</code></pre>
+                    <div class="code-note">If you fit the scaler on the whole dataset, it has seen the test set. Your evaluation is optimistic. The model looks better than it is.</div>
+                </div>
+
+                <h3>Failure Mode 2 — Leakage Inside Cross-Validation</h3>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python</span></div>
+                    <pre><code># WRONG — scaler sees all CV folds before the split
+X_scaled = scaler.fit_transform(X_train)
+cross_val_score(model, X_scaled, y_train, cv=5)
+
+# RIGHT — Pipeline re-fits scaler inside each fold automatically
+pipeline = Pipeline([('scaler', StandardScaler()), ('model', model)])
+cross_val_score(pipeline, X_train, y_train, cv=5)</code></pre>
+                </div>
+
+                <h3>Failure Mode 3 — Dropping the Scaler in Deployment</h3>
+
+                <div class="callout callout-warning">
+                    <div class="callout-label">Silent Production Bug</div>
+                    <p>
+                        You train with StandardScaler.
+                        You serialize the model weights.
+                        You forget to serialize the scaler.
+                        At inference time, raw unscaled inputs go into a model trained on scaled inputs.
+                        The model will not crash.
+                        It will produce silent, systematic errors — and you will not know why.
+                    </p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 7. IMPLEMENTATION ═══ -->
+            <section id="implementation">
+                <h2>7. Implementation — From Theory to Production</h2>
+
+                <h3>The Basic Pattern</h3>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python — sklearn</span></div>
+                    <pre><code>from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)   # fit + transform on train
+X_test_scaled  = scaler.transform(X_test)         # transform only on test</code></pre>
+                    <div class="code-note">Rule: fit on training data only. transform on both train and test.</div>
+                </div>
+
+                <h3>ColumnTransformer — Different Columns, Different Scalers</h3>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python</span></div>
+                    <pre><code>from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
+
+preprocessor = ColumnTransformer(transformers=[
+    ('standard', StandardScaler(), ['age', 'income', 'credit_score']),
+    ('minmax',   MinMaxScaler(),   ['pixel_r', 'pixel_g', 'pixel_b']),
+    ('onehot',   OneHotEncoder(),  ['city', 'job_type'])
+], remainder='passthrough')</code></pre>
+                    <div class="code-note">Real datasets almost never need the same scaler for every column.</div>
+                </div>
+
+                <h3>The Production Pipeline</h3>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">Python — Full production pattern</span></div>
+                    <pre><code>from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+import joblib
+
+pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('model',        LogisticRegression())
+])
+
+pipeline.fit(X_train, y_train)
+
+# CV is leak-free — scaler re-fits in each fold automatically
+scores = cross_val_score(pipeline, X_train, y_train, cv=5)
+
+# Save the entire pipeline, not just the model weights
+joblib.dump(pipeline, 'model_pipeline.pkl')
+
+# At inference — scaler applied automatically on raw input
+loaded = joblib.load('model_pipeline.pkl')
+loaded.predict(new_raw_data)</code></pre>
+                </div>
+
+                <div class="callout callout-good">
+                    <div class="callout-label">Why Pipeline is the only correct production approach</div>
+                    <p>
+                        The scaler is bundled with the model — you cannot forget to apply it.
+                        Cross-validation is leak-free automatically.
+                        Saving and loading is atomic — one file, one object.
+                        Raw data in, prediction out.
+                    </p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 8. DEEP LEARNING ═══ -->
+            <section id="deep-learning">
+                <h2>8. Deep Learning Specifics</h2>
+
+                <h3>Activation Function Saturation</h3>
+                <p>
+                    For the sigmoid function, inputs far from zero produce an output near 1
+                    with a gradient near 0.
+                    The network stops learning through that neuron entirely.
+                    Scaling keeps inputs in the linear region where gradients flow.
+                </p>
+
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Sigmoid Output and Gradient vs Input</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="sigmoidChart" height="190"></canvas>
+                        <p class="viz-caption">
+                            Gradient (dashed) only exists meaningfully near zero.
+                            Unscaled features push inputs into the flat saturation zones
+                            where the network cannot learn.
+                        </p>
+                    </div>
+                </div>
+
+                <h3>Does Batch Normalization Replace Input Scaling?</h3>
+                <p>
+                    No. BatchNorm normalizes activations <em>between layers</em> during training.
+                    It does not operate on your raw input features.
+                    You still need to scale your inputs — BatchNorm then handles the rest.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-header"><span class="code-lang">PyTorch</span></div>
+                    <pre><code># Input scaling is still your responsibility
+# BatchNorm handles normalization at each subsequent layer
+
+model = nn.Sequential(
+    nn.Linear(input_dim, 128),
+    nn.BatchNorm1d(128),
+    nn.ReLU(),
+    nn.Linear(128, 64),
+    nn.BatchNorm1d(64),
+    nn.ReLU(),
+    nn.Linear(64, output_dim)
+)</code></pre>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 9. SYSTEMS THINKING ═══ -->
+            <section id="systems-thinking">
+                <h2>9. Systems Thinking — The Full Picture</h2>
+
+                <h3>The Feedback Loops</h3>
+                <p>
+                    Scaling doesn't just improve accuracy numbers.
+                    It compresses the feedback loop — you get a clear signal faster.
+                    Without it, practitioners often misdiagnose a preprocessing problem
+                    as a model architecture problem and spend weeks adding complexity
+                    to something that needed one line of code.
+                </p>
+
+                <div class="loops-grid">
+                    <div class="loop-col">
+                        <div class="loop-col-header bad">Without Scaling</div>
+                        <div class="loop-col-body">
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text">Poor scaling</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text">Elongated loss surface</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text">Slow convergence</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text">Underfitting — blamed on architecture</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text">Add more layers, more features</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot bad"></div>
+                                <div class="loop-text"><strong>Still slow. More compute. Longer cycle.</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="loop-col">
+                        <div class="loop-col-header good">With Scaling</div>
+                        <div class="loop-col-body">
+                            <div class="loop-step">
+                                <div class="loop-dot good"></div>
+                                <div class="loop-text">Proper scaling</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot good"></div>
+                                <div class="loop-text">Stable, rounded loss surface</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot good"></div>
+                                <div class="loop-text">Fast convergence</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot good"></div>
+                                <div class="loop-text">Clear evaluation signal</div>
+                            </div>
+                            <div class="loop-step">
+                                <div class="loop-dot good"></div>
+                                <div class="loop-text"><strong>Rapid iteration on architecture and hyperparameters</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>System Boundaries — Where Scaling Must Persist</h3>
+                <p>
+                    The scaler defines a system boundary.
+                    Raw data is on one side. Model-ready data is on the other.
+                    This boundary must hold consistently from training through production serving.
+                    If it breaks — stale parameters, wrong scaler loaded, scaler skipped entirely —
+                    the model receives out-of-distribution inputs
+                    and produces silent, systematic errors with no crash, no alert.
+                </p>
+
+                <h3>Distribution Drift Over Time</h3>
+                <p>
+                    The scaler's parameters are computed from training data.
+                    Production data evolves.
+                    A salary scaler trained on 2022 data applied to 2024 inputs
+                    may be systematically off.
+                    The scaler is not a static artifact.
+                    It is a component that requires monitoring and periodic retraining.
+                </p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ═══ 10. QUICK REFERENCE ═══ -->
+            <section id="quick-ref">
+                <h2>10. Quick Reference</h2>
+
+                <h3>Algorithm Cheat Sheet</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Algorithm</th><th>Scale?</th><th>Reason</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>KNN</td><td><span class="yes">Yes</span></td><td>Distance-based</td></tr>
+                            <tr><td>K-Means</td><td><span class="yes">Yes</span></td><td>Distance-based</td></tr>
+                            <tr><td>SVM</td><td><span class="yes">Yes</span></td><td>Margin maximization</td></tr>
+                            <tr><td>PCA</td><td><span class="yes">Yes</span></td><td>Variance-based, scale affects directions</td></tr>
+                            <tr><td>Linear Regression</td><td><span class="yes">Yes</span></td><td>Gradient descent</td></tr>
+                            <tr><td>Logistic Regression</td><td><span class="yes">Yes</span></td><td>Gradient descent</td></tr>
+                            <tr><td>Neural Networks</td><td><span class="yes">Yes</span></td><td>Gradient descent, activation stability</td></tr>
+                            <tr><td>DBSCAN</td><td><span class="yes">Yes</span></td><td>Density = distance</td></tr>
+                            <tr><td>Decision Tree</td><td><span class="no">No</span></td><td>Threshold splits, scale-invariant</td></tr>
+                            <tr><td>Random Forest</td><td><span class="no">No</span></td><td>Ensemble of trees</td></tr>
+                            <tr><td>XGBoost / LightGBM / CatBoost</td><td><span class="no">No</span></td><td>Gradient boosted trees</td></tr>
+                            <tr><td>Naive Bayes</td><td><span class="no">No</span></td><td>Probabilistic, not distance-based</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Production Checklist</h3>
+                <ul class="checklist">
+                    <li><span class="check-box"></span>Split data before fitting the scaler</li>
+                    <li><span class="check-box"></span>Fit scaler on training data only</li>
+                    <li><span class="check-box"></span>Transform both train and test with the same fitted scaler</li>
+                    <li><span class="check-box"></span>Use Pipeline for cross-validation and deployment</li>
+                    <li><span class="check-box"></span>Save the full pipeline, not just model weights</li>
+                    <li><span class="check-box"></span>Monitor input feature distributions in production</li>
+                    <li><span class="check-box"></span>Retrain scaler when distribution shifts</li>
+                    <li><span class="check-box"></span>Inverse-transform predictions if y was scaled</li>
+                    <li><span class="check-box"></span>Use ColumnTransformer for mixed-type features</li>
+                </ul>
+
+                <div class="mental-model">
+                    <div class="mental-model-label">Mental Model</div>
+                    <p>
+                        Think of feature scaling as calibrating instruments before a measurement.
+                        Before a weigh-in at a boxing match, all scales are recalibrated to
+                        the same zero point and the same unit —
+                        not because the boxers changed,
+                        but because you need fair, comparable measurements.
+                        Your features are readings from different instruments:
+                        salary in dollars, age in years, pixels in 0 to 255.
+                        Recalibrate them to a common scale,
+                        and the algorithm can focus on learning the patterns
+                        rather than fighting with the units.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Next chapter -->
+            <div class="next-chapter">
+                <div class="next-chapter-meta">
+                    <div class="next-chapter-label">Next in Data Preprocessing</div>
+                    <div class="next-chapter-title">
+                        Feature Encoding — making categorical variables legible
+                        to algorithms that only speak numbers
+                    </div>
+                </div>
+                <a href="data-preprocessing.html" class="btn-outline">
+                    Back to Series
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+            </div>
+
+            <div style="margin-top:32px;">
+                <a href="../../index.html#learning-log" class="back-link">← Back to Learning Log</a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../../shared.js"></script>
+    <script>
+    // ── Reading progress ──
+    window.addEventListener('scroll', () => {
+        const d = document.documentElement;
+        const pct = (d.scrollTop / (d.scrollHeight - d.clientHeight)) * 100;
+        document.getElementById('reading-progress').style.width = pct + '%';
+    });
+
+    // ── Active section nav ──
+    const navLinks = document.querySelectorAll('.section-nav a');
+    const sections = document.querySelectorAll('section[id]');
+    const secObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                const id = e.target.id;
+                navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+            }
+        });
+    }, { rootMargin: '-15% 0px -72% 0px' });
+    sections.forEach(s => secObs.observe(s));
+
+    // ── Shared chart config ──
+    const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+    const gc = () => isDark() ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+    const tc = () => isDark() ? '#9ca3af' : '#6b7280';
+    const ff = "'Inter', sans-serif";
+
+    // ── Loss surface canvas drawing ──
+    function drawLossSurface() {
+        const canvas = document.getElementById('lossSurfaceCanvas');
+        if (!canvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.offsetWidth || 680;
+        const H = 200;
+        canvas.width  = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width  = W + 'px';
+        canvas.style.height = H + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const dark = isDark();
+        const bg   = dark ? '#18181b' : '#ffffff';
+        const divC = dark ? '#27272a' : '#e5e7eb';
+        const labC = dark ? '#9ca3af' : '#6b7280';
+        const red  = '#ef4444';
+        const grn  = '#10b981';
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        const half = W / 2;
+        const lx = half * 0.5, ly = H * 0.47;
+        const rx = half + half * 0.5, ry = H * 0.47;
+
+        // ---- LEFT: elongated ellipses ----
+        [[half*0.40, H*0.11], [half*0.26, H*0.075], [half*0.13, H*0.038]].forEach(([ex, ey], i) => {
+            ctx.beginPath();
+            ctx.ellipse(lx, ly, ex, ey, 0, 0, 2*Math.PI);
+            ctx.strokeStyle = `rgba(239,68,68,${0.28 + i*0.24})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+        // zigzag path
+        const zz = [
+            {x: lx - half*0.34, y: ly},
+            {x: lx - half*0.26, y: ly - H*0.05},
+            {x: lx - half*0.18, y: ly + H*0.04},
+            {x: lx - half*0.10, y: ly - H*0.025},
+            {x: lx - half*0.04, y: ly + H*0.01},
+            {x: lx, y: ly}
+        ];
+        ctx.beginPath();
+        ctx.moveTo(zz[0].x, zz[0].y);
+        zz.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = 'rgba(239,68,68,0.85)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4,3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // dot at minimum
+        ctx.beginPath(); ctx.arc(lx, ly, 4, 0, 2*Math.PI);
+        ctx.fillStyle = red; ctx.fill();
+
+        // label
+        ctx.fillStyle = labC; ctx.font = `500 11px ${ff}`; ctx.textAlign = 'center';
+        ctx.fillText('Unscaled — gradient zigzags', lx, H * 0.92);
+
+        // ---- DIVIDER ----
+        ctx.beginPath(); ctx.moveTo(half, H*0.04); ctx.lineTo(half, H*0.88);
+        ctx.strokeStyle = divC; ctx.lineWidth = 1; ctx.stroke();
+
+        // ---- RIGHT: round circles ----
+        [H*0.30, H*0.20, H*0.10].forEach((r, i) => {
+            ctx.beginPath(); ctx.arc(rx, ry, r, 0, 2*Math.PI);
+            ctx.strokeStyle = `rgba(16,185,129,${0.28 + i*0.24})`;
+            ctx.lineWidth = 1.5; ctx.stroke();
+        });
+        // straight path
+        const sx = rx - H*0.26, sy = ry + H*0.05;
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(rx, ry);
+        ctx.strokeStyle = 'rgba(16,185,129,0.85)';
+        ctx.lineWidth = 2; ctx.stroke();
+        // arrowhead
+        const ang = Math.atan2(ry - sy, rx - sx);
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 10*Math.cos(ang-0.4), ry - 10*Math.sin(ang-0.4));
+        ctx.lineTo(rx - 10*Math.cos(ang+0.4), ry - 10*Math.sin(ang+0.4));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(16,185,129,0.85)'; ctx.fill();
+        // dot at minimum
+        ctx.beginPath(); ctx.arc(rx, ry, 4, 0, 2*Math.PI);
+        ctx.fillStyle = grn; ctx.fill();
+
+        ctx.fillStyle = labC; ctx.font = `500 11px ${ff}`; ctx.textAlign = 'center';
+        ctx.fillText('Scaled — converges directly', rx, H * 0.92);
+    }
+    drawLossSurface();
+
+    // ── Before / After StandardScaler ──
+    (function() {
+        const ctx = document.getElementById('beforeAfterChart').getContext('2d');
+        const raw    = [20, 25, 28, 32, 35, 38, 40];
+        const mean   = raw.reduce((a,b) => a+b,0) / raw.length;
+        const std    = Math.sqrt(raw.reduce((a,b) => a + (b-mean)**2, 0) / raw.length);
+        const scaled = raw.map(v => +((v-mean)/std).toFixed(2));
+        const labels = raw.map(v => 'Age ' + v);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Raw values',
+                        data: raw,
+                        backgroundColor: 'rgba(59,130,246,0.55)',
+                        borderColor: 'rgba(59,130,246,0.9)',
+                        borderWidth: 1, borderRadius: 3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'After StandardScaler',
+                        data: scaled,
+                        backgroundColor: 'rgba(249,115,22,0.55)',
+                        borderColor: 'rgba(249,115,22,0.9)',
+                        borderWidth: 1, borderRadius: 3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: tc(), font: { family: ff, size: 11 }, boxWidth: 11 } }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: tc(), font: { family: ff, size: 10 } }
+                    },
+                    y: {
+                        position: 'left', grid: { color: gc() },
+                        ticks: { color: 'rgba(59,130,246,0.8)', font: { family: ff, size: 10 } },
+                        title: { display: true, text: 'Raw', color: 'rgba(59,130,246,0.8)', font: { family: ff, size: 10 } }
+                    },
+                    y1: {
+                        position: 'right', grid: { display: false },
+                        ticks: { color: 'rgba(249,115,22,0.8)', font: { family: ff, size: 10 } },
+                        title: { display: true, text: 'Scaled', color: 'rgba(249,115,22,0.8)', font: { family: ff, size: 10 } }
+                    }
+                }
+            }
+        });
+    })();
+
+    // ── Sigmoid ──
+    (function() {
+        const ctx = document.getElementById('sigmoidChart').getContext('2d');
+        const xs = [];
+        for (let x = -8; x <= 8; x += 0.2) xs.push(+x.toFixed(1));
+        const sig  = xs.map(x => +(1/(1+Math.exp(-x))).toFixed(4));
+        const grad = xs.map(x => { const s = 1/(1+Math.exp(-x)); return +(s*(1-s)).toFixed(4); });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: xs,
+                datasets: [
+                    {
+                        label: 'σ(x) — output',
+                        data: sig,
+                        borderColor: 'rgba(59,130,246,0.85)',
+                        fill: false, pointRadius: 0,
+                        borderWidth: 2, tension: 0.3
+                    },
+                    {
+                        label: 'Gradient',
+                        data: grad,
+                        borderColor: 'rgba(249,115,22,0.85)',
+                        fill: false, pointRadius: 0,
+                        borderWidth: 2, borderDash: [5,4],
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: tc(), font: { family: ff, size: 11 }, boxWidth: 11 } }
+                },
+                scales: {
+                    x: {
+                        grid: { color: gc() },
+                        ticks: { color: tc(), font: { family: ff, size: 10 }, maxTicksLimit: 9 },
+                        title: { display: true, text: 'Input x', color: tc(), font: { family: ff, size: 10 } }
+                    },
+                    y: {
+                        grid: { color: gc() },
+                        ticks: { color: tc(), font: { family: ff, size: 10 } }
+                    }
+                }
+            }
+        });
+    })();
+
+    // Redraw canvas on theme toggle
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+        setTimeout(drawLossSurface, 50);
+    });
+    </script>
+</body>
+</html>

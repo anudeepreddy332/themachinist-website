@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Scaling — Data Preprocessing Deep Dive | The Machinist</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <meta name="description" content="A systems-thinking deep dive into feature scaling — why the math demands it, when to apply it, which method to choose, and how to do it without breaking your pipeline.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        /* ── Page-level variables ── */
+        :root {
+            --fs-accent: #111;
+            --fs-muted: #6b7280;
+            --fs-border: #e5e7eb;
+            --fs-card: #f9fafb;
+            --fs-code-bg: #1a1b26;
+            --fs-code-text: #c0caf5;
+            --fs-green: #10b981;
+            --fs-red: #ef4444;
+            --fs-yellow: #f59e0b;
+            --fs-blue: #3b82f6;
+        }
+        [data-theme="dark"] {
+            --fs-accent: #f9fafb;
+            --fs-muted: #9ca3af;
+            --fs-border: #2a2a3a;
+            --fs-card: #1a1a2e;
+            --fs-green: #34d399;
+            --fs-red: #f87171;
+            --fs-yellow: #fbbf24;
+            --fs-blue: #60a5fa;
+        }
+
+        /* ── Reading progress bar ── */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: var(--fs-accent);
+            width: 0%;
+            z-index: 9999;
+            transition: width 0.1s linear;
+        }
+
+        /* ── Article header ── */
+        .article-hero {
+            padding: calc(var(--spacing-xl, 64px) + 72px) var(--spacing-md, 24px) var(--spacing-lg, 48px);
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--fs-border);
+        }
+        .article-hero .container {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        .breadcrumb {
+            font-size: 0.78rem;
+            color: var(--fs-muted);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumb a {
+            color: var(--fs-muted);
+            text-decoration: none;
+        }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb-sep { opacity: 0.4; }
+        .article-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--fs-muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .level-badge {
+            background: var(--fs-card);
+            border: 1px solid var(--fs-border);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+        .article-hero h1 {
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        .article-hero .subtitle {
+            font-size: 1rem;
+            color: var(--fs-muted);
+            line-height: 1.7;
+            margin-bottom: 28px;
+            max-width: 600px;
+        }
+        .article-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--fs-border);
+        }
+        .article-meta span {
+            font-size: 0.8rem;
+            color: var(--fs-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 20px;
+        }
+        .tag-pill {
+            font-size: 0.72rem;
+            padding: 3px 10px;
+            background: var(--fs-card);
+            border: 1px solid var(--fs-border);
+            border-radius: 20px;
+            color: var(--fs-muted);
+            font-weight: 500;
+        }
+
+        /* ── Section nav (sticky) ── */
+        .section-nav {
+            position: sticky;
+            top: 72px;
+            background: var(--card-bg, #fff);
+            border-bottom: 1px solid var(--fs-border);
+            z-index: 80;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .section-nav::-webkit-scrollbar { display: none; }
+        .section-nav-inner {
+            display: flex;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md, 24px);
+        }
+        .section-nav a {
+            white-space: nowrap;
+            padding: 12px 16px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--fs-muted);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .section-nav a:hover,
+        .section-nav a.active {
+            color: var(--fs-accent);
+            border-bottom-color: var(--fs-accent);
+        }
+
+        /* ── Main content layout ── */
+        .article-body {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 56px var(--spacing-md, 24px) 80px;
+        }
+
+        /* ── Typography ── */
+        .article-body p {
+            font-size: 0.975rem;
+            line-height: 1.8;
+            color: var(--text-color, #374151);
+            margin-bottom: 18px;
+        }
+        .article-body h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin: 56px 0 18px;
+            padding-top: 8px;
+        }
+        .article-body h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 36px 0 12px;
+            color: var(--text-color, #111);
+        }
+        .article-body ul, .article-body ol {
+            padding-left: 22px;
+            margin-bottom: 18px;
+        }
+        .article-body li {
+            font-size: 0.975rem;
+            line-height: 1.75;
+            color: var(--text-color, #374151);
+            margin-bottom: 6px;
+        }
+        .article-body strong { color: var(--text-color, #111); }
+
+        /* ── Inline code ── */
+        .article-body p code,
+        .article-body li code,
+        .article-body td code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.83em;
+            background: var(--fs-card);
+            border: 1px solid var(--fs-border);
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: var(--fs-accent);
+        }
+
+        /* ── Code blocks ── */
+        .code-block {
+            margin: 20px 0 28px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--fs-border);
+        }
+        .code-label {
+            background: var(--fs-card);
+            border-bottom: 1px solid var(--fs-border);
+            padding: 8px 16px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--fs-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .code-label .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--fs-muted);
+            opacity: 0.4;
+        }
+        pre {
+            background: var(--fs-code-bg);
+            color: var(--fs-code-text);
+            padding: 20px 24px;
+            overflow-x: auto;
+            font-size: 0.83rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+        pre code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+
+        /* ── Annotation below code ── */
+        .code-note {
+            font-size: 0.83rem;
+            color: var(--fs-muted);
+            background: var(--fs-card);
+            border: 1px solid var(--fs-border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 10px 16px;
+            line-height: 1.6;
+        }
+
+        /* ── Section divider ── */
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--fs-border);
+            margin: 52px 0;
+        }
+
+        /* ── Callout boxes ── */
+        .callout {
+            border-radius: 8px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            border: 1px solid;
+        }
+        .callout-insight {
+            background: var(--fs-card);
+            border-color: var(--fs-border);
+            border-left: 3px solid var(--fs-accent);
+        }
+        .callout-warning {
+            background: rgba(239,68,68,0.05);
+            border-color: rgba(239,68,68,0.2);
+            border-left: 3px solid var(--fs-red);
+        }
+        .callout-good {
+            background: rgba(16,185,129,0.05);
+            border-color: rgba(16,185,129,0.2);
+            border-left: 3px solid var(--fs-green);
+        }
+        .callout-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            opacity: 0.6;
+        }
+        .callout p { margin: 0; color: var(--text-color, #374151); }
+
+        /* ── Tables ── */
+        .table-wrap { overflow-x: auto; margin: 20px 0 28px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            background: var(--fs-card);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--fs-muted);
+            border-bottom: 1px solid var(--fs-border);
+        }
+        td {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--fs-border);
+            color: var(--text-color, #374151);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        .yes { color: var(--fs-green); font-weight: 700; }
+        .no  { color: var(--fs-muted); font-weight: 500; }
+
+        /* ── Viz containers ── */
+        .viz-block {
+            margin: 32px 0;
+            border: 1px solid var(--fs-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .viz-header {
+            background: var(--fs-card);
+            border-bottom: 1px solid var(--fs-border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .viz-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--fs-muted);
+        }
+        .viz-body {
+            padding: 24px 20px;
+            background: var(--card-bg, #fff);
+        }
+        canvas { max-width: 100%; display: block; }
+
+        /* ── Method cards ── */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .method-card {
+            border: 1px solid var(--fs-border);
+            border-radius: 8px;
+            padding: 18px 20px;
+            background: var(--card-bg, #fff);
+            transition: border-color 0.2s;
+        }
+        .method-card:hover { border-color: var(--fs-accent); }
+        .method-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--text-color, #111);
+        }
+        .method-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--fs-muted);
+            background: var(--fs-card);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            display: inline-block;
+        }
+        .method-use {
+            font-size: 0.8rem;
+            color: var(--fs-muted);
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+        .method-tag {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin-right: 4px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .tag-default { background: rgba(59,130,246,0.1); color: var(--fs-blue); }
+        .tag-outliers { background: rgba(239,68,68,0.1); color: var(--fs-red); }
+        .tag-bounded { background: rgba(16,185,129,0.1); color: var(--fs-green); }
+        .tag-sparse { background: rgba(245,158,11,0.1); color: var(--fs-yellow); }
+        .tag-skew { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+        /* ── Decision tree flowchart ── */
+        .flowchart {
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        .flow-node {
+            border: 1px solid var(--fs-border);
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin: 0 auto;
+            text-align: center;
+            display: inline-block;
+            color: var(--text-color, #374151);
+            background: var(--card-bg, #fff);
+            max-width: 280px;
+        }
+        .flow-node.question {
+            background: var(--fs-card);
+            font-weight: 600;
+            border-style: dashed;
+        }
+        .flow-node.result {
+            background: var(--fs-accent);
+            color: var(--bg-color, #fff);
+            border-color: var(--fs-accent);
+            font-weight: 700;
+        }
+        [data-theme="dark"] .flow-node.result { color: #0a0a0f; }
+        .flow-row {
+            display: flex;
+            justify-content: center;
+            margin: 8px 0;
+        }
+        .flow-branch {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .flow-arm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 140px;
+            max-width: 200px;
+        }
+        .flow-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--fs-muted);
+        }
+        .flow-arrow {
+            font-size: 1rem;
+            color: var(--fs-muted);
+        }
+
+        /* ── Feedback loop diagram ── */
+        .loop-diagram {
+            display: grid;
+            gap: 0;
+        }
+        .loop-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 0;
+            border-left: 2px solid var(--fs-border);
+            padding-left: 20px;
+            margin-left: 10px;
+            position: relative;
+        }
+        .loop-step::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--fs-border);
+            position: absolute;
+            left: -6px;
+            top: 16px;
+        }
+        .loop-step.bad::before { background: var(--fs-red); }
+        .loop-step.good::before { background: var(--fs-green); }
+        .loop-step:last-child { border-left-color: transparent; }
+        .loop-text { font-size: 0.88rem; color: var(--text-color, #374151); line-height: 1.55; padding-top: 1px; }
+        .loop-text strong { color: var(--text-color, #111); }
+
+        /* ── Production checklist ── */
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        .checklist li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--fs-border);
+            font-size: 0.88rem;
+        }
+        .checklist li:last-child { border-bottom: none; }
+        .check-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1.5px solid var(--fs-border);
+            flex-shrink: 0;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── System pipeline map ── */
+        .pipeline-map {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.82rem;
+        }
+        .pipeline-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 14px;
+            border-radius: 6px;
+            color: var(--fs-muted);
+            transition: background 0.15s;
+        }
+        .pipeline-item.active {
+            background: var(--fs-accent);
+            color: var(--bg-color, #fff);
+            font-weight: 600;
+        }
+        [data-theme="dark"] .pipeline-item.active { color: #0a0a0f; }
+        .pipeline-item.sub {
+            padding-left: 36px;
+            font-size: 0.79rem;
+        }
+        .pipeline-item.sub.active-sub {
+            background: rgba(0,0,0,0.06);
+            color: var(--text-color, #111);
+            font-weight: 600;
+            border-left: 2px solid var(--fs-accent);
+        }
+        [data-theme="dark"] .pipeline-item.sub.active-sub {
+            background: rgba(255,255,255,0.06);
+        }
+        .pipeline-connector {
+            padding-left: 26px;
+            color: var(--fs-border);
+            font-size: 0.9rem;
+        }
+
+        /* ── Mental model box ── */
+        .mental-model {
+            border: 1px solid var(--fs-border);
+            border-radius: 10px;
+            padding: 28px 28px;
+            margin: 32px 0;
+            text-align: center;
+        }
+        .mental-model .icon {
+            font-size: 2.5rem;
+            margin-bottom: 14px;
+        }
+        .mental-model p {
+            font-size: 1rem;
+            line-height: 1.75;
+            max-width: 540px;
+            margin: 0 auto;
+            color: var(--text-color, #374151);
+        }
+
+        /* ── Next chapter footer ── */
+        .next-chapter {
+            border-top: 1px solid var(--fs-border);
+            margin-top: 64px;
+            padding-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .next-chapter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--fs-muted);
+            margin-bottom: 4px;
+        }
+        .next-chapter-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-color, #111);
+        }
+        .next-chapter a {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-color, #111);
+            border: 1px solid var(--fs-border);
+            padding: 10px 18px;
+            border-radius: 6px;
+            transition: border-color 0.2s;
+        }
+        .next-chapter a:hover { border-color: var(--fs-accent); }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .article-body { padding: 36px 16px 60px; }
+            .article-hero { padding: calc(var(--spacing-xl, 64px) + 60px) 16px var(--spacing-md, 24px); }
+            .method-grid { grid-template-columns: 1fr; }
+            .flow-branch { gap: 12px; }
+            pre { font-size: 0.78rem; padding: 16px; }
+            .viz-body { padding: 16px 12px; }
+            .mental-model { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="progress-bar"></div>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <!-- Nav -->
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul>
+                    <li><a href="../index.html#projects">Projects</a></li>
+                    <li><a href="../index.html#about">About</a></li>
+                    <li><a href="../index.html#skills">Skills</a></li>
+                    <li><a href="../index.html#learning-log">Learning Log</a></li>
+                    <li><a href="../index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display:block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display:none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="../index.html#projects">Projects</a>
+            <a href="../index.html#about">About</a>
+            <a href="../index.html#skills">Skills</a>
+            <a href="../index.html#learning-log">Learning Log</a>
+            <a href="../index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Article hero -->
+    <header class="article-hero">
+        <div class="container" style="max-width:760px;margin:0 auto;">
+            <div class="breadcrumb">
+                <a href="../index.html#learning-log">Learning Log</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>Concept Exploration</span>
+                <span class="breadcrumb-sep">/</span>
+                <span>Data Preprocessing</span>
+            </div>
+            <div class="article-label">
+                Chapter 1 of N
+                <span class="level-badge">Intermediate</span>
+            </div>
+            <h1>Feature Scaling</h1>
+            <p class="subtitle">Why the math demands it, when to apply it, which method to choose, and how to do it without leaking data or breaking your pipeline. Built from first principles.</p>
+            <div class="tag-strip">
+                <span class="tag-pill">#preprocessing</span>
+                <span class="tag-pill">#scaling</span>
+                <span class="tag-pill">#sklearn</span>
+                <span class="tag-pill">#gradient_descent</span>
+                <span class="tag-pill">#pipeline</span>
+                <span class="tag-pill">#production_ml</span>
+            </div>
+            <div class="article-meta">
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <time datetime="2026-03-12">March 2026</time>
+                </span>
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    ~25 min read
+                </span>
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Data Preprocessing Series
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section nav -->
+    <nav class="section-nav" aria-label="Section navigation">
+        <div class="section-nav-inner">
+            <a href="#system-view">System View</a>
+            <a href="#core-problem">The Problem</a>
+            <a href="#methods">Methods</a>
+            <a href="#decision">Decision Framework</a>
+            <a href="#when-not">When Not To</a>
+            <a href="#failure-modes">Failure Modes</a>
+            <a href="#implementation">Implementation</a>
+            <a href="#deep-learning">Deep Learning</a>
+            <a href="#systems-thinking">Systems Thinking</a>
+            <a href="#quick-ref">Quick Reference</a>
+        </div>
+    </nav>
+
+    <main id="main">
+        <article class="article-body">
+
+            <!-- ── 1. SYSTEM VIEW ── -->
+            <section id="system-view">
+                <h2>1. The System View</h2>
+                <p>Before touching a single formula, zoom out. A machine learning system has a shape — and feature scaling has a specific, non-negotiable place inside it.</p>
+
+                <!-- Pipeline map -->
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">ML Pipeline — Where Feature Scaling Lives</span>
+                    </div>
+                    <div class="viz-body">
+                        <div class="pipeline-map">
+                            <div class="pipeline-item">World / Raw Data</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">Data Collection</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">EDA — understand, don't change</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item active">Preprocessing</div>
+                            <div class="pipeline-item sub active-sub">Feature Scaling &larr; this chapter</div>
+                            <div class="pipeline-item sub">Feature Encoding</div>
+                            <div class="pipeline-item sub">Missing Data Handling</div>
+                            <div class="pipeline-item sub">Outlier Treatment</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">Feature Engineering</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">Model Training</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">Evaluation</div>
+                            <div class="pipeline-connector">|</div>
+                            <div class="pipeline-item">Deployment + Monitoring</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>Three layers that are easy to confuse but must stay distinct:</p>
+                <ul>
+                    <li><strong>EDA</strong> — understand what the data looks like. Do not change it.</li>
+                    <li><strong>Feature Scaling</strong> — transform numerical features so algorithms can operate on them correctly.</li>
+                    <li><strong>Feature Engineering</strong> — create new information from existing data.</li>
+                </ul>
+
+                <div class="callout callout-insight">
+                    <div class="callout-label">Key System Insight</div>
+                    <p>Most ML algorithms have internal machinery — distance calculations, gradient updates, weight matrices — that is sensitive to the <em>magnitude</em> of numbers. Raw data doesn't care about magnitude. A salary of $80,000 and an age of 35 are both valid features. But to a gradient or a distance metric, $80,000 is an extremely loud number and 35 is barely a whisper. Feature scaling is the equalization layer.</p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 2. CORE PROBLEM ── -->
+            <section id="core-problem">
+                <h2>2. The Core Problem</h2>
+
+                <h3>2.1 The Distance Problem</h3>
+                <p>Many algorithms compute distances between data points. KNN asks which neighbors are closest. K-Means asks which cluster center is nearest. SVM asks where the maximal margin hyperplane sits. PCA asks which direction variance points. They all use Euclidean distance or a variant:</p>
+
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Euclidean Distance</div>
+                    <pre><code>distance = sqrt( (x1 - x2)^2 + (y1 - y2)^2 + (z1 - z2)^2 + ... )</code></pre>
+                </div>
+
+                <p>Now consider what happens with two unscaled features:</p>
+
+                <!-- Distance dominance chart -->
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Distance Contribution — Unscaled Features</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="distanceChart" height="180"></canvas>
+                        <p style="font-size:0.78rem;color:var(--fs-muted);margin:12px 0 0;text-align:center;">Age difference: 5 years. Salary difference: $100,000. The age contribution to Euclidean distance is effectively zero.</p>
+                    </div>
+                </div>
+
+                <p>The age difference contributes 25 to the total distance. The salary difference contributes 10,000,000,000. In practice, age does not exist to this algorithm. Not because age is unimportant, but because its scale is smaller.</p>
+
+                <h3>2.2 The Gradient Descent Problem</h3>
+                <p>Gradient-based algorithms optimize by taking steps down the loss landscape. Without scaling, features with large magnitudes create a very elongated, steep-walled surface. Gradient descent oscillates back and forth across the steep walls instead of converging directly.</p>
+
+                <!-- Loss surface comparison -->
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Loss Surface Shape — Scaled vs Unscaled</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="lossChart" height="220"></canvas>
+                        <p style="font-size:0.78rem;color:var(--fs-muted);margin:12px 0 0;text-align:center;">Unscaled features produce elongated contours — gradient descent zigzags. Scaled features produce rounder contours — gradient descent converges directly.</p>
+                    </div>
+                </div>
+
+                <h3>2.3 The Weight Initialization Problem</h3>
+                <p>Neural networks initialize weights in small ranges (e.g., 0 to 0.01). If input features carry magnitudes in the tens of thousands, the initial gradient updates will be enormous. The network either blows up or takes an unreasonable number of steps to stabilize. Scaling brings inputs into the range the initialization scheme was designed for.</p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 3. METHODS ── -->
+            <section id="methods">
+                <h2>3. The Methods</h2>
+                <p>Each scaling method answers a different question about your data. The right method depends on the distribution of your feature, the presence of outliers, and the algorithm you're feeding.</p>
+
+                <div class="method-grid">
+                    <div class="method-card">
+                        <div class="method-name">Standardization (Z-score)</div>
+                        <div class="method-formula">x' = (x &minus; &mu;) / &sigma;</div>
+                        <div class="method-use">Centers around zero, scales to unit variance. No fixed range. The safe default for most algorithms.</div>
+                        <span class="method-tag tag-default">Default</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Min-Max Normalization</div>
+                        <div class="method-formula">x' = (x &minus; min) / (max &minus; min)</div>
+                        <div class="method-use">Maps all values to [0, 1]. Preserves distribution shape. Extremely vulnerable to outliers.</div>
+                        <span class="method-tag tag-bounded">Bounded output</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Robust Scaling</div>
+                        <div class="method-formula">x' = (x &minus; median) / IQR</div>
+                        <div class="method-use">Uses median and interquartile range. Resistant to outliers. Best for messy real-world data.</div>
+                        <span class="method-tag tag-outliers">Outlier-resistant</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">MaxAbs Scaling</div>
+                        <div class="method-formula">x' = x / |x_max|</div>
+                        <div class="method-use">Scales to [&minus;1, 1] without centering. Preserves zeros. The only correct choice for sparse data.</div>
+                        <span class="method-tag tag-sparse">Sparse data</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Log Transform</div>
+                        <div class="method-formula">x' = log(x + 1)</div>
+                        <div class="method-use">Compresses large values, expands small. Converts right-skewed distributions toward Gaussian. Often a pre-scaling step.</div>
+                        <span class="method-tag tag-skew">Right-skewed</span>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-name">Yeo-Johnson</div>
+                        <div class="method-formula">PowerTransformer(&lambda;)</div>
+                        <div class="method-use">Finds the optimal power parameter to make the distribution as Gaussian as possible. Handles zeros and negatives.</div>
+                        <span class="method-tag tag-skew">Non-Gaussian</span>
+                    </div>
+                </div>
+
+                <!-- Before/after distribution chart -->
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Before vs After — StandardScaler on an Age Feature</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="beforeAfterChart" height="200"></canvas>
+                        <p style="font-size:0.78rem;color:var(--fs-muted);margin:12px 0 0;text-align:center;">Shape is preserved. Mean shifts to 0, spread normalizes to unit variance.</p>
+                    </div>
+                </div>
+
+                <h3>Min-Max Vulnerability — Why Outliers Break It</h3>
+
+                <div class="callout callout-warning">
+                    <div class="callout-label">Critical Limitation</div>
+                    <p>One extreme value collapses everything else to near-zero. Values of [20, 22, 24, 26, 1,000,000] become [0.000, 0.000002, 0.000004, 0.000006, 1.0]. The scaling becomes meaningless for 4 out of 5 values.</p>
+                </div>
+
+                <h3>Robust Scaling — Worked Example</h3>
+
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Salary feature with outlier</div>
+                    <pre><code>Values:  [30000, 50000, 70000, 90000, 2000000]
+
+Median  = 70000
+Q1      = 50000, Q3 = 90000
+IQR     = 40000
+
+Scaled:
+30000    → (30000 - 70000) / 40000  = -1.0
+50000    → -0.5
+70000    →  0.0
+90000    → +0.5
+2000000  → +48.25   ← outlier still extreme, no longer collapsing others</code></pre>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 4. DECISION FRAMEWORK ── -->
+            <section id="decision">
+                <h2>4. The Decision Framework</h2>
+                <p>Stop guessing. Follow this decision path systematically based on what your data actually looks like.</p>
+
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Scaler Selection Tree</span>
+                    </div>
+                    <div class="viz-body">
+                        <div class="flowchart">
+                            <div class="flow-row">
+                                <div class="flow-node question">Is your data sparse (many zeros)?</div>
+                            </div>
+                            <div class="flow-row"><span class="flow-arrow">|</span></div>
+                            <div class="flow-branch">
+                                <div class="flow-arm">
+                                    <span class="flow-label">Yes</span>
+                                    <div class="flow-node result">MaxAbs Scaler</div>
+                                </div>
+                                <div class="flow-arm">
+                                    <span class="flow-label">No</span>
+                                    <div class="flow-node question">Heavy right skew?</div>
+                                    <span class="flow-arrow">|</span>
+                                    <div class="flow-branch" style="gap:12px;">
+                                        <div class="flow-arm">
+                                            <span class="flow-label">Yes</span>
+                                            <div class="flow-node result">Log / Yeo-Johnson<br>then StandardScaler</div>
+                                        </div>
+                                        <div class="flow-arm">
+                                            <span class="flow-label">No</span>
+                                            <div class="flow-node question">Significant outliers?</div>
+                                            <span class="flow-arrow">|</span>
+                                            <div class="flow-branch" style="gap:12px;">
+                                                <div class="flow-arm">
+                                                    <span class="flow-label">Yes</span>
+                                                    <div class="flow-node result">Robust Scaler</div>
+                                                </div>
+                                                <div class="flow-arm">
+                                                    <span class="flow-label">No</span>
+                                                    <div class="flow-node question">Need strict [0,1]?</div>
+                                                    <span class="flow-arrow">|</span>
+                                                    <div class="flow-branch" style="gap:12px;">
+                                                        <div class="flow-arm">
+                                                            <span class="flow-label">Yes</span>
+                                                            <div class="flow-node result">MinMax Scaler</div>
+                                                        </div>
+                                                        <div class="flow-arm">
+                                                            <span class="flow-label">No</span>
+                                                            <div class="flow-node result">Standard Scaler<br>(default)</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 5. WHEN NOT TO ── -->
+            <section id="when-not">
+                <h2>5. When Not to Scale</h2>
+                <p>Some algorithms are completely immune to feature scaling. Understanding <em>why</em> matters more than memorizing the list.</p>
+
+                <p>Tree-based models split on thresholds, not distances or gradients. The split point changes after scaling, but the relative ordering of values does not. The tree makes the exact same decisions.</p>
+
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Why trees don't care</div>
+                    <pre><code># Before scaling
+if salary > 50000: go left
+
+# After scaling (salary → 0.23)
+if salary_scaled > 0.23: go left
+
+# Same split. Same result. Scaling had zero effect.</code></pre>
+                </div>
+
+                <div class="callout callout-insight">
+                    <div class="callout-label">The One-Line Rule</div>
+                    <p>Scale when the algorithm cares about <em>distance</em> or <em>gradient magnitude</em>. Don't scale when the algorithm only cares about <em>ordering</em>.</p>
+                </div>
+
+                <p><strong>Also skip scaling for:</strong> categorical features after encoding (OneHot columns are already 0/1), binary features, target variables in classification, and count features in Naive Bayes.</p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 6. FAILURE MODES ── -->
+            <section id="failure-modes">
+                <h2>6. Assumptions, Limitations, and Failure Modes</h2>
+
+                <h3>Assumptions</h3>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Assumption</th><th>What it means</th><th>What breaks if violated</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Features are numeric</td><td>Scaling operates on numbers</td><td>Categorical features must be encoded first</td></tr>
+                            <tr><td>Algorithm is scale-sensitive</td><td>Only worth doing if the model cares</td><td>Wasted work on tree models</td></tr>
+                            <tr><td>Training ≈ production distribution</td><td>Scaler params learned from training data</td><td>Distribution shift breaks the scaler silently</td></tr>
+                            <tr><td>No dominant outliers</td><td>Especially for MinMax</td><td>One extreme value corrupts the scaled range</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Failure Mode 1 — Data Leakage</h3>
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Wrong vs Right</div>
+                    <pre><code># WRONG — scaler sees the test set before evaluation
+scaler.fit_transform(X_all)
+# then split...
+
+# RIGHT — fit only on training data
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+scaler.fit(X_train)           # learns from train only
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled  = scaler.transform(X_test)</code></pre>
+                </div>
+                <p>If you fit the scaler on the whole dataset, it has seen the test set. Your evaluation is optimistic. The model looks better than it is.</p>
+
+                <h3>Failure Mode 2 — Leakage Inside Cross-Validation</h3>
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> CV leak vs Pipeline fix</div>
+                    <pre><code># WRONG — scaler sees all CV folds before splitting
+X_scaled = scaler.fit_transform(X_train)
+cross_val_score(model, X_scaled, y_train, cv=5)
+
+# RIGHT — scaler re-fits inside each fold automatically
+pipeline = Pipeline([('scaler', StandardScaler()), ('model', model)])
+cross_val_score(pipeline, X_train, y_train, cv=5)</code></pre>
+                </div>
+
+                <h3>Failure Mode 3 — Dropping the Scaler in Deployment</h3>
+                <div class="callout callout-warning">
+                    <div class="callout-label">Silent Production Bug</div>
+                    <p>You train with StandardScaler. You serialize the model weights. You forget to serialize the scaler. At inference time, raw unscaled inputs go into a model trained on scaled inputs. The model will not crash. It will just be systematically wrong, and you will not know why.</p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 7. IMPLEMENTATION ── -->
+            <section id="implementation">
+                <h2>7. Implementation — From Theory to Production</h2>
+
+                <h3>The Basic Pattern</h3>
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Python — sklearn</div>
+                    <pre><code>from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)  # fit + transform
+X_test_scaled  = scaler.transform(X_test)        # transform only</code></pre>
+                    <div class="code-note">Rule: fit on training data only. transform on both train and test.</div>
+                </div>
+
+                <h3>ColumnTransformer — Different Columns, Different Scalers</h3>
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Mixed feature types</div>
+                    <pre><code>from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
+
+preprocessor = ColumnTransformer(transformers=[
+    ('standard',  StandardScaler(),  ['age', 'income', 'credit_score']),
+    ('minmax',    MinMaxScaler(),    ['pixel_r', 'pixel_g', 'pixel_b']),
+    ('onehot',    OneHotEncoder(),   ['city', 'job_type'])
+], remainder='passthrough')</code></pre>
+                    <div class="code-note">Real datasets almost never need the same scaler for every column.</div>
+                </div>
+
+                <h3>The Production Pipeline</h3>
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Full production pattern</div>
+                    <pre><code>from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+import joblib
+
+pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('model',        LogisticRegression())
+])
+
+pipeline.fit(X_train, y_train)
+
+# CV is leak-free — scaler re-fits in each fold automatically
+scores = cross_val_score(pipeline, X_train, y_train, cv=5)
+
+# Save the whole pipeline, not just model weights
+joblib.dump(pipeline, 'model_pipeline.pkl')
+
+# At inference — scaler applied automatically on raw input
+loaded = joblib.load('model_pipeline.pkl')
+loaded.predict(new_raw_data)</code></pre>
+                </div>
+
+                <div class="callout callout-good">
+                    <div class="callout-label">Why Pipeline is the only correct production approach</div>
+                    <p>The scaler is bundled with the model — you cannot forget to apply it. Cross-validation is leak-free automatically. Saving and loading is atomic — one file, one object. Prediction is one call on raw data.</p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 8. DEEP LEARNING ── -->
+            <section id="deep-learning">
+                <h2>8. Deep Learning Specifics</h2>
+
+                <h3>Activation Function Saturation</h3>
+                <p>For the sigmoid function, inputs far from zero (say, 50,000) produce an output of approximately 1 with a gradient of approximately 0. The network stops learning through that neuron. Scaling keeps inputs in the linear region where gradients flow properly.</p>
+
+                <!-- Sigmoid saturation chart -->
+                <div class="viz-block">
+                    <div class="viz-header">
+                        <span class="viz-title">Sigmoid Saturation — Gradient Vanishes at Extreme Inputs</span>
+                    </div>
+                    <div class="viz-body">
+                        <canvas id="sigmoidChart" height="200"></canvas>
+                        <p style="font-size:0.78rem;color:var(--fs-muted);margin:12px 0 0;text-align:center;">Useful gradient only exists in the middle region. Unscaled features push inputs into the flat zones on either side.</p>
+                    </div>
+                </div>
+
+                <h3>Batch Normalization</h3>
+                <p>Batch Normalization normalizes activations at each layer during training. It reduces internal covariate shift and allows higher learning rates. But it does not replace input scaling.</p>
+
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> Input scaling still required</div>
+                    <pre><code>Input Scaling → Layer 1 → BatchNorm → Layer 2 → BatchNorm → Output
+
+# In PyTorch
+model = nn.Sequential(
+    nn.Linear(input_dim, 128),
+    nn.BatchNorm1d(128),
+    nn.ReLU(),
+    nn.Linear(128, 64),
+    nn.BatchNorm1d(64),
+    nn.ReLU(),
+    nn.Linear(64, output_dim)
+)</code></pre>
+                </div>
+
+                <h3>Learning Rate and Scaling</h3>
+                <p>With unscaled features, large-magnitude features create large gradients, which requires a very small learning rate. That same small learning rate then crawls on smaller features. With scaled features, all features produce comparable gradients, and adaptive optimizers like Adam work as designed.</p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 9. SYSTEMS THINKING ── -->
+            <section id="systems-thinking">
+                <h2>9. Systems Thinking — The Full Picture</h2>
+
+                <h3>The Feedback Loops</h3>
+                <p>Scaling doesn't just improve accuracy. It compresses the feedback loop — you get signal faster.</p>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0;">
+                    <div class="viz-block" style="margin:0;">
+                        <div class="viz-header"><span class="viz-title" style="color:var(--fs-red);">Without Scaling</span></div>
+                        <div class="viz-body" style="padding:16px 20px;">
+                            <div class="loop-diagram">
+                                <div class="loop-step bad"><span class="loop-text"><strong>Poor scaling</strong></span></div>
+                                <div class="loop-step bad"><span class="loop-text">Elongated loss surface</span></div>
+                                <div class="loop-step bad"><span class="loop-text">Slow convergence</span></div>
+                                <div class="loop-step bad"><span class="loop-text">Underfitting blamed on architecture</span></div>
+                                <div class="loop-step bad"><span class="loop-text">Added complexity</span></div>
+                                <div class="loop-step bad"><span class="loop-text"><strong>Still slow. More compute. Longer cycle.</strong></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="viz-block" style="margin:0;">
+                        <div class="viz-header"><span class="viz-title" style="color:var(--fs-green);">With Scaling</span></div>
+                        <div class="viz-body" style="padding:16px 20px;">
+                            <div class="loop-diagram">
+                                <div class="loop-step good"><span class="loop-text"><strong>Proper scaling</strong></span></div>
+                                <div class="loop-step good"><span class="loop-text">Stable loss surface</span></div>
+                                <div class="loop-step good"><span class="loop-text">Fast convergence</span></div>
+                                <div class="loop-step good"><span class="loop-text">Clear evaluation signal</span></div>
+                                <div class="loop-step good"><span class="loop-text"><strong>Rapid iteration on architecture and hyperparameters</strong></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>Practitioners often misdiagnose slow convergence as a model architecture problem when it's a preprocessing problem. Scaling fixes it at the root.</p>
+
+                <h3>System Boundaries — Where Scaling Must Persist</h3>
+
+                <div class="code-block">
+                    <div class="code-label"><span class="dot"></span> The boundary that must hold</div>
+                    <pre><code># Development
+X_train → Scaler(fit) → Model(fit) → Evaluation
+
+# Production — must mirror exactly
+X_new   → Scaler(transform) → Model(predict) → Output</code></pre>
+                </div>
+
+                <p>The scaler defines a system boundary. Raw data is on one side. Model-ready data is on the other. If the boundary breaks — scaler not applied, stale parameters, wrong scaler loaded — the model receives out-of-distribution inputs and produces silent, systematic errors. Not a crash. Just wrong predictions.</p>
+
+                <h3>Distribution Drift Over Time</h3>
+                <p>The scaler's parameters are computed from training data. Production data evolves. A salary feature scaled on 2022 data and applied to 2024 data may be systematically shifted. The model sees a biased input distribution. Monitoring input feature distributions in production and re-fitting scalers when distributions shift is part of MLOps. The scaler is not a static artifact. It's a component that needs maintenance.</p>
+            </section>
+
+            <hr class="section-divider">
+
+            <!-- ── 10. QUICK REFERENCE ── -->
+            <section id="quick-ref">
+                <h2>10. Quick Reference</h2>
+
+                <h3>Algorithm Cheat Sheet</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Algorithm</th><th>Scale?</th><th>Why</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>KNN</td><td><span class="yes">Yes</span></td><td>Distance-based</td></tr>
+                            <tr><td>K-Means</td><td><span class="yes">Yes</span></td><td>Distance-based</td></tr>
+                            <tr><td>SVM</td><td><span class="yes">Yes</span></td><td>Margin maximization, distance-based</td></tr>
+                            <tr><td>PCA</td><td><span class="yes">Yes</span></td><td>Variance-based, scale affects directions</td></tr>
+                            <tr><td>Linear Regression</td><td><span class="yes">Yes</span></td><td>Gradient descent, coefficient interpretability</td></tr>
+                            <tr><td>Logistic Regression</td><td><span class="yes">Yes</span></td><td>Gradient descent</td></tr>
+                            <tr><td>Neural Networks</td><td><span class="yes">Yes</span></td><td>Gradient descent, activation stability</td></tr>
+                            <tr><td>DBSCAN</td><td><span class="yes">Yes</span></td><td>Density = distance</td></tr>
+                            <tr><td>Decision Tree</td><td><span class="no">No</span></td><td>Threshold splits, scale-invariant</td></tr>
+                            <tr><td>Random Forest</td><td><span class="no">No</span></td><td>Ensemble of trees</td></tr>
+                            <tr><td>XGBoost / LightGBM / CatBoost</td><td><span class="no">No</span></td><td>Gradient boosted trees</td></tr>
+                            <tr><td>Naive Bayes</td><td><span class="no">No</span></td><td>Probabilistic, not distance-based</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Production Checklist</h3>
+                <ul class="checklist">
+                    <li><span class="check-icon"></span>Split data before fitting the scaler</li>
+                    <li><span class="check-icon"></span>Fit scaler on training data only</li>
+                    <li><span class="check-icon"></span>Transform both train and test with the same fitted scaler</li>
+                    <li><span class="check-icon"></span>Use Pipeline for CV and deployment</li>
+                    <li><span class="check-icon"></span>Save the full pipeline, not just model weights</li>
+                    <li><span class="check-icon"></span>Monitor input feature distributions in production</li>
+                    <li><span class="check-icon"></span>Retrain scaler when distribution shifts</li>
+                    <li><span class="check-icon"></span>Inverse-transform predictions if y was scaled</li>
+                    <li><span class="check-icon"></span>Use ColumnTransformer for mixed-type features</li>
+                </ul>
+
+                <!-- Mental model -->
+                <div class="mental-model">
+                    <div class="icon">⚖️</div>
+                    <p>Think of feature scaling as <strong>calibrating instruments before a measurement</strong>. Before a weigh-in at a boxing match, all scales are recalibrated to the same zero point and the same unit. Not because the boxers changed. Because you need fair, comparable measurements. Your features are measurements from different instruments — salary in dollars, age in years, pixels in 0 to 255. Recalibrate them to a common scale, and the algorithm can focus on learning the patterns rather than fighting with the units.</p>
+                </div>
+            </section>
+
+            <!-- Next chapter -->
+            <div class="next-chapter">
+                <div>
+                    <div class="next-chapter-label">Up next in this series</div>
+                    <div class="next-chapter-title">Feature Encoding — making categorical variables legible to algorithms that only speak numbers</div>
+                </div>
+                <a href="#">Next Chapter <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+            </div>
+
+            <div style="margin-top:40px;">
+                <a href="../index.html#learning-log" class="back-link">← Back to Learning Log</a>
+            </div>
+
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../shared.js"></script>
+    <script>
+    // ── Reading progress bar ──
+    window.addEventListener('scroll', () => {
+        const doc = document.documentElement;
+        const progress = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+    });
+
+    // ── Active section nav on scroll ──
+    const secLinks = document.querySelectorAll('.section-nav a');
+    const sections = document.querySelectorAll('section[id]');
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                const id = e.target.getAttribute('id');
+                secLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+            }
+        });
+    }, { rootMargin: '-15% 0px -75% 0px' });
+    sections.forEach(s => sectionObserver.observe(s));
+
+    // ── Chart helpers ──
+    const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = () => isDark() ? '#9ca3af' : '#6b7280';
+    const gridColor = () => isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const fontFamily = "'Inter', sans-serif";
+
+    // ── Distance dominance chart ──
+    (function() {
+        const ctx = document.getElementById('distanceChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Age (difference = 5 yrs)', 'Salary (difference = $100k)'],
+                datasets: [{
+                    label: 'Contribution to Euclidean Distance',
+                    data: [25, 10000000000],
+                    backgroundColor: ['rgba(59,130,246,0.7)', 'rgba(239,68,68,0.7)'],
+                    borderColor:     ['rgba(59,130,246,1)',   'rgba(239,68,68,1)'],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' Contribution: ' + ctx.parsed.y.toLocaleString()
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'logarithmic',
+                        grid: { color: gridColor() },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 11 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 11 } }
+                    }
+                }
+            }
+        });
+    })();
+
+    // ── Loss surface contours (simulated as scatter) ──
+    (function() {
+        const ctx = document.getElementById('lossChart').getContext('2d');
+
+        // Generate elongated contour points (unscaled) and round contour points (scaled)
+        function ellipse(cx, cy, rx, ry, n) {
+            const pts = [];
+            for (let i = 0; i < n; i++) {
+                const t = (2 * Math.PI * i) / n;
+                pts.push({ x: cx + rx * Math.cos(t), y: cy + ry * Math.sin(t) });
+            }
+            pts.push(pts[0]);
+            return pts;
+        }
+
+        const unscaled1 = ellipse(-1.5, 0, 3.5, 0.45, 60);
+        const unscaled2 = ellipse(-1.5, 0, 2.2, 0.3,  60);
+        const unscaled3 = ellipse(-1.5, 0, 1.0, 0.15, 60);
+        const scaled1   = ellipse( 1.5, 0, 1.6, 1.2,  60);
+        const scaled2   = ellipse( 1.5, 0, 1.0, 0.75, 60);
+        const scaled3   = ellipse( 1.5, 0, 0.45,0.35, 60);
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    { label: 'Unscaled', data: unscaled1, showLine: true, fill: false, borderColor: 'rgba(239,68,68,0.35)', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1.5 },
+                    { label: '',         data: unscaled2, showLine: true, fill: false, borderColor: 'rgba(239,68,68,0.55)', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1.5 },
+                    { label: '',         data: unscaled3, showLine: true, fill: false, borderColor: 'rgba(239,68,68,0.8)',  backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2 },
+                    { label: 'Scaled',   data: scaled1,   showLine: true, fill: false, borderColor: 'rgba(16,185,129,0.35)', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1.5 },
+                    { label: '',         data: scaled2,   showLine: true, fill: false, borderColor: 'rgba(16,185,129,0.55)', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1.5 },
+                    { label: '',         data: scaled3,   showLine: true, fill: false, borderColor: 'rgba(16,185,129,0.8)',  backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2 },
+                    { label: 'Unscaled minimum', data: [{x: -1.5, y: 0}], backgroundColor: 'rgba(239,68,68,1)', pointRadius: 6, showLine: false },
+                    { label: 'Scaled minimum',   data: [{x:  1.5, y: 0}], backgroundColor: 'rgba(16,185,129,1)', pointRadius: 6, showLine: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            filter: item => item.text !== '',
+                            color: textColor(),
+                            font: { family: fontFamily, size: 11 },
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: { filter: item => item.dataset.label !== '' }
+                },
+                scales: {
+                    x: {
+                        min: -5.5, max: 3.5,
+                        grid: { color: gridColor() },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 10 } },
+                        title: { display: true, text: 'w₁', color: textColor(), font: { family: fontFamily, size: 11 } }
+                    },
+                    y: {
+                        min: -1.8, max: 1.8,
+                        grid: { color: gridColor() },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 10 } },
+                        title: { display: true, text: 'w₂', color: textColor(), font: { family: fontFamily, size: 11 } }
+                    }
+                }
+            }
+        });
+    })();
+
+    // ── Before / after standardization chart ──
+    (function() {
+        const ctx = document.getElementById('beforeAfterChart').getContext('2d');
+        const raw    = [20, 22, 24, 25, 27, 28, 30, 31, 33, 35, 36, 38, 40];
+        const mean   = raw.reduce((a,b) => a+b, 0) / raw.length;
+        const std    = Math.sqrt(raw.reduce((a,b) => a + Math.pow(b-mean,2), 0) / raw.length);
+        const scaled = raw.map(v => +((v - mean) / std).toFixed(2));
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: raw,
+                datasets: [
+                    {
+                        label: 'Raw values',
+                        data: raw,
+                        backgroundColor: 'rgba(59,130,246,0.55)',
+                        borderColor: 'rgba(59,130,246,0.9)',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'After StandardScaler',
+                        data: scaled,
+                        backgroundColor: 'rgba(16,185,129,0.55)',
+                        borderColor: 'rgba(16,185,129,0.9)',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: textColor(), font: { family: fontFamily, size: 11 }, boxWidth: 12 } }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: textColor(), font: { family: fontFamily, size: 10 } } },
+                    y: {
+                        position: 'left',
+                        grid: { color: gridColor() },
+                        ticks: { color: 'rgba(59,130,246,0.8)', font: { family: fontFamily, size: 10 } },
+                        title: { display: true, text: 'Raw', color: 'rgba(59,130,246,0.8)', font: { family: fontFamily, size: 10 } }
+                    },
+                    y1: {
+                        position: 'right',
+                        grid: { display: false },
+                        ticks: { color: 'rgba(16,185,129,0.8)', font: { family: fontFamily, size: 10 } },
+                        title: { display: true, text: 'Scaled', color: 'rgba(16,185,129,0.8)', font: { family: fontFamily, size: 10 } }
+                    }
+                }
+            }
+        });
+    })();
+
+    // ── Sigmoid chart ──
+    (function() {
+        const ctx = document.getElementById('sigmoidChart').getContext('2d');
+        const xs = [];
+        for (let x = -8; x <= 8; x += 0.25) xs.push(+x.toFixed(2));
+        const sigmoid = xs.map(x => +(1 / (1 + Math.exp(-x))).toFixed(4));
+        const gradient = xs.map(x => {
+            const s = 1 / (1 + Math.exp(-x));
+            return +(s * (1 - s)).toFixed(4);
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: xs,
+                datasets: [
+                    {
+                        label: 'Sigmoid output σ(x)',
+                        data: sigmoid,
+                        borderColor: 'rgba(59,130,246,0.85)',
+                        backgroundColor: 'rgba(59,130,246,0.08)',
+                        fill: false,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Gradient σ(x)·(1-σ(x))',
+                        data: gradient,
+                        borderColor: 'rgba(239,68,68,0.85)',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        borderDash: [4, 4],
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: textColor(), font: { family: fontFamily, size: 11 }, boxWidth: 12 } },
+                    annotation: {}
+                },
+                scales: {
+                    x: {
+                        grid: { color: gridColor() },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 10 }, maxTicksLimit: 10 },
+                        title: { display: true, text: 'Input x', color: textColor(), font: { family: fontFamily, size: 11 } }
+                    },
+                    y: {
+                        grid: { color: gridColor() },
+                        ticks: { color: textColor(), font: { family: fontFamily, size: 10 } }
+                    }
+                }
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

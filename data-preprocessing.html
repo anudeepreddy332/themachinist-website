@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Preprocessing | The Machinist</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <meta name="description" content="A series on data preprocessing for machine learning — feature scaling, encoding, missing data, and outlier treatment.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared.css">
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+
+    <style>
+        .dp-header {
+            text-align: left;
+            padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg);
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+        }
+        .dp-header .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .dp-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: var(--text-muted, #6b7280);
+            margin-bottom: 20px;
+        }
+        .dp-breadcrumb a {
+            color: var(--text-muted, #6b7280);
+            text-decoration: none;
+        }
+        .dp-breadcrumb a:hover { color: var(--text-color, #111); }
+        .dp-breadcrumb-sep { opacity: 0.4; }
+        .dp-series-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted, #6b7280);
+            margin-bottom: 12px;
+        }
+        .dp-header h1 {
+            font-size: clamp(1.55rem, 3.5vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
+        .dp-subtitle {
+            font-size: 0.975rem;
+            color: var(--text-muted, #6b7280);
+            line-height: 1.75;
+            max-width: 560px;
+            margin: 0;
+        }
+
+        .dp-body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 52px 24px 80px;
+        }
+        .dp-body p {
+            font-size: 0.96rem;
+            line-height: 1.82;
+            color: var(--text-color, #374151);
+            margin-bottom: 18px;
+        }
+        .dp-body h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 40px 0 14px;
+            letter-spacing: -0.01em;
+            color: var(--text-color, #111);
+        }
+
+        .dp-definition {
+            border-left: 3px solid var(--text-color, #111);
+            background: var(--section-bg);
+            border-radius: 0 6px 6px 0;
+            padding: 18px 22px;
+            margin: 22px 0 32px;
+        }
+        .dp-definition p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.78;
+            color: var(--text-color, #374151);
+        }
+
+        .dp-pipeline {
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 24px 0 32px;
+        }
+        .dp-pipeline-label {
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            padding: 10px 18px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #6b7280);
+        }
+        .dp-pipeline-steps {
+            padding: 16px 18px;
+            background: var(--bg-color, #fff);
+        }
+        .dp-step {
+            padding: 7px 10px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: var(--text-muted, #6b7280);
+            line-height: 1.5;
+        }
+        .dp-step.active {
+            background: var(--text-color, #111);
+            color: #fff;
+            font-weight: 600;
+            margin: 3px 0;
+        }
+        [data-theme="dark"] .dp-step.active { color: #0d0d0d; }
+        .dp-step-connector {
+            padding-left: 20px;
+            font-size: 0.8rem;
+            color: var(--border-color, #d1d5db);
+            line-height: 1;
+            user-select: none;
+        }
+
+        .dp-hr {
+            border: none;
+            border-top: 1px solid var(--border-color, #e5e7eb);
+            margin: 38px 0;
+        }
+
+        .dp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+        .dp-card {
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 8px;
+            padding: 20px 22px;
+            background: var(--bg-color, #fff);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.15s;
+        }
+        a.dp-card:hover { border-color: var(--text-color, #111); }
+        .dp-card-num {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted, #6b7280);
+            margin-bottom: 9px;
+        }
+        a.dp-card .dp-card-num { color: var(--text-color, #111); }
+        .dp-card h3 {
+            font-size: 0.96rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: var(--text-color, #111);
+        }
+        .dp-card-desc {
+            font-size: 0.84rem !important;
+            color: var(--text-muted, #6b7280) !important;
+            line-height: 1.65 !important;
+            flex: 1;
+            margin: 0 0 16px !important;
+        }
+        .dp-card-cta {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-color, #111);
+            display: block;
+        }
+        .dp-card.dp-coming { opacity: 0.52; cursor: default; }
+        .dp-card.dp-coming .dp-card-cta { color: var(--text-muted, #6b7280); }
+
+        @media (max-width: 600px) {
+            .dp-body { padding: 36px 16px 60px; }
+            .dp-header { padding: calc(var(--spacing-xl) + 60px) 16px 32px; }
+            .dp-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul>
+                    <li><a href="../../index.html#projects">Projects</a></li>
+                    <li><a href="../../index.html#about">About</a></li>
+                    <li><a href="../../index.html#skills">Skills</a></li>
+                    <li><a href="../../index.html#learning-log">Learning Log</a></li>
+                    <li><a href="../../index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="../../index.html#projects">Projects</a>
+            <a href="../../index.html#about">About</a>
+            <a href="../../index.html#skills">Skills</a>
+            <a href="../../index.html#learning-log">Learning Log</a>
+            <a href="../../index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="dp-header">
+        <div class="container">
+            <nav class="dp-breadcrumb" aria-label="Breadcrumb">
+                <a href="../../index.html#learning-log">Learning Log</a>
+                <span class="dp-breadcrumb-sep">/</span>
+                <span>Concept Exploration</span>
+                <span class="dp-breadcrumb-sep">/</span>
+                <span style="color: var(--text-color, #111); font-weight: 500;">Data Preprocessing</span>
+            </nav>
+            <div class="dp-series-label">Concept Exploration</div>
+            <h1>Data Preprocessing</h1>
+            <p class="dp-subtitle">
+                The conditioning layer between raw data and a model that can learn.
+                Each chapter covers one step in the pipeline, why it exists,
+                and how to apply it without breaking things downstream.
+            </p>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="dp-body">
+
+            <h2>What is it?</h2>
+
+            <div class="dp-definition">
+                <p>
+                    Raw data is messy, inconsistently scaled, and not shaped for learning algorithms.
+                    Preprocessing is the set of transformations applied to raw data
+                    before it goes near a model. It does not create new information.
+                    It restructures existing information so the algorithm's internal
+                    machinery can work correctly.
+                </p>
+            </div>
+
+            <p>
+                A lot of people mix up EDA, preprocessing, and feature engineering
+                because they all happen before training. They are not the same thing.
+                EDA is for understanding the data without touching it.
+                Preprocessing fixes and reshapes what is there.
+                Feature engineering then builds new variables on top of that cleaned foundation.
+                Getting the order wrong, or skipping a step, usually shows up later as
+                a quiet bug that is painful to trace.
+            </p>
+
+            <div class="dp-pipeline">
+                <div class="dp-pipeline-label">Where Preprocessing Sits in the Pipeline</div>
+                <div class="dp-pipeline-steps">
+                    <div class="dp-step">Raw Data</div>
+                    <div class="dp-step-connector">|</div>
+                    <div class="dp-step">EDA &mdash; understand, don't change</div>
+                    <div class="dp-step-connector">|</div>
+                    <div class="dp-step active">Preprocessing &larr; this series</div>
+                    <div class="dp-step-connector">|</div>
+                    <div class="dp-step">Feature Engineering</div>
+                    <div class="dp-step-connector">|</div>
+                    <div class="dp-step">Model Training &rarr; Evaluation &rarr; Deployment</div>
+                </div>
+            </div>
+
+            <p>
+                Skipping preprocessing does not mean nothing happens.
+                It means the algorithm receives raw, inconsistent data and handles it on its own.
+                Distance-based models go blind to small-scale features.
+                Gradient-based models converge slowly or not at all.
+                Tree models are largely immune to it.
+                Knowing which situation you are in and why is what this series is for.
+            </p>
+
+            <div class="dp-hr"></div>
+
+            <h2>Topics in this series</h2>
+            <p>
+                Each topic is a standalone deep dive. They follow a logical order
+                but can be read on their own. The goal is a complete mental model
+                of each step, not just a how-to.
+            </p>
+
+            <div class="dp-grid">
+
+                <a href="feature-scaling.html" class="dp-card">
+                    <div class="dp-card-num">01</div>
+                    <h3>Feature Scaling</h3>
+                    <p class="dp-card-desc">
+                        Why algorithms break on unscaled data, which method fits
+                        which situation, and how to apply it correctly without
+                        leaking the test set into your training process.
+                    </p>
+                    <span class="dp-card-cta">Read &rarr;</span>
+                </a>
+
+                <div class="dp-card dp-coming">
+                    <div class="dp-card-num">02</div>
+                    <h3>Feature Encoding</h3>
+                    <p class="dp-card-desc">
+                        Making categorical variables usable by algorithms that
+                        only work with numbers. Ordinal, one-hot, and target
+                        encoding, and when each one actually makes sense.
+                    </p>
+                    <span class="dp-card-cta">Coming soon</span>
+                </div>
+
+                <div class="dp-card dp-coming">
+                    <div class="dp-card-num">03</div>
+                    <h3>Handling Missing Data</h3>
+                    <p class="dp-card-desc">
+                        Strategies for gaps in the dataset. Mean imputation,
+                        model-based imputation, and when it is better to just
+                        drop the row or column and move on.
+                    </p>
+                    <span class="dp-card-cta">Coming soon</span>
+                </div>
+
+                <div class="dp-card dp-coming">
+                    <div class="dp-card-num">04</div>
+                    <h3>Outlier Treatment</h3>
+                    <p class="dp-card-desc">
+                        How to find extreme values, decide whether they are signal
+                        or noise, and handle them without distorting
+                        what the rest of the data is trying to say.
+                    </p>
+                    <span class="dp-card-cta">Coming soon</span>
+                </div>
+
+            </div>
+
+            <div style="margin-top: 52px;">
+                <a href="../../index.html#learning-log" class="back-link">&#8592; Back to Learning Log</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">&#169; 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../../shared.js"></script>
+</body>
+</html>
