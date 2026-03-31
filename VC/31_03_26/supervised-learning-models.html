@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervised Learning Models | The Machinist</title>
+    <script>
+        (function() {
+            const t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta name="description" content="A concept exploration series on supervised learning models — linear models, instance-based, probabilistic, tree-based ensembles, and neural networks.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared.css">
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --orange: #f97316;
+            --orange-subtle: rgba(249,115,22,0.08);
+            --orange-border: rgba(249,115,22,0.25);
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --card: #f9fafb;
+        }
+        [data-theme="dark"] {
+            --orange-subtle: rgba(249,115,22,0.1);
+            --orange-border: rgba(249,115,22,0.3);
+            --muted: #9ca3af;
+            --border: #27272a;
+            --card: #18181b;
+        }
+
+        .sl-header {
+            text-align: left;
+            padding: calc(var(--spacing-xl, 64px) + 68px) var(--spacing-md, 24px) var(--spacing-lg, 48px);
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .sl-header .container { max-width: 720px; margin: 0 auto; }
+
+        .sl-breadcrumb {
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+            font-size: 0.78rem; color: var(--muted); margin-bottom: 20px;
+        }
+        .sl-breadcrumb a { color: var(--muted); text-decoration: none; }
+        .sl-breadcrumb a:hover { color: var(--text-color, #111); }
+        .sl-breadcrumb-sep { opacity: 0.4; }
+
+        .sl-series-label {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 12px;
+        }
+        .sl-header h1 {
+            font-size: clamp(1.55rem, 3.5vw, 2.1rem);
+            font-weight: 800; letter-spacing: -0.025em;
+            line-height: 1.2; margin-bottom: 14px;
+        }
+        .sl-subtitle {
+            font-size: 0.975rem; color: var(--muted);
+            line-height: 1.75; max-width: 560px; margin: 0 0 24px;
+        }
+        .sl-meta {
+            display: flex; gap: 18px; flex-wrap: wrap;
+            align-items: center; padding-top: 18px;
+            border-top: 1px solid var(--border);
+            font-size: 0.78rem; color: var(--muted);
+        }
+        .sl-meta span { display: flex; align-items: center; gap: 5px; }
+        .meta-badge {
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 3px;
+            background: var(--orange-subtle);
+            border: 1px solid var(--orange-border);
+            color: var(--orange);
+        }
+
+        .sl-body {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 52px 24px 80px;
+        }
+        .sl-body p {
+            font-size: 0.96rem; line-height: 1.82;
+            color: var(--text-color, #374151); margin-bottom: 18px;
+        }
+        .sl-body h2 {
+            font-size: 1.1rem; font-weight: 700;
+            margin: 44px 0 14px; letter-spacing: -0.01em;
+            color: var(--text-color, #111);
+        }
+        .sl-body h3 {
+            font-size: 0.9rem; font-weight: 700;
+            margin: 28px 0 10px; letter-spacing: 0.06em;
+            text-transform: uppercase; color: var(--muted);
+        }
+        .sl-body strong { color: var(--text-color, #111); }
+        .sl-body ul, .sl-body ol { padding-left: 20px; margin-bottom: 18px; }
+        .sl-body li {
+            font-size: 0.96rem; line-height: 1.78;
+            color: var(--text-color, #374151); margin-bottom: 5px;
+        }
+
+        .sl-definition {
+            border-left: 3px solid var(--text-color, #111);
+            background: var(--section-bg);
+            border-radius: 0 6px 6px 0;
+            padding: 18px 22px; margin: 22px 0 32px;
+        }
+        .sl-definition p { margin: 0; font-size: 0.95rem; line-height: 1.78; }
+
+        .sl-pipeline {
+            border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+            margin: 24px 0 32px;
+        }
+        .sl-pipeline-label {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 18px;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .sl-pipeline-steps { padding: 16px 18px; background: var(--bg-color, #fff); }
+        .sl-step {
+            padding: 7px 10px; border-radius: 4px;
+            font-size: 0.875rem; color: var(--muted); line-height: 1.5;
+        }
+        .sl-step.active {
+            background: var(--text-color, #111); color: #fff;
+            font-weight: 600; margin: 3px 0;
+        }
+        [data-theme="dark"] .sl-step.active { color: #0d0d0d; }
+        .sl-step-connector {
+            padding-left: 20px; font-size: 0.8rem;
+            color: var(--border); line-height: 1; user-select: none;
+        }
+
+        .sl-hr {
+            border: none; border-top: 1px solid var(--border); margin: 38px 0;
+        }
+
+        /* Family overview */
+        .sl-family-block {
+            border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+            margin: 18px 0 32px;
+            scroll-margin-top: 130px;
+        }
+        .sl-family-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+        }
+        .sl-family-num {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .sl-family-name {
+            font-size: 0.96rem; font-weight: 700;
+            color: var(--text-color, #111);
+        }
+        .sl-family-badge {
+            margin-left: auto;
+            font-size: 0.66rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 3px;
+        }
+        .badge-live {
+            background: var(--orange-subtle);
+            border: 1px solid var(--orange-border);
+            color: var(--orange);
+        }
+        .badge-soon {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+        .sl-family-body { padding: 18px 20px; background: var(--bg-color, #fff); }
+        .sl-family-body p {
+            font-size: 0.875rem; line-height: 1.72;
+            color: var(--text-color, #374151); margin: 0 0 14px;
+        }
+        .sl-family-body p:last-child { margin-bottom: 0; }
+
+        /* Sub-article grid */
+        .sl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px; margin-top: 16px;
+        }
+        .sl-card {
+            border: 1px solid var(--border);
+            border-radius: 7px; padding: 18px 20px;
+            background: var(--bg-color, #fff);
+            text-decoration: none;
+            display: flex; flex-direction: column;
+            transition: border-color 0.15s;
+        }
+        a.sl-card:hover { border-color: var(--orange); }
+        .sl-card-live { border-color: var(--orange-border); }
+        .sl-card-num {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 8px;
+        }
+        a.sl-card .sl-card-num { color: var(--text-color, #111); }
+        .sl-card h3 {
+            font-size: 0.96rem; font-weight: 700;
+            margin: 0 0 7px; color: var(--text-color, #111);
+            text-transform: none; letter-spacing: 0;
+        }
+        .sl-card-desc {
+            font-size: 0.825rem; color: var(--muted);
+            line-height: 1.65; flex: 1;
+        }
+        .sl-card-cta {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--text-color, #111); margin-top: 12px;
+            display: block;
+        }
+        .sl-card-coming { color: var(--muted); }
+        a.sl-card .sl-card-cta { color: var(--orange); }
+
+        /* paradigm grid */
+        .paradigm-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px; margin: 18px 0;
+        }
+        @media (max-width: 540px) { .paradigm-grid { grid-template-columns: 1fr; } }
+        .paradigm-card {
+            border: 1px solid var(--border);
+            border-radius: 7px; padding: 16px 18px;
+            background: var(--bg-color, #fff);
+        }
+        .paradigm-card.highlight {
+            border-color: var(--orange-border);
+            background: var(--orange-subtle);
+        }
+        .paradigm-label {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 6px;
+        }
+        .paradigm-card.highlight .paradigm-label { color: var(--orange); }
+        .paradigm-name {
+            font-size: 0.9rem; font-weight: 700;
+            color: var(--text-color, #111); margin-bottom: 5px;
+        }
+        .paradigm-desc {
+            font-size: 0.82rem; color: var(--muted); line-height: 1.62;
+        }
+
+        /* callout */
+        .callout {
+            border-radius: 6px; padding: 16px 20px;
+            margin: 22px 0; border: 1px solid;
+            font-size: 0.92rem; line-height: 1.72;
+        }
+        .callout-label {
+            font-size: 0.68rem; font-weight: 800;
+            letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px;
+        }
+        .callout p { margin: 0; font-size: 0.875rem; line-height: 1.72; color: var(--text-color, #374151); }
+        .callout-info {
+            background: rgba(139,92,246,0.06);
+            border-color: rgba(139,92,246,0.2);
+            border-left: 3px solid #8b5cf6;
+        }
+        .callout-info .callout-label { color: #8b5cf6; }
+        .callout-key {
+            background: var(--orange-subtle);
+            border-color: var(--orange-border);
+            border-left: 3px solid var(--orange);
+        }
+        .callout-key .callout-label { color: var(--orange); }
+
+        @media (max-width: 640px) {
+            .sl-body { padding: 36px 16px 60px; }
+            .sl-header { padding: calc(var(--spacing-xl, 64px) + 60px) 16px 36px; }
+        }
+
+        /* ── jump nav ── */
+        .sl-jump-nav {
+            position: sticky;
+            top: 68px;
+
+            background: var(--bg-color, #fff); /* FIX */
+            border-top: 1px solid var(--border); /* NEW */
+            border-bottom: 1px solid var(--border);
+
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); /* NEW */
+
+            z-index: 80;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        /* Dark mode improvement */
+        [data-theme="dark"] .sl-jump-nav {
+            background: #111;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .sl-jump-nav::-webkit-scrollbar { display: none; }
+        .sl-jump-nav-inner {
+            display: flex; max-width: 720px; margin: 0 auto;
+            padding: 6px 24px; align-items: center;
+        }
+        .sl-jump-label {
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); white-space: nowrap;
+            padding: 14px 14px 14px 0;
+            border-right: 1px solid var(--border);
+            margin-right: 4px;
+        }
+        .sl-jump-nav a {
+            white-space: nowrap; padding: 14px 12px;
+            font-size: 0.78rem; font-weight: 500; color: var(--muted);
+            text-decoration: none; border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .sl-jump-nav a:hover { color: var(--text-color, #111); }
+        .sl-jump-nav a.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul>
+                    <li><a href="../../index.html#projects">Projects</a></li>
+                    <li><a href="../../index.html#about">About</a></li>
+                    <li><a href="../../index.html#skills">Skills</a></li>
+                    <li><a href="../../index.html#learning-log">Learning Log</a></li>
+                    <li><a href="../../index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display:block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display:none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="../../index.html#projects">Projects</a>
+            <a href="../../index.html#about">About</a>
+            <a href="../../index.html#skills">Skills</a>
+            <a href="../../index.html#learning-log">Learning Log</a>
+            <a href="../../index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="sl-header">
+        <div class="container">
+            <nav class="sl-breadcrumb" aria-label="Breadcrumb">
+                <a href="../../index.html#learning-log">Learning Log</a>
+                <span class="sl-breadcrumb-sep">/</span>
+                <span>Concept Exploration</span>
+                <span class="sl-breadcrumb-sep">/</span>
+                <span style="color: var(--text-color, #111); font-weight: 500;">Supervised Learning Models</span>
+            </nav>
+            <div class="sl-series-label">Concept Exploration</div>
+            <h1>Supervised Learning Models</h1>
+            <p class="sl-subtitle">
+                Five model families, one series. Each section covers a family with the intuition behind it,
+                when it's the right tool, and links to standalone deep dives on each model.
+            </p>
+            <div class="sl-meta">
+                <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Series overview
+                </span>
+                <span class="meta-badge">Intermediate</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sl-jump-nav" aria-label="Jump to family">
+        <div class="sl-jump-nav-inner">
+            <span class="sl-jump-label">Jump to</span>
+            <a href="#family-01">Linear</a>
+            <a href="#family-02">Instance-Based</a>
+            <a href="#family-03">Probabilistic</a>
+            <a href="#family-04">Tree-Based</a>
+            <a href="#family-05">Neural Networks</a>
+        </div>
+    </nav>
+
+    <main id="main">
+        <div class="sl-body">
+
+            <h2>What is supervised learning?</h2>
+
+            <div class="sl-definition">
+                <p>
+                    In supervised learning, you give the model both the inputs and the correct
+                    outputs during training. It learns the mapping from one to the other.
+                    At prediction time, it applies that learned mapping to inputs it has never seen.
+                    The "supervision" is the labeled training data.
+                </p>
+            </div>
+
+            <p>
+                Most production ML systems run on supervised learning. Fraud detection,
+                churn prediction, price forecasting, medical diagnosis, recommendation scoring
+                — these are classification or regression problems with labeled historical data.
+                That's the domain this series lives in.
+            </p>
+
+            <p>
+                Within supervised learning, there are three core task types.
+                <strong>Regression</strong> predicts a continuous number (house price, temperature, demand).
+                <strong>Classification</strong> predicts a discrete class (spam vs not, churn vs retain, healthy vs diseased).
+                <strong>Ranking</strong> orders items by relevance (search results, feed ranking, recommendations).
+                The model families below handle one or more of these.
+            </p>
+
+            <div class="sl-pipeline">
+                <div class="sl-pipeline-label">Where Supervised Learning Fits</div>
+                <div class="sl-pipeline-steps">
+                    <div class="sl-step active">Supervised Learning &larr; this series</div>
+                    <div class="sl-step-connector">|</div>
+                    <div class="sl-step">Unsupervised Learning — find structure without labels</div>
+                    <div class="sl-step-connector">|</div>
+                    <div class="sl-step">Semi-Supervised — labeled + unlabeled data together</div>
+                    <div class="sl-step-connector">|</div>
+                    <div class="sl-step">Reinforcement Learning — learn from reward signals</div>
+                </div>
+            </div>
+
+            <div class="sl-hr"></div>
+
+            <h2>Five families, one decision</h2>
+            <p>
+                Every supervised learning model belongs to one of five families, based on
+                how it constructs the input-to-output mapping. Knowing which family a model
+                belongs to tells you its core assumptions, where it tends to break down,
+                and whether it's even the right class of tool for your problem.
+            </p>
+
+            <div class="paradigm-grid">
+                <div class="paradigm-card">
+                    <div class="paradigm-label">Family 01</div>
+                    <div class="paradigm-name">Linear Models</div>
+                    <div class="paradigm-desc">Assumes the output is a linear combination of inputs. Fast, interpretable, and a strong baseline when that assumption holds.</div>
+                </div>
+                <div class="paradigm-card">
+                    <div class="paradigm-label">Family 02</div>
+                    <div class="paradigm-name">Instance-Based</div>
+                    <div class="paradigm-desc">No training phase — the model memorizes the data and predicts by finding the nearest stored examples at inference time. KNN is the canonical case.</div>
+                </div>
+                <div class="paradigm-card">
+                    <div class="paradigm-label">Family 03</div>
+                    <div class="paradigm-name">Probabilistic</div>
+                    <div class="paradigm-desc">Models the data distribution explicitly using probability theory. Naive Bayes is the classic. Principled but sensitive to distributional assumptions.</div>
+                </div>
+                <div class="paradigm-card highlight">
+                    <div class="paradigm-label">Family 04</div>
+                    <div class="paradigm-name">Tree-Based Models</div>
+                    <div class="paradigm-desc">Builds the mapping using decision trees as building blocks. No distributional assumptions, handles missing values and mixed types naturally. The most practical family for tabular data in production.</div>
+                </div>
+                <div class="paradigm-card">
+                    <div class="paradigm-label">Family 05</div>
+                    <div class="paradigm-name">Neural Networks</div>
+                    <div class="paradigm-desc">Layers of learned transformations. The dominant approach for unstructured data: images, text, audio. Increasingly competitive on tabular data too.</div>
+                </div>
+            </div>
+
+            <div class="callout callout-key">
+                <div class="callout-label">How to read this page</div>
+                <p>Each family block below covers the intuition and failure modes for that family, then lists every model in it with a short description. Models with a completed deep dive are linked directly. Everything else is marked coming soon and will be added over time.</p>
+            </div>
+
+            <div class="sl-hr"></div>
+
+            <h2>Model families</h2>
+
+            <!-- ── Family 01: Linear Models ── -->
+            <div class="sl-family-block" id="family-01">
+                <div class="sl-family-header">
+                    <span class="sl-family-num">Family 01</span>
+                    <span class="sl-family-name">Linear Models</span>
+                    <span class="sl-family-badge badge-soon">Coming soon</span>
+                </div>
+
+                <div class="sl-family-body">
+                    <p>
+                        Linear models assume the output is a weighted sum of the input features.
+                        For regression, that's a direct linear combination. For classification,
+                        a linear boundary separates the classes. This is a strong assumption,
+                        and it pays off when the data actually has that structure: fast training,
+                        fast inference, and coefficients you can hand to a stakeholder and explain.
+                    </p>
+                    <p>
+                        The catch is that real-world relationships are rarely linear. You can extend
+                        these models with polynomial features or kernel tricks (SVM), but at that point
+                        you're adding complexity that a tree-based model handles more naturally.
+                        That said, linear models make excellent baselines. If a logistic regression
+                        already solves your problem, adding a gradient booster is just overhead.
+                    </p>
+                    <p>
+                        Regularization (Ridge, Lasso, ElasticNet) is critical in practice.
+                        Without it, linear models overfit whenever features outnumber samples
+                        or when features are correlated. Lasso also does implicit feature selection
+                        by driving irrelevant coefficients to exactly zero.
+                    </p>
+                    <div class="sl-grid">
+                        <div class="sl-card">
+                            <div class="sl-card-num">01-A</div>
+                            <h3>Linear &amp; Logistic Regression</h3>
+                            <p class="sl-card-desc">The starting point for any ML problem. Regression for continuous output, logistic for classification. The place to understand gradient descent before anything else.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">01-B</div>
+                            <h3>Ridge, Lasso &amp; ElasticNet</h3>
+                            <p class="sl-card-desc">Regularized linear models. Ridge penalizes large weights, Lasso zeros out irrelevant ones, ElasticNet does both. Essential when features outnumber samples.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">01-C</div>
+                            <h3>Support Vector Machines</h3>
+                            <p class="sl-card-desc">Finds the maximum-margin boundary between classes. The kernel trick maps inputs to higher-dimensional space where a linear boundary becomes non-linear in the original space.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Family 02: Instance-Based ── -->
+            <div class="sl-family-block" id="family-02">
+                <div class="sl-family-header">
+                    <span class="sl-family-num">Family 02</span>
+                    <span class="sl-family-name">Instance-Based Models</span>
+                    <span class="sl-family-badge badge-soon">Coming soon</span>
+                </div>
+                <div class="sl-family-body">
+                    <p>
+                        Instance-based models are the odd one out: there is no training phase in the
+                        traditional sense. The model just stores the training data. When a new input
+                        arrives, it finds the most similar stored examples (by distance) and uses their
+                        labels to make a prediction. All the work happens at inference time, not training time.
+                    </p>
+                    <p>
+                        K-Nearest Neighbors is the canonical example. You pick K, and at prediction time
+                        it finds the K closest points in the training set (by Euclidean distance,
+                        cosine similarity, or whatever metric fits the problem) and takes a majority vote
+                        for classification or an average for regression.
+                    </p>
+                    <p>
+                        The tradeoffs are real. No training cost, but inference cost scales linearly with
+                        training set size. Predictions are fully interpretable since you can point to exactly
+                        which training examples drove the output. But the model is extremely sensitive to
+                        feature scale (feature scaling is mandatory) and degrades fast in high-dimensional spaces
+                        because distance metrics stop being meaningful. This is the curse of dimensionality
+                        hitting this family the hardest.
+                    </p>
+                    <div class="callout callout-info">
+                        <div class="callout-label">Note</div>
+                        <p>Instance-based models are less common in production than they used to be. Tree-based models and neural networks usually outperform them at scale. But KNN still shows up in recommendation systems (item similarity), anomaly detection, and as a simple strong baseline.</p>
+                    </div>
+                    <div class="sl-grid">
+                        <div class="sl-card">
+                            <div class="sl-card-num">02-A</div>
+                            <h3>K-Nearest Neighbors (KNN)</h3>
+                            <p class="sl-card-desc">Predicts based on the K most similar training examples. No explicit model, no training. Useful as a baseline, and genuinely good for small datasets with well-scaled features.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">02-B</div>
+                            <h3>Radius Neighbors</h3>
+                            <p class="sl-card-desc">A variant of KNN where instead of a fixed K, all neighbors within a given radius vote. More adaptive in regions of varying density.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Family 03: Probabilistic ── -->
+            <div class="sl-family-block" id="family-03">
+                <div class="sl-family-header">
+                    <span class="sl-family-num">Family 03</span>
+                    <span class="sl-family-name">Probabilistic Models</span>
+                    <span class="sl-family-badge badge-soon">Coming soon</span>
+                </div>
+                <div class="sl-family-body">
+                    <p>
+                        Probabilistic models build an explicit statistical model of the data
+                        and use Bayes' theorem to compute class probabilities directly.
+                        Instead of learning a decision boundary, they model the probability
+                        of each class given the input features.
+                    </p>
+                    <p>
+                        Naive Bayes is the most common member of this family. It's called "naive"
+                        because it assumes all features are conditionally independent given the class label.
+                        That assumption is almost never literally true, but the model works surprisingly
+                        well in practice, especially on text. For spam filtering and document classification
+                        it's been competitive with much more complex models for decades.
+                    </p>
+                    <p>
+                        The appeal is speed and interpretability. Naive Bayes trains in a single pass
+                        through the data (just computing frequencies), handles high-dimensional feature spaces
+                        well, and works with very small datasets. The failure mode is when feature independence
+                        is badly violated and the probability estimates become unreliable, though the classification
+                        decision is often still correct even when the probabilities themselves are off.
+                    </p>
+                    <div class="sl-grid">
+                        <div class="sl-card">
+                            <div class="sl-card-num">03-A</div>
+                            <h3>Naive Bayes</h3>
+                            <p class="sl-card-desc">Fast probabilistic classifier. Three variants: Gaussian (continuous features), Multinomial (word counts), Bernoulli (binary features). The go-to for text classification baselines.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">03-B</div>
+                            <h3>Linear Discriminant Analysis</h3>
+                            <p class="sl-card-desc">Models each class as a Gaussian, finds the linear boundary that maximally separates them. Also useful as a dimensionality reduction technique before classification.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Family 04: Tree-Based ── -->
+            <div class="sl-family-block" id="family-04">
+                <div class="sl-family-header">
+                    <span class="sl-family-num">Family 04</span>
+                    <span class="sl-family-name">Tree-Based Models</span>
+                    <span class="sl-family-badge badge-live">Live</span>
+                </div>
+                <div class="sl-family-body">
+                    <p>
+                        This is the most practical family for tabular data. Tree-based models make no
+                        assumptions about feature distributions, handle missing values natively in some
+                        implementations, work on mixed numeric and categorical data, and capture
+                        non-linear interactions between features without any feature engineering.
+                    </p>
+                    <p>
+                        The family splits into two strategies: bagging and boosting. Bagging
+                        (Random Forest) trains many trees independently on random data subsets and
+                        averages their predictions. Errors are reduced by variance cancellation.
+                        Boosting (XGBoost, LightGBM, CatBoost) trains trees sequentially, with each
+                        new tree correcting the errors of the previous ensemble. Boosting tends to hit
+                        higher accuracy but requires more tuning and is easier to overfit.
+                    </p>
+                    <p>
+                        Gradient boosting methods dominate Kaggle competitions on tabular data for a reason:
+                        they're robust, well-regularized, handle feature interactions automatically,
+                        and scale to datasets too large for neural networks to be practical without
+                        massive compute.
+                    </p>
+                    <div class="sl-grid">
+                        <div class="sl-card">
+                            <div class="sl-card-num">04-A</div>
+                            <h3>Decision Trees</h3>
+                            <p class="sl-card-desc">The atomic building block. A flowchart of if/else splits that partitions data into leaf nodes. Interpretable and fast, but high variance on its own — a single tree overfits easily.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">04-B</div>
+                            <h3>Random Forest</h3>
+                            <p class="sl-card-desc">Many trees trained on random data and feature subsets. Averages out individual tree errors. Hard to overfit and requires minimal tuning. The solid default before reaching for boosting.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">04-C</div>
+                            <h3>XGBoost</h3>
+                            <p class="sl-card-desc">The framework that kicked off the gradient boosting era on Kaggle. Second-order gradients, level-wise tree growth, built-in L1/L2 regularization, and the best documentation in the space.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <a href="lightgbm.html" class="sl-card sl-card-live">
+                            <div class="sl-card-num">04-D</div>
+                            <h3>LightGBM</h3>
+                            <p class="sl-card-desc">Microsoft's take on gradient boosting. Histogram-based split finding, leaf-wise tree growth, GOSS sampling, and EFB feature bundling. Faster than XGBoost at scale with competitive accuracy.</p>
+                            <span class="sl-card-cta">Read &rarr;</span>
+                        </a>
+                        <div class="sl-card">
+                            <div class="sl-card-num">04-E</div>
+                            <h3>CatBoost</h3>
+                            <p class="sl-card-desc">Yandex's gradient boosting framework, built around native categorical handling. Symmetric trees, ordered target encoding, strong out-of-the-box defaults. Best choice when your data is heavy on categoricals.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Family 05: Neural Networks ── -->
+            <div class="sl-family-block" id="family-05">
+                <div class="sl-family-header">
+                    <span class="sl-family-num">Family 05</span>
+                    <span class="sl-family-name">Neural Networks</span>
+                    <span class="sl-family-badge badge-soon">Coming soon</span>
+                </div>
+                <div class="sl-family-body">
+                    <p>
+                        Neural networks learn by stacking layers of transformations, where each layer
+                        extracts increasingly abstract features from the input. A feedforward network is
+                        the baseline: inputs flow forward through weighted layers, a loss is computed
+                        at the output, and gradients flow backward to update the weights. That's backpropagation.
+                    </p>
+                    <p>
+                        From that foundation, specialized architectures handle specific data types.
+                        Convolutional networks (CNNs) exploit spatial structure in images.
+                        Recurrent networks (RNNs, LSTMs) handle sequences.
+                        Transformers replaced both of those for most tasks by 2021 and are now
+                        the architecture behind basically every large model you've heard of.
+                    </p>
+                    <p>
+                        On tabular data, neural networks historically underperform tree-based models
+                        without significant effort. They need more data, more tuning, and more compute
+                        for equivalent results. Architectures like TabNet and FT-Transformer have closed
+                        the gap somewhat, but gradient boosting is still the first thing to reach for
+                        on structured data.
+                    </p>
+                    <div class="sl-grid">
+                        <div class="sl-card">
+                            <div class="sl-card-num">05-A</div>
+                            <h3>Feedforward Networks</h3>
+                            <p class="sl-card-desc">The foundation. Layers of neurons with activation functions, trained via backpropagation. Getting this right — initialization, activation choice, regularization — is a prerequisite for everything else.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">05-B</div>
+                            <h3>CNNs</h3>
+                            <p class="sl-card-desc">Convolutional networks for spatial data. Filters slide across inputs to detect local patterns. The reason deep learning took off in computer vision.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                        <div class="sl-card">
+                            <div class="sl-card-num">05-C</div>
+                            <h3>Transformers</h3>
+                            <p class="sl-card-desc">Attention-based architecture that processes sequences in parallel. Now the dominant architecture for NLP, vision, and multimodal tasks. The core of every major LLM.</p>
+                            <span class="sl-card-cta sl-card-coming">Coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 52px;">
+                <a href="../../index.html#learning-log" class="back-link">&#8592; Back to Learning Log</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/cdn-cgi/l/email-protection#ed8c83988988889d9f88898994dededfad8a808c8481c38e8280" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">&copy; 2026 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon  = themeToggle.querySelector('.sun-icon');
+        const moonIcon = themeToggle.querySelector('.moon-icon');
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
+            sunIcon.style.display  = t === 'dark' ? 'none'  : 'block';
+            moonIcon.style.display = t === 'dark' ? 'block' : 'none';
+        }
+        applyTheme(localStorage.getItem('theme') || 'light');
+        themeToggle.addEventListener('click', () => {
+            applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+
+        const hamburger  = document.querySelector('.hamburger');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const closeMenu  = document.querySelector('.close-menu');
+        hamburger.addEventListener('click', () => { mobileMenu.classList.add('open'); hamburger.setAttribute('aria-expanded', 'true'); });
+        closeMenu.addEventListener('click', () => { mobileMenu.classList.remove('open'); hamburger.setAttribute('aria-expanded', 'false'); });
+
+        // active state for jump nav
+        const jumpLinks = document.querySelectorAll('.sl-jump-nav a');
+        const familyBlocks = document.querySelectorAll('.sl-family-block[id]');
+        const jumpObserver = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    jumpLinks.forEach(l => l.classList.remove('active'));
+                    const active = document.querySelector(`.sl-jump-nav a[href="#${e.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-130px 0px -55% 0px' });
+        familyBlocks.forEach(b => jumpObserver.observe(b));
+
+    </script>
+</body>
+</html>
