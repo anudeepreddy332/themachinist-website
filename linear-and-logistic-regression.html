@@ -14,17 +14,17 @@
 
     <!-- SEO block — all placeholders must be filled before output -->
     <title>Linear &amp; Logistic Regression | The Machinist</title>
-    <meta name="description" content="You have data with numeric inputs and a numeric output. You want to predict the output for new inputs.">
+    <meta name="description" content="When you need to predict a number from data — like tomorrow&#x27;s temperature or a house price — you are solving a regression problem.">
     <meta name="author" content="Anudeep Reddy">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/linear-and-logistic-regression.html">
     <meta property="og:title" content="Linear &amp; Logistic Regression | The Machinist">
-    <meta property="og:description" content="You have data with numeric inputs and a numeric output. You want to predict the output for new inputs.">
+    <meta property="og:description" content="When you need to predict a number from data — like tomorrow&#x27;s temperature or a house price — you are solving a regression problem.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Linear &amp; Logistic Regression | The Machinist">
-    <meta name="twitter:description" content="You have data with numeric inputs and a numeric output. You want to predict the output for new inputs.">
+    <meta name="twitter:description" content="When you need to predict a number from data — like tomorrow&#x27;s temperature or a house price — you are solving a regression problem.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
 
     <link rel="canonical" href="https://themachinist.org/linear-and-logistic-regression.html">
@@ -304,21 +304,21 @@
     <!-- Page header — inject TOPIC, SERIES_LABEL, SERIES_CONTEXT, META_DESCRIPTION, DIFFICULTY -->
     <header class="sl-header">
         <div class="container">
-            <!-- Breadcrumb: Learning Log / Learning Log / Linear &amp; Logistic Regression -->
+            <!-- Breadcrumb: Learning Log / Family 01 — Linear Models / Linear &amp; Logistic Regression -->
             <nav class="sl-breadcrumb" aria-label="Breadcrumb">
                 <a href="index.html#learning-log">Learning Log</a>
                 <span class="sl-breadcrumb-sep">/</span>
-                <span>Learning Log</span>
+                <span>Family 01 — Linear Models</span>
                 <span class="sl-breadcrumb-sep">/</span>
                 <span style="color: var(--text-color, #111); font-weight: 500;">Linear &amp; Logistic Regression</span>
             </nav>
 
             <!-- Series label above title -->
-            <div class="sl-series-label">Learning Log</div>
+            <div class="sl-series-label">Family 01 — Linear Models</div>
 
             <h1>Linear &amp; Logistic Regression</h1>
 
-            <p class="sl-subtitle">You have data with numeric inputs and a numeric output. You want to predict the output for new inputs.</p>
+            <p class="sl-subtitle">When you need to predict a number from data — like tomorrow&#x27;s temperature or a house price — you are solving a regression problem.</p>
 
             <div class="sl-meta">
                 <span>
@@ -340,7 +340,7 @@
             <h2>What is linear &amp; logistic regression and why does it matter?</h2>
 
             <div class="sl-definition">
-                <p>You have data with numeric inputs and a numeric output. You want to predict the output for new inputs. Linear regression does this by fitting a straight line (or hyperplane) that minimizes the squared error between predictions and actual values. Logistic regression solves a different problem: predicting a binary outcome (yes/no, spam/not spam). It uses a sigmoid function to squash a linear combination of inputs into a probability between 0 and 1. Both are foundational supervised learning algorithms. They are fast to train, interpretable, and often serve as baselines for more complex models. Understanding them is critical because they introduce core concepts like loss functions, gradient descent, and regularization that carry over to neural networks and deep learning.</p>
+                <p>When you need to predict a number from data — like tomorrow&#x27;s temperature or a house price — you are solving a regression problem. When you need to decide between two categories — spam or not spam, churn or stay — you are solving a binary classification problem. Linear regression and logistic regression are the simplest, most interpretable models for these two tasks. They are often the first model a practitioner tries, and they serve as baselines against which more complex models are measured. Linear regression fits a straight line (or hyperplane) to minimize the sum of squared errors between predictions and actual values. Logistic regression applies a sigmoid function to a linear combination of inputs, producing a probability between 0 and 1, then classifies based on a threshold. Both are fast to train, easy to explain, and require minimal tuning. But they also have strong assumptions: linear relationships, independence of errors, and (for logistic regression) no severe multicollinearity. When those assumptions hold, these models are hard to beat. When they don&#x27;t, performance degrades quickly.</p>
             </div>
 
             <hr class="sl-hr">
@@ -348,21 +348,18 @@
             <!-- ── Section 2: Technical Deep-Dive ── -->
             <h2>How it works</h2>
 
-            <h3>Linear Regression</h3>
-<p>Linear regression assumes the target <code>y</code> is a linear combination of features <code>x</code>: <code>y = w0 + w1*x1 + ... + wn*xn + epsilon</code>. The weights <code>w</code> are learned by minimizing the mean squared error (MSE) loss: <code>L = (1/N) * sum((y_i - y_hat_i)^2)</code>. The optimal weights have a closed-form solution using the normal equation: <code>w = (X^T X)^(-1) X^T y</code>. But for large datasets, gradient descent is used: <code>w = w - lr * (2/N) * X^T (Xw - y)</code>.</p>
-
-<h3>Logistic Regression</h3>
-<p>Logistic regression models the log-odds as a linear function: <code>log(p/(1-p)) = w0 + w1*x1 + ... + wn*xn</code>. The probability is <code>p = 1 / (1 + exp(-(w0 + w1*x1 + ...)))</code>. The loss function is binary cross-entropy: <code>L = -(1/N) * sum(y_i * log(p_i) + (1-y_i)*log(1-p_i))</code>. There is no closed-form solution, so gradient descent is used: <code>w = w - lr * (1/N) * X^T (p - y)</code>.</p>
-
-<h3>Failure Modes</h3>
-<p>Linear regression is sensitive to outliers because MSE squares large errors. Multicollinearity (correlated features) inflates coefficient variance. Logistic regression assumes a linear decision boundary; if the true boundary is nonlinear, performance degrades. Both can overfit with many features. Regularization (L1/L2) helps: L2 adds <code>lambda * sum(w^2)</code> to the loss, L1 adds <code>lambda * sum(|w|)</code>. L1 can drive some weights to zero, performing feature selection.</p>
-
-<h3>Real Tradeoffs</h3>
-<p>Closed-form linear regression is <code>O(n^3)</code> in feature count, so gradient descent is preferred for high-dimensional data. Logistic regression outputs probabilities, which are useful for ranking or calibration, but the model is not inherently probabilistic — it's a discriminative model. Both assume independence of features (though logistic regression is more robust to violations). For categorical features with many levels, one-hot encoding can cause the curse of dimensionality.</p>
-
+            <h3>Linear & Logistic Regression</h3>
+<p>Linear regression models the target as a weighted sum of the input features. For a dataset with <code>n</code> features, the prediction is: <code>y_pred = w0 + w1*x1 + w2*x2 + ... + wn*xn</code>. The weights <code>w</code> are learned by minimizing the residual sum of squares between predictions and actual values. This is typically done using ordinary least squares (OLS), which has a closed-form solution.</p>
+<p>Logistic regression, in contrast, models the log-odds of the positive class as a linear function: <code>log(p/(1-p)) = w0 + w1*x1 + ... + wn*xn</code>. Solving for <code>p</code> gives the sigmoid function: <code>p = 1 / (1 + exp(-z))</code>, where <code>z</code> is the linear combination. The weights are estimated using maximum likelihood estimation (MLE), which finds the weights that maximize the probability of observing the training data. There is no closed-form solution for logistic regression; weights are learned iteratively using algorithms like Newton-CG or gradient descent.</p>
+<p>Both models are sensitive to feature scaling. For linear regression, unscaled features can cause gradient descent (if used) to converge slowly. For logistic regression, unscaled features can cause the solver to fail or produce unstable coefficients.</p>
 <div class="callout callout-info">
-<strong>Note:</strong> Regularization techniques such as L1 and L2 are critical for mitigating overfitting, especially when working with high-dimensional feature spaces.
+<strong>Common failure modes:</strong>
+<ul>
+<li>For linear regression: when the relationship between inputs and output is not linear — the model will underfit.</li>
+<li>For logistic regression: when the data is not linearly separable; the model may still work but will produce probabilities near 0.5 for ambiguous regions.</li>
+</ul>
 </div>
+<p>Neither model handles non-linear relationships well without feature engineering or kernel tricks. Both models are sensitive to feature scaling — always standardize or normalize features before training. Regularization (L1 or L2) can help prevent overfitting, especially when the number of features is large relative to samples.</p>
            
             <hr class="sl-hr">
 
@@ -371,31 +368,38 @@
 
             <div class="sl-code-block"><div class="sl-code-label">PYTHON</div><pre><code class="language-python">import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, accuracy_score
 
-# Linear regression example
-X = np.random.randn(100, 3)
-y = 2*X[:,0] - 1.5*X[:,1] + 0.5*X[:,2] + np.random.randn(100)*0.1
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Generate synthetic data
+np.random.seed(42)
+X = np.random.randn(100, 2)
+y_reg = 3 + 2*X[:, 0] - 1.5*X[:, 1] + 0.5*np.random.randn(100)
+y_clf = (1 / (1 + np.exp(-(1 + 2*X[:, 0] - 1.5*X[:, 1]))) &gt; 0.5).astype(int)
 
+# Split data
+X_train, X_test, y_reg_train, y_reg_test = train_test_split(X, y_reg, test_size=0.2, random_state=42)
+_, _, y_clf_train, y_clf_test = train_test_split(X, y_clf, test_size=0.2, random_state=42)
+
+# Scale features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Linear regression
 lin_reg = LinearRegression()
-lin_reg.fit(X_train, y_train)
-y_pred = lin_reg.predict(X_test)
-print(f&quot;Linear MSE: {mean_squared_error(y_test, y_pred):.4f}&quot;)
+lin_reg.fit(X_train_scaled, y_reg_train)
+y_pred_reg = lin_reg.predict(X_test_scaled)
+print(f&quot;Linear Regression MSE: {mean_squared_error(y_reg_test, y_pred_reg):.3f}&quot;)
 print(f&quot;Coefficients: {lin_reg.coef_}&quot;)
 
-# Logistic regression example
-X = np.random.randn(200, 5)
-y = (X[:,0] + X[:,1] - 0.5 &gt; 0).astype(int)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-log_reg = LogisticRegression(penalty=&#x27;l2&#x27;, C=1.0)
-log_reg.fit(X_train, y_train)
-y_pred = log_reg.predict(X_test)
-y_prob = log_reg.predict_proba(X_test)[:, 1]
-print(f&quot;Logistic accuracy: {accuracy_score(y_test, y_pred):.4f}&quot;)
-print(f&quot;Coefficients: {log_reg.coef_[0]}&quot;)</code></pre></div>
+# Logistic regression
+log_reg = LogisticRegression(solver=&#x27;newton-cg&#x27;)
+log_reg.fit(X_train_scaled, y_clf_train)
+y_pred_clf = log_reg.predict(X_test_scaled)
+print(f&quot;Logistic Regression Accuracy: {accuracy_score(y_clf_test, y_pred_clf):.3f}&quot;)
+print(f&quot;Coefficients: {log_reg.coef_}&quot;)</code></pre></div>
 
             <hr class="sl-hr">
 
@@ -405,11 +409,11 @@ print(f&quot;Coefficients: {log_reg.coef_[0]}&quot;)</code></pre></div>
             <div class="callout callout-key">
                 <div class="callout-label">What you now know</div>
                 <ul>
-<li>Linear regression predicts continuous values by minimizing MSE; it has a closed-form solution but gradient descent scales better.</li>
-<li>Logistic regression predicts binary outcomes by modeling log-odds with a sigmoid; it uses cross-entropy loss and requires iterative optimization.</li>
-<li>Both are sensitive to outliers and multicollinearity; regularization (L1/L2) mitigates overfitting.</li>
-<li>Logistic regression outputs probabilities, enabling ranking and calibration, but assumes a linear decision boundary.</li>
-<li>These models are fast, interpretable baselines; understanding them is essential before moving to neural networks.</li>
+<li>Linear regression predicts continuous values using a weighted sum of inputs, minimized via ordinary least squares.</li>
+<li>Logistic regression predicts binary outcomes by applying a sigmoid to a linear combination, estimated via maximum likelihood.</li>
+<li>Both models assume a linear relationship between inputs and the log-odds (logistic) or the output (linear).</li>
+<li>Feature scaling is critical for both models to ensure stable and fast convergence.</li>
+<li>Neither model handles non-linear patterns without feature engineering or regularization to combat overfitting.</li>
 </ul>
 
             </div>
@@ -418,8 +422,11 @@ print(f&quot;Coefficients: {log_reg.coef_[0]}&quot;)</code></pre></div>
             <div class="sl-sources">
                 <div class="sl-sources-label">Sources</div>
                 <ol>
+                    <li><a href="https://www.datacamp.com/tutorial/understanding-logistic-regression-python" target="_blank" rel="noopener noreferrer">datacamp.com</a></li>
+                    <li><a href="https://www.geeksforgeeks.org/machine-learning/ml-linear-regression-vs-logistic-regression" target="_blank" rel="noopener noreferrer">geeksforgeeks.org</a></li>
+                    <li><a href="https://blog.alliedoffsets.com/understanding-the-difference-between-linear-and-logistic-regression-models" target="_blank" rel="noopener noreferrer">blog.alliedoffsets.com</a></li>
+                    <li><a href="http://library.virginia.edu/data/articles/logistic-regression-four-ways-with-python" target="_blank" rel="noopener noreferrer">library.virginia.edu</a></li>
                     <li><a href="https://aws.amazon.com/compare/the-difference-between-linear-regression-and-logistic-regression" target="_blank" rel="noopener noreferrer">aws.amazon.com</a></li>
-                    <li><a href="https://www.spiceworks.com/soft-tech/linear-regression-vs-logistic-regression" target="_blank" rel="noopener noreferrer">spiceworks.com</a></li>
 
                 </ol>
             </div>
@@ -467,7 +474,7 @@ print(f&quot;Coefficients: {log_reg.coef_[0]}&quot;)</code></pre></div>
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": "Linear &amp; Logistic Regression | The Machinist",
+      "headline": "Linear & Logistic Regression | The Machinist",
       "author": {
         "@type": "Person",
         "name": "Anudeep Reddy",
