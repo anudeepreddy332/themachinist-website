@@ -1,4 +1,6 @@
-# From Fluent to True: Building an Agent That Can't Fake Its Sources
+# Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles
+
+*A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing.*
 
 *Agentic AI · Phase 4 · The Machinist*
 
@@ -28,13 +30,13 @@ That turned out to be a much deeper problem than I expected, and chasing it down
 
 Content-agent is the fourth project in a deliberate arc. Each earlier phase taught a lesson the next one needed.
 
-**Phase 1, the CLI agent.** A basic query-response agent: the user asks, the agent calls a tool, the agent answers. One turn, one cycle, a raw loop with control flow hidden inside conditionals. It worked, but it could not pursue a goal across multiple steps, and there was no way to inspect what it was doing mid-run.
+**Phase 1, the CLI agent.** A basic query-response loop. The lesson: a raw loop with control flow buried in conditionals cannot pursue a goal across steps, and gives you no way to see what it is doing mid-run.
 
-**Phase 2, the RAG knowledge agent.** This added retrieval: a vector store, embeddings, and the ability to answer from a private knowledge base rather than the model's memory. The lesson here was that retrieval quality is a first-class concern. A retrieval system that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.
+**Phase 2, the RAG knowledge agent.** This added retrieval over a private knowledge base. The lesson: retrieval quality is a first-class concern. A retriever that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.
 
-**Phase 3, the code-fix agent.** This was the jump from answering questions to pursuing a goal. The agent executes a broken Python script, reads the failure, diagnoses the root cause, patches the code, and retries until the script runs or it runs out of attempts. It was built as an explicit LangGraph state machine instead of a while loop, with a human-in-the-loop approval step and full tracing. It fixed 95% of a 20-script test set. The lesson that mattered most: **exit code zero is not correctness.** A script can run cleanly and still produce the wrong answer. You need a separate evaluator whose only job is to judge whether the result is actually right.
+**Phase 3, the code-fix agent.** A goal-directed LangGraph state machine that executes a broken script, diagnoses the failure, patches it, and retries, with a human approval step. It fixed 95% of a 20-script test set. The lesson that mattered most: **exit code zero is not correctness.** Code can run cleanly and still be wrong. You need a separate evaluator whose only job is to judge whether the result is actually right.
 
-Content-agent inherited all three lessons. It needed goal-directed control flow (Phase 3), it needed retrieval that was provably healthy (Phase 2), and most of all it needed a verifier that judged correctness rather than trusting that fluent output meant true output (the Phase 3 lesson, applied to facts instead of code).
+Content-agent inherited all three. It needed goal-directed control flow (Phase 3), retrieval that was provably healthy (Phase 2), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the Phase 3 lesson, applied to facts instead of code).
 
 ---
 
@@ -60,23 +62,23 @@ retrieve -> draft -> verify -> reflect -> [route: draft | hitl]
 
 Here is what each stage does.
 
-**retrieve.** Runs first. It searches the web through Tavily across three fixed query angles (the concept explained, its failure modes and limitations, and an implementation example), deduplicates by URL, and keeps the top results. It also queries a Qdrant knowledge base of evergreen ML concepts. If the first web pass comes back thin or low-scoring, it re-runs with a forced cache refresh. Retrieval freshness, it turns out, is the single largest lever on grounding quality, so this gate matters.
+**retrieve.** Runs first. It searches the web through Tavily across three fixed query angles, deduplicates by URL, and queries a Qdrant knowledge base of evergreen ML concepts. If the first web pass comes back thin or low-scoring, it re-runs with a forced cache refresh. Retrieval freshness turned out to be the single largest lever on grounding quality, so this gate matters.
 
-**draft.** Generates a four-section article (problem framing, technical deep-dive, code, takeaways) with DeepSeek. The key design choice: the draft node reads the retrieved sources and is instructed to assert specific claims only where a source supports them, and to generalize otherwise. This is "cite or generalize," and it is the heart of the grounding fix described below.
+**draft.** Generates a four-section article (problem framing, technical deep-dive, code, takeaways) with DeepSeek. The key design choice: the draft reads the retrieved sources and is instructed to assert specific claims only where a source supports them, and to generalize otherwise. This is "cite or generalize," the heart of the grounding fix described below.
 
-**verify.** Extracts every factual claim from the draft and scores each one against the retrieved sources for grounding, assigning a status of verified, weak, or unverified, plus a confidence. This is the fact-checking desk. It is a separate LLM call with its own prompt, deliberately isolated from the draft so the writer cannot grade its own homework.
+**verify.** Extracts every factual claim and scores it against the retrieved sources as verified, weak, or unverified, with a confidence. This is the fact-checking desk: a separate LLM call with its own prompt, isolated from the draft so the writer cannot grade its own homework.
 
-**reflect.** The agent scores its own draft from 1 to 10 on structure, depth, grounding, and clarity. This score is advisory only. Language models inflate their own grades, so reflection never gets to be the hard gate.
+**reflect.** The agent scores its own draft from 1 to 10 on structure, depth, grounding, and clarity. Advisory only. Language models inflate their own grades, so reflection never gets to be the hard gate.
 
-**route after reflect.** A composite decision. Force a rewrite if grounding is below a hard floor of 0.60, or if the reflection score is below 7 and grounding is below 0.75. Otherwise move to the human. Stop revising once iterations hit the ceiling of 2 or the cost gate trips.
+**route after reflect.** Force a rewrite if grounding is below a hard floor of 0.60, or if the reflection score is below 7 and grounding is below 0.75. Otherwise move to the human. Stop revising once iterations hit the ceiling of 2 or the cost gate trips.
 
-**hitl (Gate 1, content).** The first human gate. A reviewer sees the full draft, a claim-by-claim grounding table, the reflection score, and any warnings. They approve, send feedback (which routes back to draft), or reject. Once approved, the content is frozen.
+**hitl (Gate 1, content).** The first human gate. A reviewer sees the full draft, a claim-by-claim grounding table, the reflection score, and any warnings, then approves, sends feedback (which routes back to draft), or rejects. Once approved, the content is frozen.
 
-**html_gen.** Renders the approved content into themachinist.org-compliant HTML. Three of the four sections render deterministically in Python. Only the technical deep-dive goes through an LLM for HTML conversion. The output is validated programmatically for required structure before it moves on.
+**html_gen.** Renders the approved content into themachinist.org-compliant HTML. Three of the four sections render deterministically in Python; only the technical deep-dive goes through an LLM. The output is validated for required structure before moving on.
 
-**hitl_html (Gate 2, layout).** The second human gate, and this one only reviews how the page looks. Content is frozen here. If the reviewer requests changes, a single temperature-zero pass edits the markup and loops back. A word-multiset guard compares the revised HTML against the original and discards any revision that changes more than two visible words, so a layout edit can never silently alter the text.
+**hitl_html (Gate 2, layout).** The second human gate, reviewing only how the page looks. Content is frozen here. Change requests go to a single temperature-zero pass, and a word-multiset guard discards any revision that changes more than two visible words, so a layout edit can never silently alter the text.
 
-**git.** Writes the HTML into the website repository on a feature branch, diffs it against main, tags before merging when an existing article changes, and merges locally with no fast-forward. It never pushes. More on that below, because it is the most important safety property in the project.
+**git.** Writes the HTML into the website repository on a feature branch, diffs against main, tags before merging when an existing article changes, and merges locally with no fast-forward. It never pushes. More on that below, because it is the most important safety property in the project.
 
 ### The Stack
 
@@ -171,12 +173,12 @@ The fix was to make the published filename always the canonical slug, and let th
 
 Once the grounding work was locked, I gave myself a hard deadline to turn a working pipeline into a deployed, hardened system. This was a sequence of milestones, each with an explicit exit gate.
 
-- **Input sanitization.** The topic becomes a slug, which becomes a filename and a git branch and tag name. That path needed to be safe under any automated entry point. Slug generation is now allowlist-based by construction, with dedicated tests for path traversal, git-ref injection, and a null-byte fuzz case.
-- **Failure-injection tests.** A suite covering five real fault modes: DeepSeek auth failure (must propagate, never get swallowed), DeepSeek timeout and rate limit (exactly three retry attempts, then reraise), Tavily empty or erroring, Qdrant down, and malformed model JSON. Each failure path is exercised and asserted, so the system degrades instead of crashing.
-- **CI gates.** Two tiers. A free per-push tier runs fatal-tier lint and the full mocked test suite at zero API cost. A secret-gated tier runs the real grounding gates: the golden verifier fixture with an enforced pass threshold, and a benchmark that fails the build if any run's unverified rate exceeds 0.15.
-- **Durable human-in-the-loop.** This was the centerpiece. The graph is compiled with a SqliteSaver checkpointer, so when a human gate pauses, the entire run state is persisted to disk. A reviewer can come back later, even after the process restarts, and resume from exactly where it paused. The API exposes this through approve, reject, and feedback endpoints behind bearer auth.
-- **Containerization.** A non-root image running as uid 10001, with the embedding model baked in at build time so the first run is fast. A production compose file runs the app alongside a network-isolated Qdrant that has no host port at all and is reachable only inside the compose network. Secrets are injected at runtime, never baked into the image.
-- **Publish validation and rollback.** The git automation was validated against a fork of the website, never production, exercising both the new-article and changed-article paths, plus the rollback script, plus one supervised real publish.
+- **Input sanitization.** The topic becomes a slug, which becomes a filename and a git branch and tag name. That path has to be safe under any automated entry point. Slug generation is allowlist-based by construction, with tests for path traversal, git-ref injection, and a null-byte fuzz case.
+- **Failure-injection tests.** Five real fault modes: DeepSeek auth failure (must propagate, never get swallowed), DeepSeek timeout and rate limit (exactly three retry attempts, then reraise), Tavily empty or erroring, Qdrant down, and malformed model JSON. Each path is exercised and asserted, so the system degrades instead of crashing.
+- **CI gates.** Two tiers. A free per-push tier runs fatal-tier lint and the full mocked suite at zero API cost. A secret-gated tier runs the real grounding gates: the golden verifier fixture with an enforced threshold, and a benchmark that fails the build if any run's unverified rate exceeds 0.15.
+- **Durable human-in-the-loop.** The centerpiece. The graph is compiled with a SqliteSaver checkpointer, so a paused human gate persists the entire run state to disk. A reviewer can return later, even after the process restarts, and resume from exactly where it paused, through approve, reject, and feedback endpoints behind bearer auth.
+- **Containerization.** A non-root image (uid 10001) with the embedding model baked in at build time so the first run is fast. A production compose file runs the app alongside a network-isolated Qdrant that has no host port and is reachable only inside the compose network. Secrets are injected at runtime, never baked in.
+- **Publish validation and rollback.** The git automation was validated against a fork, never production, exercising both the new-article and changed-article paths, the rollback script, and one supervised real publish.
 
 ---
 
@@ -234,9 +236,9 @@ What is deliberately not built: automated alerting and dashboards. Uptime is a m
 
 ## Current State
 
-The system is live. The demo runs on an EC2 instance behind Caddy, which handles TLS automatically, with the public URL provided by sslip.io so no real domain is needed. The container image is built once on a fast machine for the ARM instance and pushed to Docker Hub, so the small VM only ever pulls a finished image instead of rebuilding the model-baking image itself. The app container has no public port of its own. Caddy is the only thing facing the internet.
+The system is live. The demo runs on an EC2 instance behind Caddy, which handles TLS automatically, with the public URL provided by sslip.io so no real domain is needed. The app container has no public port of its own; Caddy is the only thing facing the internet.
 
-That build-once-pull model was not the first plan. The first plan was to build the image directly on the EC2 box, which is the obvious thing to try. It failed. The instance ran out of disk space partway through the build, because the image bakes in PyTorch and the embedding model, and those layers are large. Building them on a small VM with a modest disk is a losing fight. The fix was to move the heavy work off the box entirely: build the ARM image once on a local machine, push it to Docker Hub, and have EC2 only ever pull the finished image. That solved the disk problem outright, and as a bonus made deployments faster and more repeatable, because the slow model-baking step happens once on capable hardware instead of on every deploy.
+The build strategy was not the first plan. Building the image directly on the EC2 box failed: the instance ran out of disk space partway through, because the image bakes in PyTorch and the embedding model, and those layers are large. The fix was to move the heavy work off the box. Build the ARM image once on a local machine, push it to Docker Hub, and have EC2 only ever pull the finished image. That solved the disk problem outright and made deployments faster and more repeatable, because the slow model-baking step happens once on capable hardware instead of on every deploy.
 
 A full run, end to end, costs a fraction of a cent. The live rehearsal that took an article from topic to published, through both gates, retrieved 10 web sources, scored 0.773 grounding across 28 claims, and cost $0.0066.
 
