@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From Fluent to True: A Grounded, Human-Gated Article Agent | The Machinist</title>
+    <meta name="description" content="How I built a grounded LLM pipeline that researches a topic, drafts only what its sources support, verifies every claim, gates on a human twice, and can't publish without a person. LangGraph, DeepSeek, Qdrant, FastAPI, Docker, Caddy.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://themachinist.org/content-agent-case-study.html">
+    <meta property="og:title" content="From Fluent to True: A Grounded, Human-Gated Article Agent | The Machinist">
+    <meta property="og:description" content="A grounded LLM pipeline that verifies every claim against real sources, gates on a human twice, and never publishes on its own. The real story is the grounding investigation.">
+    <meta property="og:image" content="https://themachinist.org/og-default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="From Fluent to True: A Grounded, Human-Gated Article Agent | The Machinist">
+    <meta name="twitter:description" content="A grounded LLM pipeline that verifies every claim against real sources, gates on a human twice, and never publishes on its own.">
+    <meta name="twitter:image" content="https://themachinist.org/og-default.png">
+    <link rel="canonical" href="https://themachinist.org/content-agent-case-study.html">
+    <meta name="keywords" content="Content Agent, LangGraph, Grounding, RAG, Qdrant, DeepSeek, HITL, Human in the Loop, FastAPI, Docker, Caddy, LangSmith, Agentic AI">
+    <meta name="author" content="Anudeep Reddy">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+
+    <style>
+        /* ── Page-level custom scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* ── Header ── */
+        .cfa-header {
+            text-align: left;
+            padding: calc(var(--spacing-xl) + 60px) var(--spacing-md) var(--spacing-lg);
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cfa-header .container,
+        .cfa-main {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* ── Breadcrumb ── */
+        .cfa-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        .cfa-breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        .cfa-breadcrumb a:hover { color: var(--text-color); }
+        .cfa-breadcrumb-sep { opacity: 0.4; }
+
+        .cfa-series-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .cfa-header h1 {
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            margin-bottom: 14px;
+            color: var(--text-color);
+        }
+        .cfa-subtitle {
+            font-size: 0.98rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin: 0;
+            max-width: 700px;
+        }
+        .cfa-tech-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .cfa-tech-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 3px 10px;
+            letter-spacing: 0.03em;
+        }
+
+        /* ── Main content ── */
+        .cfa-main {
+            padding: 52px 24px 80px;
+        }
+        .cfa-main p {
+            font-size: 0.96rem;
+            line-height: 1.82;
+            color: var(--text-color);
+            margin-bottom: 16px;
+        }
+        .cfa-main h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 44px 0 14px;
+            letter-spacing: -0.01em;
+            color: var(--text-color);
+        }
+        .cfa-main h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 28px 0 10px;
+            color: var(--text-color);
+        }
+        .cfa-main ul, .cfa-main ol {
+            margin: 0 0 18px;
+            padding-left: 22px;
+        }
+        .cfa-main li {
+            font-size: 0.93rem;
+            line-height: 1.7;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        /* ── Callout ── */
+        .cfa-callout {
+            border-left: 3px solid var(--accent);
+            background: var(--section-bg);
+            border-radius: 0 6px 6px 0;
+            padding: 18px 22px;
+            margin: 20px 0 28px;
+        }
+        .cfa-callout p {
+            margin: 0;
+            font-size: 0.93rem;
+            line-height: 1.75;
+        }
+
+        /* ── Stat cards ── */
+        .cfa-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin: 22px 0 30px;
+        }
+        .cfa-stat-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            background: var(--bg-color);
+        }
+        .cfa-stat-label {
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        .cfa-stat-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-color);
+            line-height: 1.2;
+        }
+        .cfa-stat-note {
+            margin-top: 4px;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+
+        /* ── Card grid ── */
+        .cfa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 12px;
+            margin: 18px 0 30px;
+        }
+        .cfa-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            background: var(--bg-color);
+        }
+        .cfa-card h4 {
+            margin: 0 0 8px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        .cfa-card p {
+            margin: 0;
+            font-size: 0.84rem;
+            line-height: 1.64;
+            color: var(--text-secondary);
+        }
+        .cfa-grid .cfa-card:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+            max-width: 600px;
+        }
+
+        /* ── Diagram ── */
+        .cfa-diagram-wrap {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 820px;
+            margin: 22px auto 30px;
+        }
+        .cfa-diagram-label {
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .cfa-diagram-body {
+            padding: 20px;
+            background: var(--bg-color);
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+        .cfa-diagram-body pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-color);
+            white-space: pre;
+        }
+
+        /* ── Pipeline steps ── */
+        .cfa-pipeline {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 22px 0 30px;
+        }
+        .cfa-pipeline-label {
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .cfa-pipeline-body {
+            padding: 16px;
+            background: var(--bg-color);
+        }
+        .cfa-step {
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 12px;
+            margin: 10px 0;
+            align-items: start;
+        }
+        .cfa-step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-color);
+            color: var(--bg-color);
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .cfa-step-body {
+            font-size: 0.87rem;
+            color: var(--text-color);
+            line-height: 1.62;
+        }
+        .cfa-step-body strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        .cfa-step-body span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.81rem;
+            margin-top: 2px;
+        }
+
+        /* ── Code blocks ── */
+        .cfa-code-wrap {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0 22px;
+        }
+        .cfa-code-label {
+            background: var(--section-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 9px 14px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .cfa-code-block {
+            background: #1a1a1a;
+            color: #d4d4d4;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.65;
+            white-space: pre;
+            margin: 0;
+        }
+
+        /* ── Layer stack ── */
+        .cfa-layer-stack {
+            display: grid;
+            gap: 10px;
+            margin: 18px 0 30px;
+        }
+        .cfa-layer {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            background: var(--bg-color);
+        }
+        .cfa-layer-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .cfa-layer-badge {
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+        .cfa-layer-file {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+        }
+        .cfa-layer p {
+            margin: 0;
+            font-size: 0.86rem;
+            line-height: 1.65;
+            color: var(--text-secondary);
+        }
+
+        /* ── Table ── */
+        .cfa-table-wrap {
+            overflow-x: auto;
+            margin: 20px 0 30px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+        .cfa-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 560px;
+        }
+        .cfa-table th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        .cfa-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.86rem;
+            line-height: 1.55;
+            color: var(--text-color);
+            vertical-align: top;
+        }
+        .cfa-badge-done {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(39, 174, 96, 0.12);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.25);
+        }
+        .cfa-badge-warn {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(231, 76, 60, 0.1);
+            color: #c0392b;
+            border: 1px solid rgba(231, 76, 60, 0.22);
+        }
+
+        /* ── Compare cards ── */
+        .cfa-compare {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin: 18px 0 30px;
+        }
+        .cfa-compare-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            background: var(--bg-color);
+        }
+        .cfa-compare-card h4 {
+            margin: 0 0 10px;
+            font-size: 0.88rem;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .cfa-compare-card ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        .cfa-compare-card li {
+            color: var(--text-secondary);
+            font-size: 0.83rem;
+            line-height: 1.55;
+            margin-bottom: 6px;
+        }
+
+        /* ── Divider ── */
+        .cfa-divider {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 38px 0;
+        }
+
+        /* ── Inline code ── */
+        .cfa-main code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.84em;
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 1px 5px;
+            color: var(--text-color);
+        }
+
+        /* ── Closing links ── */
+        .cfa-closing {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 22px;
+            background: var(--section-bg);
+            margin: 24px 0 10px;
+        }
+        .cfa-closing p { margin: 0 0 8px; font-size: 0.92rem; }
+        .cfa-closing a { color: var(--accent); font-weight: 600; text-decoration: none; }
+        .cfa-closing a:hover { text-decoration: underline; }
+
+        /* ── Mobile ── */
+        @media (max-width: 700px) {
+            .cfa-main { padding: 36px 16px 60px; }
+            .cfa-header { padding: calc(var(--spacing-xl) + 60px) 16px 32px; }
+            .cfa-code-block, .cfa-diagram-body pre { font-size: 0.72rem; }
+            .cfa-stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-container">
+                <button class="hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul>
+                    <li><a href="index.html#projects">Projects</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#skills">Skills</a></li>
+                    <li><a href="index.html#learning-log">Learning Log</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <div class="toggle-slider">
+                        <svg class="toggle-icon sun-icon" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="toggle-icon moon-icon" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu">
+            <div class="mobile-menu-header">
+                <button class="close-menu" aria-label="Close menu">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <a href="index.html#projects">Projects</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#skills">Skills</a>
+            <a href="index.html#learning-log">Learning Log</a>
+            <a href="index.html#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="cfa-header">
+        <div class="container">
+            <nav class="cfa-breadcrumb" aria-label="Breadcrumb">
+                <a href="index.html#learning-log">Learning Log</a>
+                <span class="cfa-breadcrumb-sep">/</span>
+                <span>Project Deep Dives</span>
+                <span class="cfa-breadcrumb-sep">/</span>
+                <span style="color: var(--text-color); font-weight: 500;">Content-Agent</span>
+            </nav>
+            <div class="cfa-series-label">Agentic AI · Phase 4</div>
+            <h1>From Fluent to True: Building an Agent That Can't Fake Its Sources</h1>
+            <p class="cfa-subtitle">A single-agent LangGraph pipeline that researches a topic, drafts only what its sources support, verifies every claim, gates on a human twice, and never publishes on its own. The plumbing was the easy part. The real work was proving the agent had stopped making things up.</p>
+            <div class="cfa-tech-row">
+                <span class="cfa-tech-tag">Python</span>
+                <span class="cfa-tech-tag">LangGraph</span>
+                <span class="cfa-tech-tag">DeepSeek</span>
+                <span class="cfa-tech-tag">Qdrant + BM25 + RRF</span>
+                <span class="cfa-tech-tag">FastAPI</span>
+                <span class="cfa-tech-tag">Docker</span>
+                <span class="cfa-tech-tag">Caddy</span>
+                <span class="cfa-tech-tag">LangSmith</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        <article class="cfa-main">
+
+            <p>Type in a topic, press Enter, and watch an article get researched, drafted, fact-checked against real sources, scored, reviewed by a human at two separate gates, rendered into site-ready HTML, and published live. The whole run costs less than a cent and finishes in minutes. Nothing reaches the website that a person did not read first, and nothing gets pushed to production without a human running the final command.</p>
+
+            <!-- TL;DR -->
+            <h2>TL;DR</h2>
+            <div class="cfa-callout">
+                <p>Content-agent is a single-agent LangGraph pipeline that writes grounded technical articles for themachinist.org. It retrieves sources, drafts only what those sources support, verifies every claim, scores itself, pauses for a human to approve the content, renders HTML, pauses again for a human to approve the layout, and merges the result through git. It runs as an authenticated FastAPI service inside a non-root Docker container, deployed on EC2 behind Caddy with automatic TLS. The hard part was never the plumbing. It was getting the agent to stop making things up, and proving that it had.</p>
+            </div>
+
+            <div class="cfa-stat-grid">
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Human Gates</div>
+                    <div class="cfa-stat-value">2</div>
+                    <div class="cfa-stat-note">Content, then layout. Both mandatory in production.</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Retrieval recall@3</div>
+                    <div class="cfa-stat-value">1.0</div>
+                    <div class="cfa-stat-note">On a 35-query adversarial golden set</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Cost / Run</div>
+                    <div class="cfa-stat-value">&lt; $0.01</div>
+                    <div class="cfa-stat-note">Live rehearsal: $0.0066, topic to published</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Test Suite</div>
+                    <div class="cfa-stat-value">62</div>
+                    <div class="cfa-stat-note">$0 API cost, fully mocked, under 10s</div>
+                </div>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- THE PROBLEM -->
+            <h2>The Problem: An Agent That Writes Confident Fiction</h2>
+            <p>Ask any large language model to write a technical article and it will give you something that reads well. That is exactly the danger. It reads well whether or not the facts are real.</p>
+            <p>A model writing about, say, multi-agent systems will happily state a specific benchmark number, attribute a result to a paper, or describe an algorithm's failure mode in precise detail. Some of that is true. Some of it is invented. The fluent sentences look identical either way. For a personal blog that publishes under my own name, that is not acceptable. A single fabricated claim, confidently worded, is worse than no article at all.</p>
+            <p>So the goal was never "generate articles." Generating articles is easy and mostly useless. The goal was: <strong>generate articles where every substantive claim can be traced back to a real source, and prove it with measurement, not vibes.</strong></p>
+            <p>That turned out to be a much deeper problem than I expected, and chasing it down is the real story of this project.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- WHERE THIS CAME FROM -->
+            <h2>Where This Came From: Three Phases of Agents</h2>
+            <p>Content-agent is the fourth project in a deliberate arc. Each earlier phase taught a lesson the next one needed.</p>
+
+            <div class="cfa-layer-stack">
+                <div class="cfa-layer">
+                    <div class="cfa-layer-head">
+                        <span class="cfa-layer-badge">Phase 1</span>
+                        <span class="cfa-layer-file">the CLI agent</span>
+                    </div>
+                    <p>A basic query-response agent: the user asks, the agent calls a tool, the agent answers. One turn, one cycle, a raw loop with control flow hidden inside conditionals. It worked, but it could not pursue a goal across multiple steps, and there was no way to inspect what it was doing mid-run.</p>
+                </div>
+                <div class="cfa-layer">
+                    <div class="cfa-layer-head">
+                        <span class="cfa-layer-badge">Phase 2</span>
+                        <span class="cfa-layer-file">the RAG knowledge agent</span>
+                    </div>
+                    <p>This added retrieval: a vector store, embeddings, and the ability to answer from a private knowledge base rather than the model's memory. The lesson here was that retrieval quality is a first-class concern. A retrieval system that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.</p>
+                </div>
+                <div class="cfa-layer">
+                    <div class="cfa-layer-head">
+                        <span class="cfa-layer-badge">Phase 3</span>
+                        <span class="cfa-layer-file">the code-fix agent</span>
+                    </div>
+                    <p>The jump from answering questions to pursuing a goal. The agent executes a broken Python script, reads the failure, diagnoses the root cause, patches the code, and retries until the script runs or it runs out of attempts. Built as an explicit LangGraph state machine instead of a while loop, with a human approval step and full tracing. It fixed 95% of a 20-script test set. The lesson that mattered most: exit code zero is not correctness. A script can run cleanly and still produce the wrong answer. You need a separate evaluator whose only job is to judge whether the result is actually right.</p>
+                </div>
+            </div>
+
+            <p>Content-agent inherited all three lessons. It needed goal-directed control flow (Phase 3), it needed retrieval that was provably healthy (Phase 2), and most of all it needed a verifier that judged correctness rather than trusting that fluent output meant true output (the Phase 3 lesson, applied to facts instead of code).</p>
+
+            <hr class="cfa-divider">
+
+            <!-- WHAT IT DOES -->
+            <h2>What Content-Agent Does</h2>
+            <p>The agent takes a topic and an editorial intent. It produces a publish-ready HTML article for themachinist.org, optionally merged into the website's git repository. Between those two points, it runs seven nodes in a fixed graph, pausing twice for a human.</p>
+            <div class="cfa-callout">
+                <p>Think of it like a newsroom with a strict fact-checking desk. A writer drafts the piece, but before anything prints, a checker goes through every factual claim and marks which ones are actually supported by the reporting. An editor reads the draft and signs off on the content. A layout person sets the page. The editor signs off again on how it looks. Only then does it go to the press, and even then, a person has to physically start the press. The agent automates the writer, the checker, and the layout person. The two editor sign-offs and the press start stay human, on purpose.</p>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- ARCHITECTURE -->
+            <h2>Architecture: The Pipeline</h2>
+            <p>The whole system is a directed graph. Each node is a function that reads the shared state and returns an update to it. Each edge is a transition, some unconditional, some routed by a decision function.</p>
+
+            <div class="cfa-diagram-wrap">
+                <div class="cfa-diagram-label">Pipeline Topology</div>
+                <div class="cfa-diagram-body">
+<pre>        ┌───────────┐
+        │ retrieve  │   web (Tavily) + KB (Qdrant + BM25 + RRF)
+        └─────┬─────┘
+              ▼
+        ┌───────────┐
+        │   draft   │   source-aware, cite-or-generalize
+        └─────┬─────┘
+              ▼
+        ┌───────────┐
+        │  verify   │   claim-by-claim grounding score
+        └─────┬─────┘
+              ▼
+        ┌───────────┐
+        │  reflect  │   self-score 1-10 (advisory only)
+        └─────┬─────┘
+              ▼
+   route_after_reflect ──(grounding &lt; floor)──► back to draft  (max 2 iterations)
+              │
+              ▼
+   ┌────────────────────┐
+   │  GATE 1 · CONTENT  │   human: approve / feedback / reject
+   └─────────┬──────────┘   feedback ► draft        reject ► END
+     approve │
+             ▼
+        ┌───────────┐
+        │ html_gen  │   render approved content to site HTML
+        └─────┬─────┘
+              ▼
+   ┌────────────────────┐
+   │  GATE 2 · LAYOUT   │   human: approve / request changes / reject
+   │  (content frozen)  │   changes ► html_revise ► (loop back)
+   └─────────┬──────────┘
+     approve │
+             ▼
+        ┌───────────┐
+        │    git    │   LOCAL merge only, never pushes
+        └─────┬─────┘
+              ▼
+            END  ◄── a human runs `git push` to actually go live</pre>
+                </div>
+            </div>
+
+            <div class="cfa-pipeline">
+                <div class="cfa-pipeline-label">What Each Stage Does</div>
+                <div class="cfa-pipeline-body">
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">1</div>
+                        <div class="cfa-step-body">
+                            <strong>retrieve</strong>
+                            Runs first. Searches the web through Tavily across three fixed query angles (the concept explained, its failure modes and limitations, and an implementation example), deduplicates by URL, and keeps the top results. Also queries a Qdrant knowledge base of evergreen ML concepts. If the first web pass comes back thin or low-scoring, it re-runs with a forced cache refresh.
+                            <span>Retrieval freshness turned out to be the single largest lever on grounding quality, so this gate matters.</span>
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">2</div>
+                        <div class="cfa-step-body">
+                            <strong>draft</strong>
+                            Generates a four-section article (problem framing, technical deep-dive, code, takeaways) with DeepSeek. The key design choice: the draft node reads the retrieved sources and is instructed to assert specific claims only where a source supports them, and to generalize otherwise.
+                            <span>This is "cite or generalize," and it is the heart of the grounding fix below.</span>
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">3</div>
+                        <div class="cfa-step-body">
+                            <strong>verify</strong>
+                            Extracts every factual claim from the draft and scores each one against the retrieved sources, assigning a status of verified, weak, or unverified, plus a confidence. This is the fact-checking desk: a separate LLM call with its own prompt, deliberately isolated from the draft so the writer cannot grade its own homework.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">4</div>
+                        <div class="cfa-step-body">
+                            <strong>reflect</strong>
+                            The agent scores its own draft from 1 to 10 on structure, depth, grounding, and clarity. This score is advisory only. Language models inflate their own grades, so reflection never gets to be the hard gate.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">5</div>
+                        <div class="cfa-step-body">
+                            <strong>route after reflect</strong>
+                            A composite decision. Force a rewrite if grounding is below a hard floor of 0.60, or if the reflection score is below 7 and grounding is below 0.75. Otherwise move to the human. Stop revising once iterations hit the ceiling of 2 or the cost gate trips.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">6</div>
+                        <div class="cfa-step-body">
+                            <strong>hitl (Gate 1, content)</strong>
+                            The first human gate. A reviewer sees the full draft, a claim-by-claim grounding table, the reflection score, and any warnings. They approve, send feedback (which routes back to draft), or reject. Once approved, the content is frozen.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">7</div>
+                        <div class="cfa-step-body">
+                            <strong>html_gen</strong>
+                            Renders the approved content into themachinist.org-compliant HTML. Three of the four sections render deterministically in Python. Only the technical deep-dive goes through an LLM for HTML conversion. The output is validated programmatically for required structure before it moves on.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">8</div>
+                        <div class="cfa-step-body">
+                            <strong>hitl_html (Gate 2, layout)</strong>
+                            The second human gate, and this one only reviews how the page looks. Content is frozen here. If the reviewer requests changes, a single temperature-zero pass edits the markup and loops back. A word-multiset guard compares the revised HTML against the original and discards any revision that changes more than two visible words, so a layout edit can never silently alter the text.
+                        </div>
+                    </div>
+                    <div class="cfa-step">
+                        <div class="cfa-step-num">9</div>
+                        <div class="cfa-step-body">
+                            <strong>git</strong>
+                            Writes the HTML into the website repository on a feature branch, diffs it against main, tags before merging when an existing article changes, and merges locally with no fast-forward. It never pushes. More on that below, because it is the most important safety property in the project.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>The Stack</h3>
+            <div class="cfa-table-wrap">
+                <table class="cfa-table">
+                    <thead>
+                        <tr><th>Layer</th><th>Choice</th><th>Why</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Orchestration</td><td>LangGraph (single agent)</td><td>Explicit state machine, every transition named and inspectable</td></tr>
+                        <tr><td>Generation</td><td>DeepSeek API</td><td>Strong, cheap; 120s timeout with tenacity retries, SDK retries disabled so they do not stack</td></tr>
+                        <tr><td>Web retrieval</td><td>Tavily</td><td>7-day cache with a score-gated freshness refresh</td></tr>
+                        <tr><td>Knowledge base</td><td>Qdrant + BM25 + RRF over all-MiniLM-L6-v2</td><td>Dense plus keyword, fused by reciprocal rank fusion</td></tr>
+                        <tr><td>Service</td><td>FastAPI + SqliteSaver</td><td>Durable, resumable human-in-the-loop behind bearer auth</td></tr>
+                        <tr><td>Publish</td><td>GitPython, Netlify</td><td>Local merge, human push, static deploy</td></tr>
+                        <tr><td>Container</td><td>Docker, non-root</td><td>uid 10001, embedding model baked at build time</td></tr>
+                        <tr><td>Edge</td><td>Caddy + sslip.io</td><td>Automatic TLS without manual certs or a purchased domain</td></tr>
+                        <tr><td>Registry</td><td>Docker Hub</td><td>Build once on a fast machine, pull on the small VM</td></tr>
+                        <tr><td>Tracing</td><td>LangSmith</td><td>Cross-node traces with per-call token usage and cost</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Why ChromaDB Became Qdrant</h3>
+            <p>The knowledge base did not start on Qdrant. The first version used ChromaDB, which is a fine choice for a notebook prototype. It stopped being the right choice once the project needed to run benchmarks and behave like production infrastructure.</p>
+            <p>ChromaDB showed problems with concurrent writes under benchmark loads, which is exactly the situation where a retrieval backend has to stay reliable. Qdrant fixed that and brought three things that mattered for where this project was going: payload filtering, so retrieval can be constrained by metadata rather than vector similarity alone; a clean fit with a Docker-based production setup, running as its own network-isolated service instead of an embedded library; and a scroll API that handles larger collections without loading everything into memory at once.</p>
+            <p>The migration was not taken on faith. I re-ran the retrieval evaluation against the same 35-query adversarial golden set after switching backends and confirmed that recall at 3 held at 1.0. The backend changed underneath; the retrieval quality did not move. After the migration, ChromaDB was removed entirely, since nothing imported it anymore.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- GROUNDING INVESTIGATION -->
+            <h2>The Grounding Investigation</h2>
+            <p>This is the part I am proudest of, because it is where the project stopped being a build and became an investigation. The first working version produced articles that read beautifully and were full of claims I could not verify. The obvious move would have been to tweak prompts until the output looked better. Instead I treated it as a measurement problem and ran experiments.</p>
+
+            <h3>First, exonerate the verifier</h3>
+            <p>Before blaming the writer, I had to rule out the checker. Maybe grounding looked low because the verifier was too strict and marking true claims as unverified. So I built a golden fixture: twelve fixed claims, hand-labeled, covering verbatim matches, paraphrases, absent claims, and outright false ones, each crossed with substantive versus generic. The verifier scored these against a known source.</p>
+            <p>It got 8 out of 8 on the ground-truth set, including paraphrased-but-correct claims, with high confidence. The verifier was not the problem. I also checked retrieval the same way, with a 35-query adversarial set spanning easy, medium, hard, multi-hop, and out-of-scope questions. Recall at 3 was 1.0. The knowledge base was not the problem either.</p>
+            <p>With both the checker and the retriever cleared, the cause had to be the writer.</p>
+
+            <h3>The trap: optimizing the wrong number</h3>
+            <p>The naive metric for grounding is the unverified rate (UVR): what fraction of claims could not be verified. Lower is better. So why not just minimize it?</p>
+            <p>Because minimizing UVR rewards vagueness. The cheapest way to drive unverified claims to zero is to stop making specific claims at all. An article that says "neural networks can be effective in some situations" has a wonderful UVR and is worth nothing. I caught this early and <strong>voided UVR-alone as an objective.</strong></p>
+            <p>What replaced it is SV, substantive verified claims: a count of specific, technically meaningful claims that actually checked out against sources. SV is the primary quality metric. UVR is kept only as a guardrail (it must stay at or below 0.15), and any change that improves UVR by going vague triggers a mandatory co-condition: SV must not drop. You cannot win by saying less. You can only win by saying more true things.</p>
+
+            <h3>Source-aware drafting</h3>
+            <p>The root cause turned out to be over-claiming by substitution. The original draft node ran before retrieval and never saw the sources. So it wrote from the model's memory, producing confident specifics that no retrieved source backed up. When I made drafting source-aware (retrieve first, then draft, with an explicit instruction to cite or generalize), the worst offender, a multi-agent-systems topic, went from a UVR of 0.63 to 0.22 with its SV up 253%. The draft was finally writing about what it had actually found, not what it vaguely remembered.</p>
+            <div class="cfa-stat-grid">
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Worst topic, UVR</div>
+                    <div class="cfa-stat-value">0.63 → 0.22</div>
+                    <div class="cfa-stat-note">Multi-agent systems, after source-aware drafting</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Same topic, SV</div>
+                    <div class="cfa-stat-value">+253%</div>
+                    <div class="cfa-stat-note">More specific claims, and they checked out</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">Grounding floor</div>
+                    <div class="cfa-stat-value">0.60</div>
+                    <div class="cfa-stat-note">Hard gate; below it forces a rewrite</div>
+                </div>
+                <div class="cfa-stat-card">
+                    <div class="cfa-stat-label">UVR guardrail</div>
+                    <div class="cfa-stat-value">&le; 0.15</div>
+                    <div class="cfa-stat-note">With SV-no-loss as a mandatory co-condition</div>
+                </div>
+            </div>
+
+            <h3>Killing the blind re-roll</h3>
+            <p>The original revision loop, when grounding was bad, simply threw the draft away and generated a fresh one from scratch, hoping for better luck. I tested this against a smarter loop that fed the previous draft's unverified claims back in with instructions to ground them, generalize them, or cut them.</p>
+            <p>The blind re-roll was not just weaker. It was actively worse than doing nothing. On healthy topics it made grounding regress: one topic went from 0.170 to 0.270 unverified, another from 0.275 to 0.341. Rolling the dice again on a draft that was already fine just gave the model another chance to over-claim. The blind re-roll was removed. Revision now always carries forward a specific, claim-level grounding report.</p>
+
+            <h3>Why the iteration ceiling stays at 2</h3>
+            <p>Later I tested raising the maximum revision count above 2 to chase higher grounding. It failed for a clean reason: a higher ceiling cannot help drafts that never trigger a revision in the first place, and on the drafts that do revise, the extra passes traded SV for vagueness. They lowered the unverified rate by making claims blander, which is exactly the failure mode SV exists to catch. The ceiling stays at 2.</p>
+            <div class="cfa-callout">
+                <p>The thread running through all of this: it is easy to make an automated writer look more grounded by making it say less. The entire metric design exists to make that cheat impossible, so the only way to score better is to actually be better.</p>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- THREE BUGS -->
+            <h2>Three Bugs That Taught Me Something</h2>
+            <p>Every one of these passed at least one test before I caught it. That is the lesson in all three: a green checkmark is evidence, not proof.</p>
+
+            <h3>The chained-assignment telemetry bug</h3>
+            <p>The pipeline records latency per node. For a long time, the knowledge-base retrieval latency looked alarming, and I nearly went hunting for a Qdrant performance problem. Two things were wrong. First, a chained assignment in the telemetry code recorded the web latency under the knowledge-base field, so the number was not even measuring what its name claimed. Second, the one genuinely slow reading came from a diagnostic probe that loaded the embedding model a second time into a local variable, while the real singleton stayed cold. The "slow Qdrant" was a model load in disguise.</p>
+            <div class="cfa-callout">
+                <p>Warm queries were actually 29 to 33 milliseconds. Qdrant was fine the whole time. <strong>The lesson: a telemetry field can be broken at birth, and a measurement bug will happily masquerade as a system bug until you check that the number measures what its label says.</strong> I added a warmup step so steady-state latency is what gets recorded, and a telemetry check that asserts field correctness, not just field presence.</p>
+            </div>
+
+            <h3>The rm -f that deleted articles</h3>
+            <p>The rollback script was supposed to undo a publish. An early version ended with a manual <code>rm -f</code> of the article file. It passed its first test, so I trusted it.</p>
+            <p>It was wrong. There are two kinds of rollback: undoing a brand-new article (where deleting the file is correct) and undoing an edit to an existing article (where the correct outcome is restoring the previous version, and the file must stay). The <code>rm -f</code> deleted the file in both cases. On a modification rollback it destroyed content that should have been restored. The reason it "passed once" was a coincidence in the test article that happened to make the wrong behavior look right.</p>
+            <div class="cfa-callout">
+                <p>I rebuilt the script from git's actual revert semantics: revert the publish merge commit, which restores the prior version content-for-content, and never manually delete anything. <strong>The lesson: a rollback that silently deletes an edited article is worse than no rollback at all, and correctness has to be derived from how the tool actually works, not from one run that happened to look fine.</strong></p>
+            </div>
+
+            <h3>The filename suffix that broke republishing</h3>
+            <p>To avoid clobbering local debug copies, the HTML generator gave each run's archived file a unique suffix. That suffix leaked into the filename that the git node writes into the website repository. The effect was subtle and bad: every republish of the same topic produced a new filename, so git always saw a brand-new file, the "changed file" code path that tags before merging was never reachable, and the public URL of an article changed every single time it was updated.</p>
+            <div class="cfa-callout">
+                <p>The fix was to make the published filename always the canonical slug, and let the local archive keep its own unique name where it belongs. <strong>The lesson: a local convenience leaking into production semantics is its own bug class.</strong> A name that only mattered for avoiding a debug-file collision had quietly taken over the publishing logic.</p>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- FREEZE SPRINT -->
+            <h2>The Freeze Sprint: Making It Production-Grade</h2>
+            <p>Once the grounding work was locked, I gave myself a hard deadline to turn a working pipeline into a deployed, hardened system. This was a sequence of milestones, each with an explicit exit gate.</p>
+            <div class="cfa-grid">
+                <div class="cfa-card">
+                    <h4>Input sanitization</h4>
+                    <p>The topic becomes a slug, which becomes a filename and a git branch and tag name. Slug generation is now allowlist-based by construction, with dedicated tests for path traversal, git-ref injection, and a null-byte fuzz case.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Failure-injection tests</h4>
+                    <p>Five real fault modes: DeepSeek auth failure (must propagate, never get swallowed), DeepSeek timeout and rate limit (exactly three retry attempts, then reraise), Tavily empty or erroring, Qdrant down, and malformed model JSON. Each path is exercised and asserted, so the system degrades instead of crashing.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>CI gates</h4>
+                    <p>Two tiers. A free per-push tier runs fatal-tier lint and the full mocked suite at zero API cost. A secret-gated tier runs the real grounding gates: the golden verifier fixture with an enforced threshold, and a benchmark that fails the build if any run's unverified rate exceeds 0.15.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Durable human-in-the-loop</h4>
+                    <p>The centerpiece. The graph is compiled with a SqliteSaver checkpointer, so when a human gate pauses, the entire run state is persisted to disk. A reviewer can come back later, even after the process restarts, and resume from exactly where it paused.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Containerization</h4>
+                    <p>A non-root image running as uid 10001, with the embedding model baked in at build time so the first run is fast. A production compose file runs the app alongside a network-isolated Qdrant that has no host port and is reachable only inside the compose network. Secrets are injected at runtime, never baked in.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Publish validation and rollback</h4>
+                    <p>The git automation was validated against a fork of the website, never production, exercising both the new-article and changed-article paths, plus the rollback script, plus one supervised real publish.</p>
+                </div>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- POST FREEZE -->
+            <h2>Post-Freeze: The Live Demo and the Second Gate</h2>
+            <p>After the freeze, three pieces of work turned a command-line tool into something you can actually watch run in a browser.</p>
+            <p><strong>The second HITL gate.</strong> The original pipeline had one human gate, for content. I split review into two: content first, then layout, with content frozen at the second gate. The layout gate routes change requests to a single temperature-zero revision pass that can only touch markup. The content-freeze guard mechanically discards any "layout" edit that drifts the text by more than two words. This means a reviewer can fix how an article looks with zero risk of changing what it says.</p>
+            <p><strong>The index auto-update.</strong> Every successful publish patches a card into the website's homepage learning log, in place on republish, and excluded from the diff that decides the tag-versus-no-tag publish path so the distinction still holds.</p>
+            <p><strong>The interactive front-end.</strong> A self-contained single-page app, vanilla JavaScript with server-sent events, served by the same FastAPI app. You enter a topic and watch each node complete in real time. Both human gates appear inline: the content gate shows the draft and the grounding table, the layout gate shows the rendered HTML in a frame. A publish button does the final go-live. This streaming surface was added without touching the existing pipeline. The graph runs exactly as before. The UI is a new way to observe it, not a new way to run it.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- VALIDATION -->
+            <h2>Validation and Quality Gates</h2>
+            <p>Nothing here is self-reported. Every quality claim has an enforcing check behind it.</p>
+            <div class="cfa-grid">
+                <div class="cfa-card">
+                    <h4>Golden verifier fixture</h4>
+                    <p>Twelve hand-labeled claims. The check exits with a failure code if grounding accuracy drops below 11 of 12 or specificity below 10 of 12. The cheap, fast regression guard, and it runs automatically on every pull request.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Benchmark gate</h4>
+                    <p>Runs 20 topics through the real pipeline and fails outright if any run errors or any run's unverified rate exceeds 0.15. The comprehensive guard, run on demand because it spends real money.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Telemetry correctness check</h4>
+                    <p>Asserts that every required field is present and internally consistent: attribution counts sum to the claim count, every claim has a source kind, every knowledge-base result carries its chunk index. Reconstructability is a contract, not a hope.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Failure-injection suite</h4>
+                    <p>The five fault modes from the freeze sprint, all mocked, all at zero cost, all asserting the exact degradation behavior.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Fork-based publish validation</h4>
+                    <p>The git automation is only ever tested against a fork of the website. Production is never the test environment.</p>
+                </div>
+            </div>
+            <p>The full test suite is 62 tests, runs at zero API cost because everything external is mocked, and finishes in under ten seconds.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- PUBLISH SAFETY -->
+            <h2>The Publish-Safety Posture</h2>
+            <p>This deserves its own section, because it is the single design decision I am most deliberate about.</p>
+            <div class="cfa-callout">
+                <p><strong>The git node does a local merge only. It never pushes.</strong> There is no code path inside it that calls <code>git push</code>. I have grepped for it specifically. The agent can research, draft, verify, render, and merge a finished article into a local branch, and then it stops. Going live, the actual push to the remote that triggers the public deploy, is a separate command that a human runs.</p>
+            </div>
+            <p>When I added a cloud publish button to the demo, this property had to survive. It did, because the button is a separate, explicitly human-triggered endpoint that only succeeds after both human gates have already passed and the git node has already done its local merge. The push lives in its own place, gated behind everything else. Adding a go-live button extended what the system can do without weakening the rule that a person, not the agent, decides when something goes public.</p>
+            <p>This is not a limitation I am working around. It is the safeguard, and it is intentional. An automated writer that can publish to the open internet on its own is exactly the thing I do not want to build.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- OBSERVABILITY -->
+            <h2>Observability and Monitoring</h2>
+            <p>Every run is reconstructable after the fact.</p>
+            <ul>
+                <li><strong>Structured logs.</strong> Every node logs JSON to stdout through a shared logger, tagged with the run ID. In a container, stdout is the log sink.</li>
+                <li><strong>Per-run telemetry.</strong> Each run writes a JSON record with the full grounding report, the retrieved sources, per-iteration metrics (so a two-pass revision is fully reconstructable, not just its final draft), claim attribution, cost, tokens, per-node latency, and any non-fatal errors.</li>
+                <li><strong>Prompt-hash versioning.</strong> Every prompt file is content-hashed at startup, and the hash is stamped into every telemetry record. Changing a prompt silently re-baselines every quality metric, because grounding numbers are only comparable across runs that used the same verifier prompt. The hash makes that comparability visible and impossible to forget.</li>
+                <li><strong>Claim-level attribution.</strong> Every verified claim is resolved back against the actual retrieved set and tagged as web, knowledge-base, or neither. A claim the verifier cited that does not resolve to anything retrieved is a hallucinated-citation signal, surfaced rather than hidden.</li>
+                <li><strong>LangSmith tracing.</strong> When credentials are present, the DeepSeek client is wrapped so every model call becomes a traced run with token usage and real per-call cost attached. This gives cross-node trace visualization and a latency breakdown that the stdout logs alone do not.</li>
+            </ul>
+            <p>What is deliberately not built: automated alerting and dashboards. Uptime is a manual check, a free HTTP monitor pointed at the health endpoint, set up by hand and documented in the runbook. For a single-operator system that is watched while it runs, that is an honest scope choice, not an oversight. It is written down as exactly that.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- CURRENT STATE -->
+            <h2>Current State</h2>
+            <p>The system is live. The demo runs on an EC2 instance behind Caddy, which handles TLS automatically, with the public URL provided by sslip.io so no real domain is needed. The container image is built once on a fast machine for the ARM instance and pushed to Docker Hub, so the small VM only ever pulls a finished image instead of rebuilding the model-baking image itself. The app container has no public port of its own. Caddy is the only thing facing the internet.</p>
+            <p>That build-once-pull model was not the first plan. The first plan was to build the image directly on the EC2 box, which is the obvious thing to try. It failed. The instance ran out of disk space partway through the build, because the image bakes in PyTorch and the embedding model, and those layers are large. Building them on a small VM with a modest disk is a losing fight. The fix was to move the heavy work off the box entirely: build the ARM image once on a local machine, push it to Docker Hub, and have EC2 only ever pull the finished image. That solved the disk problem outright, and as a bonus made deployments faster and more repeatable, because the slow model-baking step happens once on capable hardware instead of on every deploy.</p>
+            <p>A full run, end to end, costs a fraction of a cent. The live rehearsal that took an article from topic to published, through both gates, retrieved 10 web sources, scored 0.773 grounding across 28 claims, and cost $0.0066.</p>
+
+            <h3>Known Limitations</h3>
+            <p>I keep these first-class, written down rather than discovered later.</p>
+            <div class="cfa-table-wrap">
+                <table class="cfa-table">
+                    <thead>
+                        <tr><th>Limitation</th><th>What it means</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Registry not rehydrated on restart</td>
+                            <td>A paused run's HTTP-visible state is lost if the process restarts, though the underlying checkpoint survives on disk. Drain reviews before restarting.</td>
+                            <td><span class="cfa-badge-warn">Accepted, fix scoped</span></td>
+                        </tr>
+                        <tr>
+                            <td>Tag-based rollback window</td>
+                            <td>The tag-based rollback keeps the newest five publish tags. The revert-based rollback does not depend on tags and is unbounded.</td>
+                            <td><span class="cfa-badge-done">Accepted</span></td>
+                        </tr>
+                        <tr>
+                            <td>Local merge, human push</td>
+                            <td>The agent never pushes. Every live publish needs a human command.</td>
+                            <td><span class="cfa-badge-done">Intentional safeguard</span></td>
+                        </tr>
+                        <tr>
+                            <td>Single-worker throughput</td>
+                            <td>One run computes at a time. Fine for one-article-at-a-time editorial use.</td>
+                            <td><span class="cfa-badge-done">Accepted for scope</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>These are also exactly the things that would need to change for a multi-tenant, always-on version: per-tenant identity instead of one shared token, rate limiting and spend caps, horizontal scale instead of a single worker on a single box, and automated alerting. None of them block a supervised single-operator demo. All of them would be required before letting strangers run it unattended. Knowing precisely which is which is part of the point.</p>
+
+            <hr class="cfa-divider">
+
+            <!-- WHAT I LEARNED -->
+            <h2>What I Learned</h2>
+            <div class="cfa-grid">
+                <div class="cfa-card">
+                    <h4>Fluency is not truth</h4>
+                    <p>The whole project exists because a well-written false claim looks identical to a well-written true one. You cannot eyeball your way out of this. You need a separate verifier and a metric that cannot be gamed.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Pick a metric you can't cheat</h4>
+                    <p>Unverified-rate looked like the obvious grounding metric and was actively harmful, because the easy way to improve it was to say nothing specific. Designing SV with a no-vagueness co-condition mattered more than any prompt change.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>A passing test is evidence, not proof</h4>
+                    <p>All three of the bugs that taught me the most had passed a check first. Re-deriving correctness from how a thing actually works, rather than trusting one green result, is the habit that separates a demo from a system.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Keep the human where the stakes are</h4>
+                    <p>Two gates and a human-only push are not friction to be optimized away. They are the design. The agent does the labor; a person owns the decision to publish.</p>
+                </div>
+                <div class="cfa-card">
+                    <h4>Disclose your limits</h4>
+                    <p>The fastest way to lose trust in a system is to hide what it cannot do. Every limitation here is written down, scoped, and labeled as either an accepted trade-off or a deliberate safeguard.</p>
+                </div>
+            </div>
+
+            <hr class="cfa-divider">
+
+            <!-- BOTTOM LINE -->
+            <h2>Bottom Line</h2>
+            <p>Most "AI writes articles" demos stop at fluent output. This one starts there and spends all of its effort on the question that actually matters: is any of it true, and can you prove it?</p>
+            <p>The answer is a pipeline where every substantive claim is checked against a real source, where the quality metric is built so that the only way to score higher is to be more correct rather than more vague, where two humans review the work and a third action (the push) is reserved for a person, and where every run leaves behind enough telemetry to reconstruct exactly what happened. It is deployed, authenticated, containerized, and live, with its limits written down honestly rather than hidden.</p>
+            <p>It proves something specific: that an LLM system can be made trustworthy not by hoping the model behaves, but by measuring whether it did, and by keeping a human at every point where the stakes are real.</p>
+
+            <div class="cfa-closing">
+                <p><strong>View the code on GitHub:</strong> <a href="https://github.com/anudeepreddy332/content-agent" target="_blank" rel="noopener noreferrer">github.com/anudeepreddy332/content-agent →</a></p>
+            </div>
+
+            <a href="index.html#projects" class="back-link">← Back to Projects</a>
+
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mailto:anudeepreddy332@gmail.com" aria-label="Email">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </a>
+                <a href="https://linkedin.com/in/anudeep-reddy-mutyala" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                        <rect x="2" y="9" width="4" height="12"/>
+                        <circle cx="4" cy="4" r="2"/>
+                    </svg>
+                </a>
+                <a href="https://github.com/anudeepreddy332" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+            </div>
+            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="shared.js"></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "From Fluent to True: Building an Agent That Can't Fake Its Sources | The Machinist",
+      "author": {
+        "@type": "Person",
+        "name": "Anudeep Reddy",
+        "url": "https://themachinist.org"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "The Machinist",
+        "url": "https://themachinist.org"
+      },
+      "url": "https://themachinist.org/content-agent-case-study.html"
+    }
+    </script>
+</body>
+</html>

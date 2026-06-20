@@ -1,4 +1,4 @@
-# Content-Agent: A Grounded, Human-Gated Article Pipeline
+# From Fluent to True: Building an Agent That Can't Fake Its Sources
 
 *Agentic AI · Phase 4 · The Machinist*
 
@@ -12,7 +12,7 @@ Type in a topic, press Enter, and watch an article get researched, drafted, fact
 
 ---
 
-## The Problem: An Agent That Writes Confidently and Wrongly
+## The Problem: An Agent That Writes Confident Fiction
 
 Ask any large language model to write a technical article and it will give you something that reads well. That is exactly the danger. It reads well whether or not the facts are real.
 
@@ -92,6 +92,14 @@ Here is what each stage does.
 | Edge | Caddy + sslip.io | Automatic TLS without manual certs or a purchased domain |
 | Registry | Docker Hub | Build once on a fast machine, pull on the small VM |
 | Tracing | LangSmith | Cross-node traces with per-call token usage and cost |
+
+### Why ChromaDB Became Qdrant
+
+The knowledge base did not start on Qdrant. The first version used ChromaDB, which is a fine choice for a notebook prototype. It stopped being the right choice once the project needed to run benchmarks and behave like production infrastructure.
+
+ChromaDB showed problems with concurrent writes under benchmark loads, which is exactly the situation where a retrieval backend has to stay reliable. Qdrant fixed that and brought three things that mattered for where this project was going: payload filtering, so retrieval can be constrained by metadata rather than vector similarity alone; a clean fit with a Docker-based production setup, running as its own network-isolated service instead of an embedded library; and a scroll API that handles larger collections without loading everything into memory at once.
+
+The migration was not taken on faith. I re-ran the retrieval evaluation against the same 35-query adversarial golden set after switching backends and confirmed that recall at 3 held at 1.0. The backend changed underneath; the retrieval quality did not move. After the migration, ChromaDB was removed entirely, since nothing imported it anymore.
 
 ---
 
@@ -228,6 +236,8 @@ What is deliberately not built: automated alerting and dashboards. Uptime is a m
 
 The system is live. The demo runs on an EC2 instance behind Caddy, which handles TLS automatically, with the public URL provided by sslip.io so no real domain is needed. The container image is built once on a fast machine for the ARM instance and pushed to Docker Hub, so the small VM only ever pulls a finished image instead of rebuilding the model-baking image itself. The app container has no public port of its own. Caddy is the only thing facing the internet.
 
+That build-once-pull model was not the first plan. The first plan was to build the image directly on the EC2 box, which is the obvious thing to try. It failed. The instance ran out of disk space partway through the build, because the image bakes in PyTorch and the embedding model, and those layers are large. Building them on a small VM with a modest disk is a losing fight. The fix was to move the heavy work off the box entirely: build the ARM image once on a local machine, push it to Docker Hub, and have EC2 only ever pull the finished image. That solved the disk problem outright, and as a bonus made deployments faster and more repeatable, because the slow model-baking step happens once on capable hardware instead of on every deploy.
+
 A full run, end to end, costs a fraction of a cent. The live rehearsal that took an article from topic to published, through both gates, retrieved 10 web sources, scored 0.773 grounding across 28 claims, and cost $0.0066.
 
 ### Known Limitations
@@ -259,19 +269,6 @@ These are also exactly the things that would need to change for a multi-tenant, 
 
 ---
 
-## Tech Stack
-
-- **Orchestration:** LangGraph (single-agent state machine), Python 3.14, uv
-- **Generation:** DeepSeek API (120s timeout, tenacity retries, SDK retries disabled)
-- **Retrieval:** Tavily (cached web search with score-gated refresh), Qdrant + BM25 + reciprocal rank fusion over all-MiniLM-L6-v2
-- **Service:** FastAPI, SqliteSaver checkpointer, bearer auth, server-sent events
-- **Front-end:** Vanilla JavaScript single-page app with EventSource streaming
-- **Publish:** GitPython (local merge only), Netlify static deploy
-- **Infrastructure:** Docker (non-root), Docker Hub, EC2 (ARM/Graviton), Caddy (automatic TLS), sslip.io
-- **Observability:** structlog JSON logging, per-run telemetry, prompt-hash versioning, LangSmith tracing with token and cost
-
----
-
 ## Bottom Line
 
 Most "AI writes articles" demos stop at fluent output. This one starts there and spends all of its effort on the question that actually matters: is any of it true, and can you prove it?
@@ -279,3 +276,7 @@ Most "AI writes articles" demos stop at fluent output. This one starts there and
 The answer is a pipeline where every substantive claim is checked against a real source, where the quality metric is built so that the only way to score higher is to be more correct rather than more vague, where two humans review the work and a third action (the push) is reserved for a person, and where every run leaves behind enough telemetry to reconstruct exactly what happened. It is deployed, authenticated, containerized, and live, with its limits written down honestly rather than hidden.
 
 It proves something specific: that an LLM system can be made trustworthy not by hoping the model behaves, but by measuring whether it did, and by keeping a human at every point where the stakes are real.
+
+---
+
+View the code on GitHub: https://github.com/anudeepreddy332/content-agent
