@@ -96,7 +96,21 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-top: 20px;
+            margin-top: 12px;
+        }
+        .cfa-jump-link {
+            display: inline-block;
+            margin-top: 16px;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .cfa-jump-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .cfa-jump-link a:hover {
+            text-decoration: underline;
         }
         .cfa-tech-tag {
             font-size: 0.75rem;
@@ -442,6 +456,7 @@
             .cfa-header { padding: calc(var(--spacing-xl) + 60px) 16px 32px; }
             .cfa-diagram-body pre { font-size: 0.72rem; }
             .cfa-stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .cfa-jump-link a { font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -512,6 +527,7 @@
             <div class="cfa-series-label">Agentic AI · Phase 4</div>
             <h1>Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles</h1>
             <p class="cfa-subtitle">A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing.</p>
+            <p class="cfa-jump-link"><a href="#grounding-investigation">Jump to the grounding investigation &darr;</a></p>
             <div class="cfa-tech-row">
                 <span class="cfa-tech-tag">Python</span>
                 <span class="cfa-tech-tag">LangGraph</span>
@@ -760,7 +776,7 @@
             <hr class="cfa-divider">
 
             <!-- GROUNDING INVESTIGATION -->
-            <h2>The Grounding Investigation</h2>
+            <h2 id="grounding-investigation">The Grounding Investigation</h2>
             <p>This is the part I am proudest of, because it is where the project stopped being a build and became an investigation. The first working version produced articles that read beautifully and were full of claims I could not verify. The obvious move would have been to tweak prompts until the output looked better. Instead I treated it as a measurement problem and ran experiments.</p>
 
             <h3>First, exonerate the verifier</h3>
@@ -1035,7 +1051,7 @@
                     </svg>
                 </a>
             </div>
-            <p class="copyright">© 2025 The Machinist. All rights reserved.</p>
+            <p class="copyright">© 2026 The Machinist. All rights reserved.</p>
         </div>
     </footer>
 
