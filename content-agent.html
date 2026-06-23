@@ -552,6 +552,17 @@
                 <p>Content-agent is a single-agent LangGraph pipeline that writes grounded technical articles for themachinist.org. It retrieves sources, drafts only what those sources support, verifies every claim, scores itself, pauses for a human to approve the content, renders HTML, pauses again for a human to approve the layout, and merges the result through git. It runs as an authenticated FastAPI service inside a non-root Docker container, deployed on EC2 behind Caddy with automatic TLS. The hard part was never the plumbing. It was getting the agent to stop making things up, and proving that it had.</p>
             </div>
 
+            <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5rem 0;">
+                <iframe
+                    src="https://www.youtube.com/embed/gJttMm90ugM"
+                    title="Content Agent — Live Demo"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;">
+                </iframe>
+            </div>
+
             <div class="cfa-stat-grid">
                 <div class="cfa-stat-card">
                     <div class="cfa-stat-label">Human Gates</div>
