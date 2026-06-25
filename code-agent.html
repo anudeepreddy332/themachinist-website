@@ -9,16 +9,16 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code-Fix Agent — Phase 3 Deep Dive | The Machinist</title>
-    <meta name="description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously — using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
+    <title>Code-Fix Agent: Deep Dive | The Machinist</title>
+    <meta name="description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously, using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/code-agent.html">
-    <meta property="og:title" content="Code-Fix Agent — Phase 3 Deep Dive | The Machinist">
-    <meta property="og:description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously — using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
+    <meta property="og:title" content="Code-Fix Agent: Deep Dive | The Machinist">
+    <meta property="og:description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously, using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Code-Fix Agent — Phase 3 Deep Dive | The Machinist">
-    <meta name="twitter:description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously — using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
+    <meta name="twitter:title" content="Code-Fix Agent: Deep Dive | The Machinist">
+    <meta name="twitter:description" content="How I built a self-correcting AI agent that executes Python scripts, diagnoses errors, patches them, and retries autonomously, using LangGraph, HITL approval, and a 95% fix rate across 20 test cases.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
     <link rel="canonical" href="https://themachinist.org/code-agent.html">
     <meta name="keywords" content="Code Fix Agent, LangGraph, Self-Correcting AI, HITL, Human in the Loop, DeepSeek, LangSmith, Python, Agentic AI">
@@ -565,9 +565,9 @@
                 <span class="cfa-breadcrumb-sep">/</span>
                 <span style="color: var(--text-color); font-weight: 500;">Code-Fix Agent</span>
             </nav>
-            <div class="cfa-series-label">Agentic AI · Phase 3</div>
+            <div class="cfa-series-label">Agentic AI</div>
             <h1>Code-Fix Agent: Self-Correcting AI System</h1>
-            <p class="cfa-subtitle">A goal-directed agent that fixes 95% of Python runtime errors in under 3 iterations at $0.0006/fix — built on a LangGraph state machine with human-in-the-loop approval and full LangSmith tracing.</p>
+            <p class="cfa-subtitle">A goal-directed agent that fixes 95% of Python runtime errors in under 3 iterations at $0.0006/fix, built on a LangGraph state machine with human-in-the-loop approval and full LangSmith tracing.</p>
             <div class="cfa-tech-row">
                 <span class="cfa-tech-tag">Python</span>
                 <span class="cfa-tech-tag">LangGraph</span>
@@ -585,7 +585,7 @@
             <!-- TL;DR -->
             <h2>TL;DR</h2>
             <div class="cfa-callout">
-                <p>This is the phase where an agent stops answering questions and starts <strong>pursuing a goal</strong>. The code-fix agent executes a script, reads the failure, diagnoses the root cause, patches the code, and tries again — until the script runs correctly, the cost ceiling is hit, or it runs out of attempts. The loop is expressed as an explicit LangGraph state machine, not a raw while loop.</p>
+                <p>This is where an agent stops answering questions and starts <strong>pursuing a goal</strong>. The code-fix agent executes a script, reads the failure, diagnoses the root cause, patches the code, and tries again, until the script runs correctly, the cost ceiling is hit, or it runs out of attempts. The loop is expressed as an explicit LangGraph state machine, not a raw while loop.</p>
             </div>
 
             <div class="cfa-stat-grid">
@@ -611,29 +611,29 @@
                 </div>
             </div>
 
-            <p>The core concept: the agent is no longer answering a question. It is pursuing a goal — and observing the consequences of its own actions to adjust. That's the distinction between a query-response loop and a goal-directed loop.</p>
+            <p>The core concept: the agent is no longer answering a question. It is pursuing a goal and observing the consequences of its own actions to adjust. That's the distinction between a query-response loop and a goal-directed loop.</p>
             <p>Code execution is the sharpest use case for this because failure is unambiguous. Either the script runs or it doesn't. Either the output is correct or it isn't. No subjectivity. The exit code is ground truth.</p>
 
             <hr class="cfa-divider">
 
-            <!-- What Phase 3 adds -->
-            <h2>What Phase 3 Adds</h2>
+            <!-- What the code-fix agent adds -->
+            <h2>What the Code-Fix Agent Adds</h2>
             <div class="cfa-compare">
                 <div class="cfa-compare-card">
-                    <h4>Phases 1 &amp; 2</h4>
+                    <h4>Earlier Agents</h4>
                     <ul>
-                        <li>Raw while loop — control flow implicit in conditionals.</li>
+                        <li>Raw while loop: control flow implicit in conditionals.</li>
                         <li>Query-driven: user asks, agent finds, agent responds.</li>
-                        <li>One turn per run — loop starts and ends in a single cycle.</li>
+                        <li>One turn per run: loop starts and ends in a single cycle.</li>
                         <li>No human checkpoint mid-run.</li>
                     </ul>
                 </div>
                 <div class="cfa-compare-card">
-                    <h4>Phase 3</h4>
+                    <h4>Code-Fix Agent</h4>
                     <ul>
-                        <li>LangGraph state machine — every state named, every transition explicit.</li>
+                        <li>LangGraph state machine: every state named, every transition explicit.</li>
                         <li>Goal-directed: agent keeps going until goal is met or resources exhausted.</li>
-                        <li>Reflexion loop — agent reads its own failure history to try a different approach.</li>
+                        <li>Reflexion loop: agent reads its own failure history to try a different approach.</li>
                         <li>Human-in-the-loop checkpoint with interrupt/resume.</li>
                     </ul>
                 </div>
@@ -643,10 +643,10 @@
 
             <!-- Architecture -->
             <h2>Architecture &amp; State Machine</h2>
-            <p>The agent is a directed graph. Each node is a function. Each edge is a transition — some unconditional, some conditional on the current state. Think of it like a quality control station at a factory: the broken script comes in, gets examined, repaired, approved, tested, and scored. If it passes, it ships. If it fails, it goes back to the repair station with the inspector's notes.</p>
+            <p>The agent is a directed graph. Each node is a function. Each edge is a transition, some unconditional, some conditional on the current state. Think of it like a quality control station at a factory: the broken script comes in, gets examined, repaired, approved, tested, and scored. If it passes, it ships. If it fails, it goes back to the repair station with the inspector's notes.</p>
 
             <div class="cfa-diagram-wrap">
-                <div class="cfa-diagram-label">State Machine — Execution Flow</div>
+                <div class="cfa-diagram-label">State Machine: Execution Flow</div>
                 <div class="cfa-diagram-body">
                     <svg viewBox="0 0 740 400" width="740" height="400" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif" aria-label="State machine execution flow diagram">                        <defs>
                             <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
@@ -764,7 +764,7 @@
                         <span class="cfa-layer-badge">Core</span>
                         <span class="cfa-layer-file">graph.py</span>
                     </div>
-                    <p>Contains only two things: the <code>AgentState</code> TypedDict that declares every field the agent tracks, and <code>build_graph()</code> that wires nodes and edges into a compiled LangGraph object. Nothing about how nodes work lives here — only how they connect.</p>
+                    <p>Contains only two things: the <code>AgentState</code> TypedDict that declares every field the agent tracks, and <code>build_graph()</code> that wires nodes and edges into a compiled LangGraph object. Nothing about how nodes work lives here, only how they connect.</p>
                 </div>
                 <div class="cfa-layer">
                     <div class="cfa-layer-head">
@@ -792,7 +792,7 @@
                         <span class="cfa-layer-badge">Scripts</span>
                         <span class="cfa-layer-file">scripts/</span>
                     </div>
-                    <p><code>benchmark.py</code> — systematic evaluation across all 20 broken scripts. <code>analyze_failures.py</code> — extracts failed runs from benchmark JSON. <code>regression_check.py</code> — compares results against a stored baseline. <code>test_resilience.py</code> — simulates the four failure modes.</p>
+                    <p><code>benchmark.py</code>: systematic evaluation across all 20 broken scripts. <code>analyze_failures.py</code>: extracts failed runs from benchmark JSON. <code>regression_check.py</code>: compares results against a stored baseline. <code>test_resilience.py</code>: simulates the four failure modes.</p>
                 </div>
             </div>
 
@@ -803,7 +803,7 @@
             <p>Here's what happens when you run a real broken script through the agent, end to end.</p>
 
             <div class="cfa-code-wrap">
-                <div class="cfa-code-label">The broken script — attribute_error.py</div>
+                <div class="cfa-code-label">The broken script: attribute_error.py</div>
                 <pre class="cfa-code-block">class Dog:
     def __init__(self, name):
         self.name = name
@@ -894,7 +894,7 @@ print(d.age)</pre>
                         <div class="cfa-step-body">
                             <strong>evaluate</strong>
                             LLM receives original code, fixed code, and actual output. Asked to score correctness 1–10 with JSON reasoning. Score: 9. Passes threshold of 7. Status set to "done".
-                            <span>Score 9 — the AttributeError is resolved, default value of None is reasonable, but not the only correct choice.</span>
+                            <span>Score 9: the AttributeError is resolved, default value of None is reasonable, but not the only correct choice.</span>
                         </div>
                     </div>
 
@@ -916,12 +916,12 @@ print(d.age)</pre>
 
             <h3>LangGraph vs. Raw While Loop</h3>
             <div class="cfa-callout">
-                <p>A raw while loop is like a chef who keeps the recipe in their head — they know what step comes next because they remember where they are. A LangGraph state machine is like a recipe card with checkboxes: each step is written down, you can see what's done, and anyone can pick up mid-recipe without losing context.</p>
+                <p>A raw while loop is like a chef who keeps the recipe in their head: they know what step comes next because they remember where they are. A LangGraph state machine is like a recipe card with checkboxes: each step is written down, you can see what's done, and anyone can pick up mid-recipe without losing context.</p>
             </div>
             <p>The practical difference: adding human approval to a raw loop means adding more variables, more conditionals, and more mental tracing. In LangGraph, it meant adding two fields to <code>AgentState</code> and one new node. The rest of the graph didn't change.</p>
 
             <h3>Typed State and Observability</h3>
-            <p><code>AgentState</code> is a TypedDict with 18 fields. LangGraph validates at compile time — if a node returns a key not in the schema, it raises immediately, not when that key is accessed at runtime. This turns silent bugs into loud, early errors.</p>
+            <p><code>AgentState</code> is a TypedDict with 18 fields. LangGraph validates at compile time: if a node returns a key not in the schema, it raises immediately, not when that key is accessed at runtime. This turns silent bugs into loud, early errors.</p>
             <div class="cfa-state-card">
                 <div class="cfa-state-title">Key AgentState Fields</div>
                 <div class="cfa-state-fields">
@@ -943,28 +943,28 @@ print(d.age)</pre>
             </div>
 
             <h3>The Reflexion Pattern</h3>
-            <p>On the first failed attempt, <code>node_diagnose</code> receives the current code and error. On subsequent attempts, it receives the full history of prior attempts — each containing the code tried, the error it produced, the diagnosis made, and the patch applied. The prompt changes from "diagnose this error" to "here is everything that was tried and why it failed — what is a different approach?"</p>
+            <p>On the first failed attempt, <code>node_diagnose</code> receives the current code and error. On subsequent attempts, it receives the full history of prior attempts, each containing the code tried, the error it produced, the diagnosis made, and the patch applied. The prompt changes from "diagnose this error" to "here is everything that was tried and why it failed: what is a different approach?"</p>
             <div class="cfa-callout">
                 <p><strong>Archival timing is critical.</strong> <code>attempt_history</code> is archived by <code>node_execute</code> before it overwrites the error fields with new results. If archival happened after the new execution results were written, the wrong error would be saved. This ordering is enforced by the graph structure, not a comment in the code.</p>
             </div>
 
             <h3>Human-in-the-Loop with interrupt/resume</h3>
-            <p>When <code>node_human_approval</code> calls <code>interrupt(payload)</code>, the graph stops. The entire state is checkpointed by <code>MemorySaver</code>. Control returns to <code>main.py</code>, which displays a unified diff and prompts the user. When the user responds, <code>main.py</code> calls <code>graph.invoke(Command(resume=decision), config)</code> with the same thread ID — and the graph resumes from the exact point where it suspended.</p>
-            <p>This matters architecturally: in a production system, the resume signal wouldn't come from the terminal — it would come from a webhook, a UI button, or a message queue. The <code>interrupt()/resume</code> pattern supports all of these without changing the graph.</p>
+            <p>When <code>node_human_approval</code> calls <code>interrupt(payload)</code>, the graph stops. The entire state is checkpointed by <code>MemorySaver</code>. Control returns to <code>main.py</code>, which displays a unified diff and prompts the user. When the user responds, <code>main.py</code> calls <code>graph.invoke(Command(resume=decision), config)</code> with the same thread ID, and the graph resumes from the exact point where it suspended.</p>
+            <p>This matters architecturally: in a production system, the resume signal wouldn't come from the terminal. It would come from a webhook, a UI button, or a message queue. The <code>interrupt()/resume</code> pattern supports all of these without changing the graph.</p>
 
             <h3>Sandboxed Code Execution</h3>
-            <p><code>execute_python</code> writes code to a temp file and runs it with <code>subprocess.run()</code>. This is intentional isolation. If you used Python's <code>exec()</code> built-in, the code would run inside the agent's own process — a script that calls <code>sys.exit()</code> or enters an infinite loop would crash or hang the agent itself. With subprocess isolation, a crash is just a non-zero exit code and a stderr string.</p>
-            <p>The temp file is deleted in a <code>finally</code> block — even if the subprocess crashes or times out, no orphaned temp files accumulate across runs.</p>
+            <p><code>execute_python</code> writes code to a temp file and runs it with <code>subprocess.run()</code>. This is intentional isolation. If you used Python's <code>exec()</code> built-in, the code would run inside the agent's own process: a script that calls <code>sys.exit()</code> or enters an infinite loop would crash or hang the agent itself. With subprocess isolation, a crash is just a non-zero exit code and a stderr string.</p>
+            <p>The temp file is deleted in a <code>finally</code> block, even if the subprocess crashes or times out, so no orphaned temp files accumulate across runs.</p>
 
             <h3>LLM-Based Evaluator</h3>
             <p>The evaluator is what separates "the code runs" from "the code is correct." Exit code 0 means no exception was raised. It doesn't mean the output is right. <code>logic_error.py</code> proved this: the inverted Fahrenheit-to-Celsius formula ran cleanly and exited 0, but produced 180.0 for 212°F instead of the correct 100.0.</p>
-            <p>When the evaluator scores below 7, it doesn't just fail the run — it sends the agent back to <code>node_diagnose</code> with the evaluator's specific feedback. The agent now knows not just that its fix was wrong, but precisely why.</p>
+            <p>When the evaluator scores below 7, it doesn't just fail the run. It sends the agent back to <code>node_diagnose</code> with the evaluator's specific feedback. The agent now knows not just that its fix was wrong, but precisely why.</p>
 
             <h3>Cost Tracking and Guards</h3>
             <div class="cfa-grid">
                 <div class="cfa-card">
                     <h4>Cost Ceiling ($0.10/run)</h4>
-                    <p>Checked first in <code>should_continue</code> before anything else. Money gates go first — even a successful fix on the ceiling-crossing iteration terminates as <code>cost_exceeded</code>.</p>
+                    <p>Checked first in <code>should_continue</code> before anything else. Money gates go first, so even a successful fix on the ceiling-crossing iteration terminates as <code>cost_exceeded</code>.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Max Iterations (5)</h4>
@@ -972,7 +972,7 @@ print(d.age)</pre>
                 </div>
                 <div class="cfa-card">
                     <h4>Execution Timeout (10s)</h4>
-                    <p>Subprocess is killed after 10 seconds via SIGKILL. The agent receives a synthetic <code>timed_out=True</code> result with a readable error string — it correctly diagnosed <code>infinite_loop.py</code> from this synthetic message.</p>
+                    <p>Subprocess is killed after 10 seconds via SIGKILL. The agent receives a synthetic <code>timed_out=True</code> result with a readable error string, and it correctly diagnosed <code>infinite_loop.py</code> from this synthetic message.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Input Validation</h4>
@@ -983,7 +983,7 @@ print(d.age)</pre>
             <hr class="cfa-divider">
 
             <!-- Benchmark results -->
-            <h2>Benchmark Results — 20 Scripts</h2>
+            <h2>Benchmark Results: 20 Scripts</h2>
             <p>The final run across all 20 broken scripts. <code>bypass_hitl=True</code> auto-approved every patch, making the run non-interactive and reproducible.</p>
 
             <div class="cfa-table-wrap">
@@ -1024,7 +1024,7 @@ print(d.age)</pre>
             </div>
 
             <div class="cfa-callout">
-                <p><strong>The one failure is a sandbox constraint, not an agent failure.</strong> <code>import_error.py</code> tries to import numpy and pandas, which aren't installed in the agent's environment. The agent correctly identified the missing modules — but every attempted fix either renamed the imports, swapped to other uninstalled libraries, or rewrote the functionality in ways the evaluator scored as losing the original intent. The fix rate of 95% is a precise claim: this agent, these 20 scripts, this environment, these parameters.</p>
+                <p><strong>The one failure is a sandbox constraint, not an agent failure.</strong> <code>import_error.py</code> tries to import numpy and pandas, which aren't installed in the agent's environment. The agent correctly identified the missing modules, but every attempted fix either renamed the imports, swapped to other uninstalled libraries, or rewrote the functionality in ways the evaluator scored as losing the original intent. The fix rate of 95% is a precise claim: this agent, these 20 scripts, this environment, these parameters.</p>
             </div>
 
             <hr class="cfa-divider">
@@ -1038,7 +1038,7 @@ print(d.age)</pre>
                 </div>
                 <div class="cfa-card">
                     <h4>Cost Ceiling</h4>
-                    <p>Agent is given normal code but with <code>total_cost_usd</code> pre-set to 999.0. The first call to <code>should_continue</code> sees cost above ceiling and routes to "end" — before any LLM call is made. Status: <code>cost_exceeded</code>.</p>
+                    <p>Agent is given normal code but with <code>total_cost_usd</code> pre-set to 999.0. The first call to <code>should_continue</code> sees cost above ceiling and routes to "end" before any LLM call is made. Status: <code>cost_exceeded</code>.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Max Iterations</h4>
@@ -1046,7 +1046,7 @@ print(d.age)</pre>
                 </div>
                 <div class="cfa-card">
                     <h4>Invalid API Key</h4>
-                    <p><code>DEEPSEEK_API_KEY</code> is temporarily replaced with garbage. The test asserts the final status is not "done" — either the agent raises an exception or returns "blocked". The original key is restored in a <code>finally</code> block.</p>
+                    <p><code>DEEPSEEK_API_KEY</code> is temporarily replaced with garbage. The test asserts the final status is not "done": either the agent raises an exception or returns "blocked". The original key is restored in a <code>finally</code> block.</p>
                 </div>
             </div>
 
@@ -1059,7 +1059,7 @@ print(d.age)</pre>
             <div class="cfa-grid">
                 <div class="cfa-card">
                     <h4>No pip access in sandbox</h4>
-                    <p>Any script requiring an uninstalled library cannot be fixed by installing it. The agent will exhaust iterations trying to rewrite without the library — often the wrong approach.</p>
+                    <p>Any script requiring an uninstalled library cannot be fixed by installing it. The agent will exhaust iterations trying to rewrite without the library, often the wrong approach.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Evaluator relies on intent inference</h4>
@@ -1073,7 +1073,7 @@ print(d.age)</pre>
 
             <h3>The Typo Bug</h3>
             <div class="cfa-callout">
-                <p>A typo crept into the <code>bypass_hitl</code> field name — written as <code>bypass_hit1</code> (digit one) in one location while referenced as <code>bypass_hitl</code> (lowercase L) elsewhere. In benchmark mode, the auto-approve path was never triggered — the graph reached <code>interrupt()</code> and waited for human input that was never coming. The bug was caught when the benchmark hung without output. <strong>Typos in dict keys are silent killers.</strong> LangGraph validates node return values, not key access within node functions. The only defenses are careful review, consistent naming conventions, and integration tests that exercise the bypass path.</p>
+                <p>A typo crept into the <code>bypass_hitl</code> field name, written as <code>bypass_hit1</code> (digit one) in one location while referenced as <code>bypass_hitl</code> (lowercase L) elsewhere. In benchmark mode, the auto-approve path was never triggered: the graph reached <code>interrupt()</code> and waited for human input that was never coming. The bug was caught when the benchmark hung without output. <strong>Typos in dict keys are silent killers.</strong> LangGraph validates node return values, not key access within node functions. The only defenses are careful review, consistent naming conventions, and integration tests that exercise the bypass path.</p>
             </div>
 
             <hr class="cfa-divider">
@@ -1083,15 +1083,15 @@ print(d.age)</pre>
             <div class="cfa-grid">
                 <div class="cfa-card">
                     <h4>Explicit state is not a luxury</h4>
-                    <p>Externalizing agent state into a typed schema made debugging fast and extension cheap. Adding human approval required two new fields and one new node — nothing else changed.</p>
+                    <p>Externalizing agent state into a typed schema made debugging fast and extension cheap. Adding human approval required two new fields and one new node; nothing else changed.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>exit_code 0 ≠ correctness</h4>
-                    <p>The evaluator is the most important addition. Any agent that treats execution success as correctness will produce confidently wrong results. One more LLM call per success — it's the call that makes the system trustworthy.</p>
+                    <p>The evaluator is the most important addition. Any agent that treats execution success as correctness will produce confidently wrong results. One more LLM call per success is the call that makes the system trustworthy.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Reflexion requires designed memory</h4>
-                    <p>Getting the archival timing right — saving the previous attempt before overwriting current error fields — required explicit reasoning about node order. The graph structure enforces it.</p>
+                    <p>Getting the archival timing right (saving the previous attempt before overwriting current error fields) required explicit reasoning about node order. The graph structure enforces it.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Instrumentation is not optional</h4>
@@ -1099,7 +1099,7 @@ print(d.age)</pre>
                 </div>
                 <div class="cfa-card">
                     <h4>Sandbox design shapes what you can fix</h4>
-                    <p>The 5% failure rate is entirely explained by the sandbox design choice: no pip access. Understanding where your agent fails — and whether those are agent bugs or environmental constraints — requires structured logging.</p>
+                    <p>The 5% failure rate is entirely explained by the sandbox design choice: no pip access. Understanding where your agent fails, and whether those are agent bugs or environmental constraints, requires structured logging.</p>
                 </div>
                 <div class="cfa-card">
                     <h4>Typos in dict keys are silent</h4>
@@ -1156,7 +1156,7 @@ uv run python main.py scripts/broken_scripts/attribute_error.py</pre>
     {
       "@context": "https://schema.org",
       "@type": "Article",
-      "headline": "Code-Fix Agent — Phase 3 Deep Dive | The Machinist",
+      "headline": "Code-Fix Agent: Deep Dive | The Machinist",
       "author": {
         "@type": "Person",
         "name": "Anudeep Reddy",

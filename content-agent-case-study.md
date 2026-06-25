@@ -2,7 +2,7 @@
 
 *A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing.*
 
-*Agentic AI · Phase 4 · The Machinist*
+*Agentic AI · The Machinist*
 
 Type in a topic, press Enter, and watch an article get researched, drafted, fact-checked against real sources, scored, reviewed by a human at two separate gates, rendered into site-ready HTML, and published live. The whole run costs less than a cent and finishes in minutes. Nothing reaches the website that a person did not read first, and nothing gets pushed to production without a human running the final command.
 
@@ -26,17 +26,17 @@ That turned out to be a much deeper problem than I expected, and chasing it down
 
 ---
 
-## Where This Came From: Three Phases of Agents
+## Where This Came From: Three Earlier Agents
 
-Content-agent is the fourth project in a deliberate arc. Each earlier phase taught a lesson the next one needed.
+Content-agent builds on three earlier agents. Each one taught a lesson the next needed.
 
-**Phase 1, the CLI agent.** A basic query-response loop. The lesson: a raw loop with control flow buried in conditionals cannot pursue a goal across steps, and gives you no way to see what it is doing mid-run.
+**The CLI agent.** A basic query-response loop. The lesson: a raw loop with control flow buried in conditionals cannot pursue a goal across steps, and gives you no way to see what it is doing mid-run.
 
-**Phase 2, the RAG knowledge agent.** This added retrieval over a private knowledge base. The lesson: retrieval quality is a first-class concern. A retriever that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.
+**The RAG knowledge agent.** This added retrieval over a private knowledge base. The lesson: retrieval quality is a first-class concern. A retriever that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.
 
-**Phase 3, the code-fix agent.** A goal-directed LangGraph state machine that executes a broken script, diagnoses the failure, patches it, and retries, with a human approval step. It fixed 95% of a 20-script test set. The lesson that mattered most: **exit code zero is not correctness.** Code can run cleanly and still be wrong. You need a separate evaluator whose only job is to judge whether the result is actually right.
+**The code-fix agent.** A goal-directed LangGraph state machine that executes a broken script, diagnoses the failure, patches it, and retries, with a human approval step. It fixed 95% of a 20-script test set. The lesson that mattered most: **exit code zero is not correctness.** Code can run cleanly and still be wrong. You need a separate evaluator whose only job is to judge whether the result is actually right.
 
-Content-agent inherited all three. It needed goal-directed control flow (Phase 3), retrieval that was provably healthy (Phase 2), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the Phase 3 lesson, applied to facts instead of code).
+Content-agent inherited all three. It needed goal-directed control flow (from the code-fix agent), retrieval that was provably healthy (from the knowledge agent), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the code-fix lesson, applied to facts instead of code).
 
 ---
 

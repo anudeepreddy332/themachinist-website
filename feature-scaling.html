@@ -10,15 +10,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feature Scaling in ML | The Machinist</title>
-    <meta name="description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling — when to use each and the math behind them.">
+    <meta name="description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling, and when to use each and the math behind them.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/feature-scaling.html">
     <meta property="og:title" content="Feature Scaling in ML | The Machinist">
-    <meta property="og:description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling — when to use each and the math behind them.">
+    <meta property="og:description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling, and when to use each and the math behind them.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Feature Scaling in ML | The Machinist">
-    <meta name="twitter:description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling — when to use each and the math behind them.">
+    <meta name="twitter:description" content="Why feature scaling matters in ML: standardization, normalization, robust scaling, and when to use each and the math behind them.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
     <link rel="canonical" href="https://themachinist.org/feature-scaling.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -681,19 +681,19 @@
                 <h2>1. The System View</h2>
                 <p>
                     Before touching a single formula, zoom out.
-                    Feature scaling has one specific, non-negotiable place inside the ML pipeline —
+                    Feature scaling has one specific, non-negotiable place inside the ML pipeline,
                     and understanding that position tells you a lot about why it exists.
                 </p>
 
                 <div class="viz-block">
-                    <div class="viz-header"><span class="viz-title">ML Pipeline — Where Feature Scaling Fits</span></div>
+                    <div class="viz-header"><span class="viz-title">ML Pipeline: Where Feature Scaling Fits</span></div>
                     <div class="viz-body">
                         <div class="pipeline-map">
                             <div class="pipe-item">World / Raw Data</div>
                             <div class="pipe-connector">↓</div>
                             <div class="pipe-item">Data Collection</div>
                             <div class="pipe-connector">↓</div>
-                            <div class="pipe-item">EDA &mdash; understand, don't change</div>
+                            <div class="pipe-item">EDA: understand, don't change</div>
                             <div class="pipe-connector">↓</div>
                             <div class="pipe-item highlight">Preprocessing</div>
                             <div class="pipe-item sub-active">&#8627; Feature Scaling &larr; this chapter</div>
@@ -710,7 +710,7 @@
 
                 <p>
                     Three layers that are easy to conflate but must stay separate:
-                    EDA is for understanding — you don't change the data.
+                    EDA is for understanding. You don't change the data.
                     Feature scaling transforms numerical features so algorithms can operate correctly.
                     Feature engineering creates new information from existing data.
                 </p>
@@ -718,8 +718,8 @@
                 <div class="callout callout-key">
                     <div class="callout-label">Key System Insight</div>
                     <p>
-                        Most ML algorithms have internal machinery — distance calculations, gradient updates,
-                        weight matrices — that is sensitive to the magnitude of numbers.
+                        Most ML algorithms have internal machinery (distance calculations, gradient updates,
+                        weight matrices) that is sensitive to the magnitude of numbers.
                         Raw data doesn't care about magnitude.
                         A salary of $80,000 and an age of 35 are both valid features,
                         but to a gradient or a distance metric, $80,000 is an extremely loud number
@@ -744,13 +744,13 @@
                     They all use Euclidean distance or a variant of it.
                 </p>
                 <p>
-                    Now consider two unscaled features — age and salary — and what
+                    Now consider two unscaled features, age and salary, and what
                     happens when you compute the distance between two people:
                 </p>
 
                 <div class="distance-viz">
                     <div class="distance-row">
-                        <div class="distance-feature">Age difference &mdash; Person A: 25, Person B: 30</div>
+                        <div class="distance-feature">Age difference: Person A: 25, Person B: 30</div>
                         <div class="distance-number small">25</div>
                         <div class="distance-track">
                             <div class="distance-fill small-fill" style="width:100%; background: var(--blue); height:5px; border-radius:3px;"></div>
@@ -761,19 +761,19 @@
                     <div class="distance-vs">vs</div>
 
                     <div class="distance-row">
-                        <div class="distance-feature">Salary difference &mdash; Person A: $30,000, Person B: $130,000</div>
+                        <div class="distance-feature">Salary difference: Person A: $30,000, Person B: $130,000</div>
                         <div class="distance-number large">10,000,000,000</div>
                         <div class="distance-track" style="margin-bottom:4px;">
                             <div class="distance-fill" style="width:100%; background: var(--red); height:5px; border-radius:3px;"></div>
                         </div>
-                        <div class="distance-label-note">Salary completely dominates — age effectively does not exist</div>
+                        <div class="distance-label-note">Salary completely dominates: age effectively does not exist</div>
                     </div>
                 </div>
 
                 <p>
                     The age difference contributes 25 to the total distance.
                     The salary difference contributes 10,000,000,000.
-                    Age is invisible to the algorithm — not because age is unimportant,
+                    Age is invisible to the algorithm, not because age is unimportant,
                     but because its scale is smaller.
                     This is not a flaw in the algorithm.
                     It's a mismatch between what the algorithm assumes and what raw data delivers.
@@ -791,14 +791,14 @@
 
                 <div class="viz-block">
                     <div class="viz-header">
-                        <span class="viz-title">Loss Surface — Unscaled vs Scaled</span>
+                        <span class="viz-title">Loss Surface: Unscaled vs Scaled</span>
                     </div>
                     <div class="viz-body">
                         <canvas id="lossSurfaceCanvas" height="230"></canvas>
                         <p class="viz-caption">
-                            Left: unscaled features produce an elongated surface —
+                            Left: unscaled features produce an elongated surface, and
                             gradient descent zigzags and converges slowly.<br>
-                            Right: scaled features produce a rounded bowl —
+                            Right: scaled features produce a rounded bowl, and
                             gradient descent heads straight to the minimum.
                         </p>
                     </div>
@@ -841,7 +841,7 @@
                     <div class="method-card">
                         <div class="method-name">Robust Scaling</div>
                         <div class="method-formula">x&prime; = (x &minus; median) / IQR</div>
-                        <div class="method-use">Uses median and interquartile range — both resistant to outliers. Best for messy real-world financial or medical data.</div>
+                        <div class="method-use">Uses median and interquartile range, both resistant to outliers. Best for messy real-world financial or medical data.</div>
                         <span class="method-tag tag-outliers">Outlier-resistant</span>
                     </div>
                     <div class="method-card">
@@ -864,7 +864,7 @@
                     </div>
                 </div>
 
-                <h3>Before vs After — StandardScaler</h3>
+                <h3>Before vs After: StandardScaler</h3>
                 <p>
                     The distribution shape is preserved. The mean shifts to zero
                     and the spread normalizes to unit variance.
@@ -873,7 +873,7 @@
 
                 <div class="viz-block">
                     <div class="viz-header">
-                        <span class="viz-title">StandardScaler — Raw Values vs Scaled Values</span>
+                        <span class="viz-title">StandardScaler: Raw Values vs Scaled Values</span>
                     </div>
                     <div class="viz-body">
                         <canvas id="beforeAfterChart" height="190"></canvas>
@@ -910,7 +910,7 @@
                 </p>
 
                 <div class="viz-block">
-                    <div class="viz-header"><span class="viz-title">Scaler Selection — Decision Path</span></div>
+                    <div class="viz-header"><span class="viz-title">Scaler Selection: Decision Path</span></div>
                     <div class="viz-body">
                         <div class="fs-flow-wrap" role="img" aria-label="Decision path for selecting a feature scaler based on sparsity, skew, outliers, and bounded range requirements." style="overflow-x:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent;">
                             <svg viewBox="0 0 680 560" width="680" height="560" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, sans-serif" style="display:block; min-width:500px; max-width:100%; margin:0 auto;">
@@ -1068,15 +1068,15 @@ if salary_scaled > 0.23: go_left()
                     </table>
                 </div>
 
-                <h3>Failure Mode 1 — Data Leakage</h3>
+                <h3>Failure Mode 1: Data Leakage</h3>
 
                 <div class="code-block">
-                    <div class="code-header"><span class="code-lang">Python — Wrong vs Right</span></div>
-                    <pre><code># WRONG — scaler sees test data before evaluation
+                    <div class="code-header"><span class="code-lang">Python: Wrong vs Right</span></div>
+                    <pre><code># WRONG: scaler sees test data before evaluation
 scaler.fit_transform(X_all)
 # then split...
 
-# RIGHT — fit on training data only
+# RIGHT: fit on training data only
 X_train, X_test, y_train, y_test = train_test_split(X, y)
 scaler.fit(X_train)
 X_train_scaled = scaler.transform(X_train)
@@ -1084,20 +1084,20 @@ X_test_scaled  = scaler.transform(X_test)   # no refitting</code></pre>
                     <div class="code-note">If you fit the scaler on the whole dataset, it has seen the test set. Your evaluation is optimistic. The model looks better than it is.</div>
                 </div>
 
-                <h3>Failure Mode 2 — Leakage Inside Cross-Validation</h3>
+                <h3>Failure Mode 2: Leakage Inside Cross-Validation</h3>
 
                 <div class="code-block">
                     <div class="code-header"><span class="code-lang">Python</span></div>
-                    <pre><code># WRONG — scaler sees all CV folds before the split
+                    <pre><code># WRONG: scaler sees all CV folds before the split
 X_scaled = scaler.fit_transform(X_train)
 cross_val_score(model, X_scaled, y_train, cv=5)
 
-# RIGHT — Pipeline re-fits scaler inside each fold automatically
+# RIGHT: Pipeline re-fits scaler inside each fold automatically
 pipeline = Pipeline([('scaler', StandardScaler()), ('model', model)])
 cross_val_score(pipeline, X_train, y_train, cv=5)</code></pre>
                 </div>
 
-                <h3>Failure Mode 3 — Dropping the Scaler in Deployment</h3>
+                <h3>Failure Mode 3: Dropping the Scaler in Deployment</h3>
 
                 <div class="callout callout-warning">
                     <div class="callout-label">Silent Production Bug</div>
@@ -1107,7 +1107,7 @@ cross_val_score(pipeline, X_train, y_train, cv=5)</code></pre>
                         You forget to serialize the scaler.
                         At inference time, raw unscaled inputs go into a model trained on scaled inputs.
                         The model will not crash.
-                        It will produce silent, systematic errors — and you will not know why.
+                        It will produce silent, systematic errors, and you will not know why.
                     </p>
                 </div>
             </section>
@@ -1116,12 +1116,12 @@ cross_val_score(pipeline, X_train, y_train, cv=5)</code></pre>
 
             <!-- ═══ 7. IMPLEMENTATION ═══ -->
             <section id="implementation">
-                <h2>7. Implementation — From Theory to Production</h2>
+                <h2>7. Implementation: From Theory to Production</h2>
 
                 <h3>The Basic Pattern</h3>
 
                 <div class="code-block">
-                    <div class="code-header"><span class="code-lang">Python — sklearn</span></div>
+                    <div class="code-header"><span class="code-lang">Python: sklearn</span></div>
                     <pre><code>from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
@@ -1133,7 +1133,7 @@ X_test_scaled  = scaler.transform(X_test)         # transform only on test</code
                     <div class="code-note">Rule: fit on training data only. transform on both train and test.</div>
                 </div>
 
-                <h3>ColumnTransformer — Different Columns, Different Scalers</h3>
+                <h3>ColumnTransformer: Different Columns, Different Scalers</h3>
 
                 <div class="code-block">
                     <div class="code-header"><span class="code-lang">Python</span></div>
@@ -1151,7 +1151,7 @@ preprocessor = ColumnTransformer(transformers=[
                 <h3>The Production Pipeline</h3>
 
                 <div class="code-block">
-                    <div class="code-header"><span class="code-lang">Python — Full production pattern</span></div>
+                    <div class="code-header"><span class="code-lang">Python: Full production pattern</span></div>
                     <pre><code>from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 import joblib
@@ -1163,13 +1163,13 @@ pipeline = Pipeline([
 
 pipeline.fit(X_train, y_train)
 
-# CV is leak-free — scaler re-fits in each fold automatically
+# CV is leak-free: scaler re-fits in each fold automatically
 scores = cross_val_score(pipeline, X_train, y_train, cv=5)
 
 # Save the entire pipeline, not just the model weights
 joblib.dump(pipeline, 'model_pipeline.pkl')
 
-# At inference — scaler applied automatically on raw input
+# At inference: scaler applied automatically on raw input
 loaded = joblib.load('model_pipeline.pkl')
 loaded.predict(new_raw_data)</code></pre>
                 </div>
@@ -1177,9 +1177,9 @@ loaded.predict(new_raw_data)</code></pre>
                 <div class="callout callout-good">
                     <div class="callout-label">Why Pipeline is the only correct production approach</div>
                     <p>
-                        The scaler is bundled with the model — you cannot forget to apply it.
+                        The scaler is bundled with the model, so you cannot forget to apply it.
                         Cross-validation is leak-free automatically.
-                        Saving and loading is atomic — one file, one object.
+                        Saving and loading is atomic: one file, one object.
                         Raw data in, prediction out.
                     </p>
                 </div>
@@ -1217,7 +1217,7 @@ loaded.predict(new_raw_data)</code></pre>
                 <p>
                     No. BatchNorm normalizes activations <em>between layers</em> during training.
                     It does not operate on your raw input features.
-                    You still need to scale your inputs — BatchNorm then handles the rest.
+                    You still need to scale your inputs. BatchNorm then handles the rest.
                 </p>
 
                 <div class="code-block">
@@ -1241,12 +1241,12 @@ model = nn.Sequential(
 
             <!-- ═══ 9. SYSTEMS THINKING ═══ -->
             <section id="systems-thinking">
-                <h2>9. Systems Thinking — The Full Picture</h2>
+                <h2>9. Systems Thinking: The Full Picture</h2>
 
                 <h3>The Feedback Loops</h3>
                 <p>
                     Scaling doesn't just improve accuracy numbers.
-                    It compresses the feedback loop — you get a clear signal faster.
+                    It compresses the feedback loop, so you get a clear signal faster.
                     Without it, practitioners often misdiagnose a preprocessing problem
                     as a model architecture problem and spend weeks adding complexity
                     to something that needed one line of code.
@@ -1270,7 +1270,7 @@ model = nn.Sequential(
                             </div>
                             <div class="loop-step">
                                 <div class="loop-dot bad"></div>
-                                <div class="loop-text">Underfitting — blamed on architecture</div>
+                                <div class="loop-text">Underfitting: blamed on architecture</div>
                             </div>
                             <div class="loop-step">
                                 <div class="loop-dot bad"></div>
@@ -1309,12 +1309,12 @@ model = nn.Sequential(
                     </div>
                 </div>
 
-                <h3>System Boundaries — Where Scaling Must Persist</h3>
+                <h3>System Boundaries: Where Scaling Must Persist</h3>
                 <p>
                     The scaler defines a system boundary.
                     Raw data is on one side. Model-ready data is on the other.
                     This boundary must hold consistently from training through production serving.
-                    If it breaks — stale parameters, wrong scaler loaded, scaler skipped entirely —
+                    If it breaks (stale parameters, wrong scaler loaded, scaler skipped entirely),
                     the model receives out-of-distribution inputs
                     and produces silent, systematic errors with no crash, no alert.
                 </p>
@@ -1377,7 +1377,7 @@ model = nn.Sequential(
                     <p>
                         Think of feature scaling as calibrating instruments before a measurement.
                         Before a weigh-in at a boxing match, all scales are recalibrated to
-                        the same zero point and the same unit —
+                        the same zero point and the same unit,
                         not because the boxers changed,
                         but because you need fair, comparable measurements.
                         Your features are readings from different instruments:
@@ -1394,7 +1394,7 @@ model = nn.Sequential(
                 <div class="next-chapter-meta">
                     <div class="next-chapter-label">Next in Data Preprocessing</div>
                     <div class="next-chapter-title">
-                        Feature Encoding — making categorical variables legible
+                        Feature Encoding: making categorical variables legible
                         to algorithms that only speak numbers
                     </div>
                 </div>
@@ -1519,7 +1519,7 @@ model = nn.Sequential(
 
         // label
         ctx.fillStyle = labC; ctx.font = `500 11px ${ff}`; ctx.textAlign = 'center';
-        ctx.fillText('Unscaled — gradient zigzags', lx, H * 0.93);
+        ctx.fillText('Unscaled: gradient zigzags', lx, H * 0.93);
 
         // ---- DIVIDER ----
         ctx.beginPath(); ctx.moveTo(half, H*0.04); ctx.lineTo(half, H*0.84);
@@ -1549,7 +1549,7 @@ model = nn.Sequential(
         ctx.fillStyle = grn; ctx.fill();
 
         ctx.fillStyle = labC; ctx.font = `500 11px ${ff}`; ctx.textAlign = 'center';
-        ctx.fillText('Scaled — converges directly', rx, H * 0.93);
+        ctx.fillText('Scaled: converges directly', rx, H * 0.93);
     }
     drawLossSurface();
 
@@ -1624,7 +1624,7 @@ model = nn.Sequential(
                 labels: xs,
                 datasets: [
                     {
-                        label: 'σ(x) — output',
+                        label: 'σ(x): output',
                         data: sig,
                         borderColor: 'rgba(59,130,246,0.85)',
                         fill: false, pointRadius: 0,

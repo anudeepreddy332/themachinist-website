@@ -10,15 +10,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLI Research Agent | The Machinist</title>
-    <meta name="description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking. Phase 1 of a 5-phase agentic AI build curriculum.">
+    <meta name="description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/cli-research-agent.html">
     <meta property="og:title" content="CLI Research Agent | The Machinist">
-    <meta property="og:description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking. Phase 1 of a 5-phase agentic AI build curriculum.">
+    <meta property="og:description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CLI Research Agent | The Machinist">
-    <meta name="twitter:description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking. Phase 1 of a 5-phase agentic AI build curriculum.">
+    <meta name="twitter:description" content="A CLI research agent using tool-calling loops, structured logging, and cost tracking.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
     <link rel="canonical" href="https://themachinist.org/cli-research-agent.html">
     <meta name="keywords" content="CLI Research Agent, AI Agent, ReAct Loop, Tool Calling, DeepSeek, Tavily, Python, Agent Architecture">
@@ -468,7 +468,7 @@
             </nav>
             <div class="cra-series-label">Project Deep Dive</div>
             <h1>CLI Research Agent from First Principles</h1>
-            <p class="cra-subtitle">A phase-by-phase breakdown of how a stateless LLM becomes an iterative research system that searches, reads, computes, and writes reports with source traceability.</p>
+            <p class="cra-subtitle">A step-by-step breakdown of how a stateless LLM becomes an iterative research system that searches, reads, computes, and writes reports with source traceability.</p>
             <div class="cra-tech-row">
                 <span class="cra-tech-tag">Python</span>
                 <span class="cra-tech-tag">DeepSeek API</span>
@@ -484,7 +484,7 @@
         <article class="cra-main">
             <h2>TL;DR</h2>
             <div class="cra-callout">
-                <p>Phase 1 proves that an agent is not magic: it is <strong>state + loop + tools</strong>. The model plans the next action, your loop executes it, and results are fed back into the message state until <code>write_report</code> completes the run.</p>
+                <p>This project proves that an agent is not magic: it is <strong>state + loop + tools</strong>. The model plans the next action, your loop executes it, and results are fed back into the message state until <code>write_report</code> completes the run.</p>
             </div>
 
             <div class="cra-stat-grid">
@@ -663,7 +663,7 @@
             <div class="cra-grid-3">
                 <div class="cra-card">
                     <h4>Blocked / JS-rendered Pages</h4>
-                    <p>Raw HTTP fetch cannot execute JavaScript, so some pages degrade into low-signal context. Phase 2 targets this with stronger retrieval strategy.</p>
+                    <p>Raw HTTP fetch cannot execute JavaScript, so some pages degrade into low-signal context. The next agent targets this with stronger retrieval strategy.</p>
                 </div>
                 <div class="cra-card">
                     <h4>Context Window Pressure</h4>
@@ -682,7 +682,7 @@
                 </div>
                 <div class="cra-card">
                     <h4>Single-Pass Research</h4>
-                    <p>Phase 1 does one search + one fetch wave. Poor initial retrieval quality directly lowers final report quality.</p>
+                    <p>This agent does one search + one fetch wave. Poor initial retrieval quality directly lowers final report quality.</p>
                 </div>
                 <div class="cra-card">
                     <h4>No Caching</h4>
@@ -753,10 +753,10 @@
                 </div>
             </div>
 
-            <h2>Phase 1 to Phase 2</h2>
+            <h2>Where This Goes Next</h2>
             <div class="cra-compare">
                 <div class="cra-compare-card">
-                    <h4>Phase 1 Limits</h4>
+                    <h4>Current Limits</h4>
                     <ul>
                         <li>No persistent memory.</li>
                         <li>No retrieval grounding layer.</li>
@@ -764,7 +764,7 @@
                     </ul>
                 </div>
                 <div class="cra-compare-card">
-                    <h4>Phase 2 Direction</h4>
+                    <h4>Next Direction</h4>
                     <ul>
                         <li>Knowledge base + retrieval (RAG).</li>
                         <li>Stronger source grounding and fallback behavior.</li>

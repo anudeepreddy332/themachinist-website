@@ -524,7 +524,7 @@
                 <span class="cfa-breadcrumb-sep">/</span>
                 <span style="color: var(--text-color); font-weight: 500;">Content-Agent</span>
             </nav>
-            <div class="cfa-series-label">Agentic AI · Phase 4</div>
+            <div class="cfa-series-label">Agentic AI</div>
             <h1>Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles</h1>
             <p class="cfa-subtitle">A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing.</p>
             <p class="cfa-jump-link"><a href="#grounding-investigation">Jump to the grounding investigation &darr;</a></p>
@@ -555,7 +555,7 @@
             <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5rem 0;">
                 <iframe
                     src="https://www.youtube.com/embed/gJttMm90ugM"
-                    title="Content Agent — Live Demo"
+                    title="Content Agent: Live Demo"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
@@ -598,34 +598,34 @@
             <hr class="cfa-divider">
 
             <!-- WHERE THIS CAME FROM -->
-            <h2>Where This Came From: Three Phases of Agents</h2>
-            <p>Content-agent is the fourth project in a deliberate arc. Each earlier phase taught a lesson the next one needed.</p>
+            <h2>Where This Came From: Three Earlier Agents</h2>
+            <p>Content-agent builds on three earlier agents. Each one taught a lesson the next needed.</p>
 
             <div class="cfa-layer-stack">
                 <div class="cfa-layer">
                     <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">Phase 1</span>
+                        <span class="cfa-layer-badge">1</span>
                         <span class="cfa-layer-file">the CLI agent</span>
                     </div>
                     <p>A basic query-response loop. The lesson: a raw loop with control flow buried in conditionals cannot pursue a goal across steps, and gives you no way to see what it is doing mid-run.</p>
                 </div>
                 <div class="cfa-layer">
                     <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">Phase 2</span>
+                        <span class="cfa-layer-badge">2</span>
                         <span class="cfa-layer-file">the RAG knowledge agent</span>
                     </div>
                     <p>This added retrieval over a private knowledge base. The lesson: retrieval quality is a first-class concern. A retriever that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.</p>
                 </div>
                 <div class="cfa-layer">
                     <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">Phase 3</span>
+                        <span class="cfa-layer-badge">3</span>
                         <span class="cfa-layer-file">the code-fix agent</span>
                     </div>
                     <p>A goal-directed LangGraph state machine that executes a broken script, diagnoses the failure, patches it, and retries, with a human approval step. It fixed 95% of a 20-script test set. The lesson that mattered most: exit code zero is not correctness. Code can run cleanly and still be wrong. You need a separate evaluator whose only job is to judge whether the result is actually right.</p>
                 </div>
             </div>
 
-            <p>Content-agent inherited all three. It needed goal-directed control flow (Phase 3), retrieval that was provably healthy (Phase 2), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the Phase 3 lesson, applied to facts instead of code).</p>
+            <p>Content-agent inherited all three. It needed goal-directed control flow (from the code-fix agent), retrieval that was provably healthy (from the knowledge agent), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the code-fix lesson, applied to facts instead of code).</p>
 
             <hr class="cfa-divider">
 
