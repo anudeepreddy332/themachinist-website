@@ -10,15 +10,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bearing Failure Prediction | The Machinist</title>
-    <meta name="description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier — from 52% accuracy to production-ready.">
+    <meta name="description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/bearing-failure-prediction-case-study.html">
     <meta property="og:title" content="Bearing Failure Prediction | The Machinist">
-    <meta property="og:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier — from 52% accuracy to production-ready.">
+    <meta property="og:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Bearing Failure Prediction | The Machinist">
-    <meta name="twitter:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier — from 52% accuracy to production-ready.">
+    <meta name="twitter:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
     <link rel="canonical" href="https://themachinist.org/bearing-failure-prediction-case-study.html">
     <meta name="keywords" content="Predictive Maintenance, Bearing Failure, Machine Learning, RUL Prediction, LightGBM, Manufacturing, Condition Monitoring">
@@ -131,23 +131,23 @@
 
         <!-- TL;DR -->
         <h2>TL;DR</h2>
-        <p><strong>2.88-hour prediction accuracy</strong> in the critical 0-50 hour failure zone. Achieved through <strong>weighted loss optimization</strong> (penalizes low-RUL errors 10x more) + <strong>stratified RUL sampling</strong> (fixed train/test distribution mismatch). <strong>Result:</strong> R² improved from -11.9 to 0.9852, $300K annual savings, 98.5% of failures caught early.</p>
+        <p><strong>2.88-hour prediction accuracy</strong> in the critical 0-50 hour failure zone. Achieved through <strong>weighted loss optimization</strong> (penalizes low-RUL errors 10x more) + <strong>stratified RUL sampling</strong> (fixed train/test distribution mismatch). <strong>Result:</strong> R² improved from -11.9 to 0.9852, with modeled ~$300K annual savings and modeled 98.5% failure prevention in critical zones.</p>
 
         <hr>
 
         <!-- THE PROBLEM -->
         <h2>The Problem: $50K Per Unexpected Failure</h2>
-        <p>Manufacturing plants lose <strong>$50K+ per unexpected bearing failure</strong> — downtime, emergency repairs, production losses. Traditional time-based maintenance (replace every 30 days) wastes <strong>$200K annually</strong> replacing perfectly healthy bearings.</p>
-        <p>Existing prediction models are dangerously inaccurate: ±30 hour errors when actual RUL is only 10 hours. That's a <strong>300% error rate</strong> — useless for emergency maintenance planning.</p>
-        <p><strong>My mission:</strong> Predict bearing Remaining Useful Life (RUL) with &lt;5 hour accuracy in critical failure zones using the NASA/UC IMS Bearing Dataset — 984 measurements over 34 days, sampled at 20,480 Hz.</p>
+        <p>Manufacturing plants lose <strong>$50K+ per unexpected bearing failure</strong>: downtime, emergency repairs, production losses. Traditional time-based maintenance (replace every 30 days) wastes <strong>$200K annually</strong> replacing perfectly healthy bearings.</p>
+        <p>Existing prediction models are dangerously inaccurate: ±30 hour errors when actual RUL is only 10 hours. That's a <strong>300% error rate</strong>, useless for emergency maintenance planning.</p>
+        <p><strong>My mission:</strong> Predict bearing Remaining Useful Life (RUL) with &lt;5 hour accuracy in critical failure zones using the NASA/UC IMS Bearing Dataset: 984 measurements over 34 days, sampled at 20,480 Hz.</p>
 
         <hr>
 
         <!-- THE DATA -->
         <h2>The Data: 34 Days Until Failure</h2>
         <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/degradation_overview.png" alt="Bearing degradation over time showing RMS trends">
-        <p>Four test bearings ran 24/7 under constant 6,000 lb load until failure. Bearings 3 and 4 developed inner race defects and eventually failed catastrophically. Vibration sensors captured data every 10 minutes at 20,480 Hz — both low-frequency degradation trends and high-frequency impact events.</p>
-        <p><strong>Key observation:</strong> RMS (vibration amplitude) steadily increases as bearings degrade, but the rate accelerates dramatically in the final 100 hours before failure. This non-linear behavior is what makes prediction challenging — and what I exploited.</p>
+        <p>Four test bearings ran 24/7 under constant 6,000 lb load until failure. Bearings 3 and 4 developed inner race defects and eventually failed catastrophically. Vibration sensors captured data every 10 minutes at 20,480 Hz, both low-frequency degradation trends and high-frequency impact events.</p>
+        <p><strong>Key observation:</strong> RMS (vibration amplitude) steadily increases as bearings degrade, but the rate accelerates dramatically in the final 100 hours before failure. This non-linear behavior is what makes prediction challenging, and what I exploited.</p>
 
         <hr>
 
@@ -173,7 +173,7 @@
         <p>I extracted four categories of features from the raw 20,480 Hz vibration signals:</p>
 
         <h3>1. Temporal Features (Rolling Stats, EMAs, Slopes)</h3>
-        <p>Exponential moving averages smooth sensor noise while preserving trends. EMAs weight recent data more heavily — critical for detecting accelerating degradation.</p>
+        <p>Exponential moving averages smooth sensor noise while preserving trends. EMAs weight recent data more heavily, critical for detecting accelerating degradation.</p>
         <pre><code>rms_mean_ema_10 = df['rms_mean'].ewm(span=10).mean()
 rms_mean_slope_5 = (df['rms_mean'] - df['rms_mean'].shift(5)) / 5</code></pre>
 
@@ -183,13 +183,13 @@ rms_mean_slope_5 = (df['rms_mean'] - df['rms_mean'].shift(5)) / 5</code></pre>
 bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
 
         <h3>3. Statistical Features (Kurtosis, Z-scores)</h3>
-        <p>Kurtosis measures impulsiveness — sharp spikes when balls hit crack edges. Z-scores detect outliers indicating abnormal behavior.</p>
+        <p>Kurtosis measures impulsiveness: sharp spikes when balls hit crack edges. Z-scores detect outliers indicating abnormal behavior.</p>
 
         <h3>4. Cross-Bearing Features</h3>
-        <p>Multi-axis aggregates capture asymmetric degradation patterns — when one bearing axis degrades faster than others.</p>
+        <p>Multi-axis aggregates capture asymmetric degradation patterns, when one bearing axis degrades faster than others.</p>
 
         <h3>Why Temporal Features Won (2.5x Better)</h3>
-        <p>Raw statistics are noisy and volatile. A 10-point EMA filters noise but still captures the true degradation trend. The <strong>top feature</strong> was <code>bp_1k_5k_mean_ema_10</code> — defect frequency energy, smoothed with exponential weighting.</p>
+        <p>Raw statistics are noisy and volatile. A 10-point EMA filters noise but still captures the true degradation trend. The <strong>top feature</strong> was <code>bp_1k_5k_mean_ema_10</code>: defect frequency energy, smoothed with exponential weighting.</p>
 
         <hr>
 
@@ -200,10 +200,10 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
         <h3>What Went Wrong</h3>
         <p>My initial approach used a standard <strong>time-based train/test split</strong>:</p>
         <ul>
-            <li><strong>Training set:</strong> Early degradation (RUL 263-827 hours) — mostly healthy bearings</li>
-            <li><strong>Test set:</strong> Late degradation + failure (RUL 0-263 hours) — failing bearings</li>
+            <li><strong>Training set:</strong> Early degradation (RUL 263-827 hours), mostly healthy bearings</li>
+            <li><strong>Test set:</strong> Late degradation + failure (RUL 0-263 hours), failing bearings</li>
         </ul>
-        <p><strong>The disaster:</strong> The model learned patterns from healthy bearings but was tested on late-stage failures it had <em>never seen</em> during training. Result: <strong>R² = -11.9</strong> — worse than random guessing!</p>
+        <p><strong>The disaster:</strong> The model learned patterns from healthy bearings but was tested on late-stage failures it had <em>never seen</em> during training. Result: <strong>R² = -11.9</strong>, worse than random guessing!</p>
 
         <h3>The Breakthrough: Stratified Sampling by RUL</h3>
         <p>Instead of splitting by time, I created <strong>stratified samples by RUL bins</strong>:</p>
@@ -212,7 +212,7 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
             <li>Each bin split 80/20 into train and test</li>
             <li><strong>Critical insight:</strong> Both sets now contain examples from ALL degradation stages</li>
         </ul>
-        <p><strong>Impact:</strong> R² improved from -11.9 to 0.9852 — the model finally learned the full degradation progression.</p>
+        <p><strong>Impact:</strong> R² improved from -11.9 to 0.9852, the model finally learned the full degradation progression.</p>
 
         <hr>
 
@@ -223,8 +223,8 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
         <h3>The Problem: Not All Errors Are Equal</h3>
         <p>Standard MAE treats all errors equally. But a 30-hour error has <strong>drastically different consequences</strong> depending on actual RUL:</p>
         <ul>
-            <li><strong>At RUL = 500h:</strong> 30h error = 6% (acceptable — bearing is still healthy)</li>
-            <li><strong>At RUL = 10h:</strong> 30h error = 300% (catastrophic — you think you have 40 hours but only have 10!)</li>
+            <li><strong>At RUL = 500h:</strong> 30h error = 6% (acceptable, bearing is still healthy)</li>
+            <li><strong>At RUL = 10h:</strong> 30h error = 300% (catastrophic: you think you have 40 hours but only have 10!)</li>
         </ul>
 
         <h3>The Solution: Custom Weighted Loss</h3>
@@ -235,7 +235,7 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
     # RUL=10h  → weight=1.1   (11x penalty)
     # RUL=500h → weight=1.002 (minimal penalty)
     return (errors * weights).mean()</code></pre>
-        <p><strong>Impact:</strong> Critical zone (0-50h) MAE dropped from 30h to <strong>2.88h</strong> — a 10x improvement where it matters most!</p>
+        <p><strong>Impact:</strong> Critical zone (0-50h) MAE dropped from 30h to <strong>2.88h</strong>, a 10x improvement where it matters most!</p>
 
         <hr>
 
@@ -276,11 +276,11 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
         <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
         <table>
             <tr><th>RUL Range</th><th>MAE (hours)</th><th>Use Case</th></tr>
-            <tr><td><strong>0-50h (Critical)</strong></td><td><strong>2.88</strong></td><td>Emergency maintenance — trigger within 24 hours</td></tr>
+            <tr><td><strong>0-50h (Critical)</strong></td><td><strong>2.88</strong></td><td>Emergency maintenance: trigger within 24 hours</td></tr>
             <tr><td>50-100h (Warning)</td><td>4.77</td><td>Schedule maintenance within 2-3 days</td></tr>
             <tr><td>100-150h (Alert)</td><td>10.77</td><td>Plan maintenance this week</td></tr>
             <tr><td>150-300h (Monitor)</td><td>~17</td><td>Track closely, no immediate action</td></tr>
-            <tr><td>300+h (Healthy)</td><td>~15</td><td>Baseline monitoring — no concerns</td></tr>
+            <tr><td>300+h (Healthy)</td><td>~15</td><td>Baseline monitoring, no concerns</td></tr>
         </table>
         </div>
         <p><strong>Model behavior:</strong> Accuracy is highest where it matters most (imminent failures) and gracefully degrades for less critical predictions. Exactly what production systems need.</p>
@@ -297,12 +297,12 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
             <li><strong>Mid failure (RUL 100-300h):</strong> Kurtosis peaks. Cracks widen, creating distinct impacts every time a ball crosses a crack.</li>
             <li><strong>Late failure (RUL 0-100h):</strong> RMS peaks but kurtosis <strong>falls</strong>. Cracks become so large there's continuous metal-on-metal grinding instead of distinct impacts. The signal becomes Gaussian (continuous noise) rather than impulsive.</li>
         </ul>
-        <p>This physics insight guided feature engineering — explaining why both RMS-based and kurtosis-based features are necessary but tell different parts of the story.</p>
+        <p>This physics insight guided feature engineering, explaining why both RMS-based and kurtosis-based features are necessary but tell different parts of the story.</p>
 
         <hr>
 
         <!-- BUSINESS IMPACT -->
-        <h2>Business Impact: $300K Annual Savings</h2>
+        <h2>Business Impact: Modeled ~$300K Annual Savings</h2>
         <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
         <table>
             <tr><th>Metric</th><th>Before (Time-based)</th><th>After (Predictive)</th></tr>
@@ -310,7 +310,7 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
             <tr><td>Premature Replacements</td><td>40% ($200K waste)</td><td><strong>0%</strong></td></tr>
             <tr><td>Unexpected Failures</td><td>5% ($300K downtime)</td><td><strong>1.5%</strong> (98.5% caught)</td></tr>
             <tr><td>Annual Cost</td><td>$500K</td><td><strong>$200K</strong></td></tr>
-            <tr><td><strong>Savings</strong></td><td>—</td><td><strong>$300K/year (60%)</strong></td></tr>
+            <tr><td><strong>Savings</strong></td><td>N/A</td><td><strong>$300K/year (60%)</strong></td></tr>
         </table>
         </div>
 
@@ -324,15 +324,15 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
         <ul>
             <li><strong>RUL predictions with confidence intervals</strong></li>
             <li><strong>Risk-based alerts:</strong> Critical (&lt;50h), Warning (50-100h), Normal (&gt;100h)</li>
-            <li><strong>Degradation trend visualization</strong> — RMS, kurtosis, bandpower over time</li>
-            <li><strong>Maintenance scheduling</strong> — optimal replacement timing recommendations</li>
+            <li><strong>Degradation trend visualization</strong>: RMS, kurtosis, bandpower over time</li>
+            <li><strong>Maintenance scheduling</strong>: optimal replacement timing recommendations</li>
         </ul>
 
         <hr>
 
         <!-- KEY LEARNINGS -->
         <h2>Key Learnings</h2>
-        <p><strong>1. Distribution mismatch kills models.</strong> Time-based splits fail catastrophically for degradation data. Stratified RUL sampling ensures train/test alignment — fixing R² from -11.9 to 0.985.</p>
+        <p><strong>1. Distribution mismatch kills models.</strong> Time-based splits fail catastrophically for degradation data. Stratified RUL sampling ensures train/test alignment, fixing R² from -11.9 to 0.985.</p>
         <p><strong>2. Not all errors are equal.</strong> A 30h error at RUL=10h is 10x worse than at RUL=500h. Custom weighted loss reduced critical zone MAE by 10x (30h → 2.88h).</p>
         <p><strong>3. Temporal features dominate.</strong> EMAs and rolling statistics outperformed raw features by 2.5x. They smooth noise while preserving trends and react quickly to accelerating failures.</p>
         <p><strong>4. Physics matters.</strong> Understanding failure mechanics (RMS rises, kurtosis peaks then falls) guided feature engineering. Domain knowledge + ML = better predictions.</p>
@@ -353,14 +353,14 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
 
         <!-- BOTTOM LINE -->
         <h2>Bottom Line</h2>
-        <p>Bearings fail in predictable patterns — <strong>if you capture the right signals and learn from all degradation stages</strong>.</p>
+        <p>Bearings fail in predictable patterns, <strong>if you capture the right signals and learn from all degradation stages</strong>.</p>
         <p>Three innovations transformed a failing model (R² = -11.9) into a production system (R² = 0.9852):</p>
         <ol>
-            <li><strong>Stratified sampling</strong> — train/test distribution alignment</li>
-            <li><strong>Weighted loss</strong> — accuracy prioritized where it matters</li>
-            <li><strong>Temporal features</strong> — noise smoothing with trend preservation</li>
+            <li><strong>Stratified sampling</strong>: train/test distribution alignment</li>
+            <li><strong>Weighted loss</strong>: accuracy prioritized where it matters</li>
+            <li><strong>Temporal features</strong>: noise smoothing with trend preservation</li>
         </ol>
-        <p><strong>Result:</strong> 2.88h accuracy in critical zones, $300K annual savings, 98.5% of failures prevented.</p>
+        <p><strong>Result:</strong> 2.88h accuracy in critical zones, with modeled ~$300K annual savings and modeled 98.5% failure prevention in critical zones.</p>
         <p><strong>GitHub:</strong> <a href="https://github.com/anudeepreddy332/ims-bearing-failure-prediction" target="_blank" rel="noopener noreferrer">Full code, pipeline, and documentation →</a></p>
 
         <a href="index.html#projects" class="back-link">← Back to Projects</a>

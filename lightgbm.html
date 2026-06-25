@@ -600,13 +600,13 @@
                             <div class="pipe-item">Supervised Learning</div>
                             <div class="pipe-connector">&darr;</div>
                             <div class="pipe-item highlight">Tree-Based Models</div>
-                            <div class="pipe-item sub">&rdsh; Decision Trees — single tree, the building block</div>
-                            <div class="pipe-item sub">&rdsh; Random Forest — bagging (parallel ensemble)</div>
-                            <div class="pipe-item sub">&rdsh; Gradient Boosting — sequential ensemble</div>
-                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; GBM — Friedman's original, 2001</div>
-                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; XGBoost — Chen &amp; Guestrin, 2016</div>
+                            <div class="pipe-item sub">&rdsh; Decision Trees: single tree, the building block</div>
+                            <div class="pipe-item sub">&rdsh; Random Forest: bagging (parallel ensemble)</div>
+                            <div class="pipe-item sub">&rdsh; Gradient Boosting: sequential ensemble</div>
+                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; GBM: Friedman's original, 2001</div>
+                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; XGBoost: Chen &amp; Guestrin, 2016</div>
                             <div class="pipe-item sub-active" style="padding-left:50px;">&rdsh; LightGBM &larr; this article (Microsoft, 2017)</div>
-                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; CatBoost — Yandex, 2017</div>
+                            <div class="pipe-item sub" style="padding-left:52px;">&rdsh; CatBoost: Yandex, 2017</div>
                         </div>
                     </div>
                 </div>
@@ -1322,7 +1322,7 @@ X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# LightGBM Dataset format — more memory-efficient than raw numpy arrays
+# LightGBM Dataset format: more memory-efficient than raw numpy arrays
 train_data = lgb.Dataset(X_train, label=y_train)
 val_data   = lgb.Dataset(X_val,   label=y_val, reference=train_data)
 
@@ -1330,7 +1330,7 @@ params = {
     'objective':        'binary',       # task type
     'metric':           'binary_logloss',
     'num_leaves':       31,             # complexity control
-    'learning_rate':    0.05,           # conservative — relies on early stopping
+    'learning_rate':    0.05,           # conservative: relies on early stopping
     'feature_fraction': 0.9,           # subsample features per tree
     'bagging_fraction': 0.8,           # subsample rows per round
     'bagging_freq':     5,             # apply bagging every 5 rounds
@@ -1354,7 +1354,7 @@ model = lgb.train(
 # Predict (raw probabilities for binary classification)
 preds = model.predict(X_val)
 
-# Feature importance — gain = how much each feature reduced total loss
+# Feature importance: gain = how much each feature reduced total loss
 importance = dict(
     zip(model.feature_name(), model.feature_importance(importance_type='gain'))
 )</code></pre>
@@ -1626,17 +1626,17 @@ pipe = Pipeline([
             const NR = 10; // node radius
 
             // ─────────────────────────────────────────
-            // LEFT PANEL — level-wise (balanced)
+            // LEFT PANEL: level-wise (balanced)
             // ─────────────────────────────────────────
             const lx = half * 0.5;                // panel centre
             const lSpread1 = Math.round(half * 0.17);  // depth-1 spread
             const lSpread2 = Math.round(half * 0.09);  // depth-2 spread
 
-            // depth 0 — root
+            // depth 0: root
             drawNode(lx, R[0], NR, nodeC, edgeC);
             drawLabel('Root', lx + NR + 4, R[0] + 4, textC);
 
-            // depth 1 — nodes A and B
+            // depth 1: nodes A and B
             const lD1 = [-1, 1].map(d => ({ x: lx + d * lSpread1, label: d < 0 ? 'A' : 'B' }));
             lD1.forEach(n => {
                 drawEdge(lx, R[0] + NR, n.x, R[1] - NR, edgeC);
@@ -1646,7 +1646,7 @@ pipe = Pipeline([
                 drawLabel(n.label, n.x + (right ? NR + 4 : -NR - 12), R[1] + 4, textC);
             });
 
-            // depth 2 — four nodes (all split, level-wise)
+            // depth 2: four nodes (all split, level-wise)
             lD1.forEach(parent => {
                 [-1, 1].forEach(d => {
                     const cx = parent.x + d * lSpread2;
@@ -1655,7 +1655,7 @@ pipe = Pipeline([
                 });
             });
 
-            // depth 3 — eight tiny nodes
+            // depth 3: eight tiny nodes
             lD1.forEach(parent => {
                 [-1, 1].forEach(d => {
                     const px = parent.x + d * lSpread2;
@@ -1674,16 +1674,16 @@ pipe = Pipeline([
             ctx.fillText('Level-wise', lx, H - 8);
 
             // ─────────────────────────────────────────
-            // RIGHT PANEL — leaf-wise (asymmetric)
+            // RIGHT PANEL: leaf-wise (asymmetric)
             // ─────────────────────────────────────────
             const rx = half + half * 0.5;         // panel centre
             const rOff = Math.round(half * 0.19); // root → depth-1 horizontal spread
 
-            // depth 0 — root (highlighted)
+            // depth 0: root (highlighted)
             drawNode(rx, R[0], NR, accent, null);
             drawLabel('Root', rx + NR + 4, R[0] + 4, accent);
 
-            // depth 1 — left child (split, high gain) and right child (waiting)
+            // depth 1: left child (split, high gain) and right child (waiting)
             const lcX = rx - rOff;
             const rcX = rx + rOff;
 
@@ -1697,7 +1697,7 @@ pipe = Pipeline([
             drawLabel('HIGH', lcX - NR - 38, R[1] + 4, accent, 'left');
             drawLabel('low',  rcX + NR + 4,  R[1] + 4, textC,  'left');
 
-            // depth 2 — only the high-gain child splits (two children)
+            // depth 2: only the high-gain child splits (two children)
             const off2 = Math.round(half * 0.115);
             const l2L  = lcX - off2;
             const l2R  = lcX + off2;
@@ -1710,7 +1710,7 @@ pipe = Pipeline([
 
             drawLabel('NEXT', l2L - 8 - 36, R[2] + 4, accent, 'left');
 
-            // depth 3 — l2L splits further
+            // depth 3: l2L splits further
             const off3 = Math.round(half * 0.07);
             const l3L  = l2L - off3;
             const l3R  = l2L + off3;
@@ -1734,7 +1734,7 @@ pipe = Pipeline([
             drawTreeGrowth();
         }
 
-        // init — script is at body-bottom so DOM is ready; use rAF for canvas sizing
+        // init: script is at body-bottom so DOM is ready; use rAF for canvas sizing
         requestAnimationFrame(function() {
             buildBoostingChart();
             buildSpeedChart();
