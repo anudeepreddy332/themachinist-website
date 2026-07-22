@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        (function() {
-            const t = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <script src="theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supervised Learning Models | The Machinist</title>
@@ -819,22 +815,7 @@
     </footer>
 
     <script src="./shared.js"></script>
-    <script>
-        // active state for jump nav
-        const jumpLinks = document.querySelectorAll('.sl-jump-nav a');
-        const familyBlocks = document.querySelectorAll('.sl-family-block[id]');
-        const jumpObserver = new IntersectionObserver(entries => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    jumpLinks.forEach(l => l.classList.remove('active'));
-                    const active = document.querySelector(`.sl-jump-nav a[href="#${e.target.id}"]`);
-                    if (active) active.classList.add('active');
-                }
-            });
-        }, { rootMargin: '-130px 0px -55% 0px' });
-        familyBlocks.forEach(b => jumpObserver.observe(b));
-
-    </script>
+    <script src="./supervised-learning-models.js"></script>
     <script type="application/ld+json">
     {
       "": "https://schema.org",

@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        (function() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <script src="theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bearing Failure Prediction | The Machinist</title>
@@ -383,68 +379,6 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
         </div>
     </footer>
 
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const sunIcon = document.querySelector('.sun-icon');
-        const moonIcon = document.querySelector('.moon-icon');
-
-        function setTheme(isDark) {
-            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            themeToggle.classList.toggle('active', isDark);
-            sunIcon.style.display = isDark ? 'none' : 'block';
-            moonIcon.style.display = isDark ? 'block' : 'none';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        }
-
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
-
-        themeToggle.addEventListener('click', () => {
-            const isDark = document.documentElement.getAttribute('data-theme') !== 'dark';
-            setTheme(isDark);
-        });
-
-        // Nav visibility on scroll
-        const nav = document.getElementById('nav');
-        let lastScroll = 0;
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            if (currentScroll > 100) {
-                nav.classList.add('visible');
-            } else {
-                nav.classList.remove('visible');
-            }
-            lastScroll = currentScroll;
-        });
-
-        // Mobile menu
-        const hamburger = document.querySelector('.hamburger');
-        const mobileMenu = document.querySelector('.mobile-menu');
-        const closeMenu = document.querySelector('.close-menu');
-
-        hamburger?.addEventListener('click', () => {
-            hamburger.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
-            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
-        });
-
-        closeMenu?.addEventListener('click', () => {
-            hamburger.classList.remove('active');
-            mobileMenu.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-
-        mobileMenu?.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                mobileMenu.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-        });
-    </script>
     <script src="shared.js"></script>
     <script type="application/ld+json">
     {

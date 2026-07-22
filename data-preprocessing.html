@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        (function() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <script src="theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Preprocessing & Feature Engineering | The Machinist</title>
@@ -25,13 +21,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./shared.css">
-    <script>
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    </script>
 
     <style>
         .dp-header {
