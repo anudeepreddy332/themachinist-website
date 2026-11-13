@@ -6,15 +6,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content-Agent: Researches, Fact-Checks, and Publishes Technical Articles | The Machinist</title>
-    <meta name="description" content="A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing. Content-agent researches a topic, drafts only what its sources support, verifies every claim, gates on a human twice, and never publishes on its own.">
+    <meta name="description" content="An engineering case study on grounded article generation, evidence retrieval, verification, and two human review gates.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://themachinist.org/content-agent">
     <meta property="og:title" content="Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles | The Machinist">
-    <meta property="og:description" content="A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing. Every claim is checked against real sources, two humans review the work, and the agent never publishes on its own.">
+    <meta property="og:description" content="An engineering case study on grounded article generation, evidence retrieval, verification, and two human review gates.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles | The Machinist">
-    <meta name="twitter:description" content="A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing. Every claim is checked against real sources, and the agent never publishes on its own.">
+    <meta name="twitter:description" content="An engineering case study on grounded article generation, evidence retrieval, verification, and two human review gates.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
     <link rel="canonical" href="https://themachinist.org/content-agent">
     <meta name="keywords" content="Content Agent, LangGraph, Grounding, RAG, Qdrant, DeepSeek, HITL, Human in the Loop, FastAPI, Docker, Caddy, LangSmith, Agentic AI">
@@ -522,7 +522,7 @@
             </nav>
             <div class="cfa-series-label">Agentic AI</div>
             <h1>Content-Agent: Building an AI System That Researches, Fact-Checks, and Publishes Technical Articles</h1>
-            <p class="cfa-subtitle">A production LangGraph case study in grounding, evaluation, and human-in-the-loop publishing.</p>
+            <p class="cfa-subtitle">An engineering case study in grounding, evaluation, and human-in-the-loop publishing.</p>
             <p class="cfa-jump-link"><a href="#grounding-investigation">Jump to the grounding investigation &darr;</a></p>
             <div class="cfa-tech-row">
                 <span class="cfa-tech-tag">Python</span>
@@ -540,14 +540,9 @@
     <main id="main">
         <article class="cfa-main">
 
-            <p>Type in a topic, press Enter, and watch an article get researched, drafted, fact-checked against real sources, scored, reviewed by a human at two separate gates, rendered into site-ready HTML, and published live. The whole run costs less than a cent and finishes in minutes. Nothing reaches the website that a person did not read first, and nothing gets pushed to production without a human running the final command.</p>
-
-            <!-- TL;DR -->
+            <p>I built Content Agent to research and draft technical articles while keeping unsupported claims away from publication. The difficult part is not making an article sound convincing. It is identifying what the draft actually claims, checking the evidence it was given, and stopping when the checks cannot establish support.</p>
             <h2>TL;DR</h2>
-            <div class="cfa-callout">
-                <p>Content-agent is a single-agent LangGraph pipeline that writes grounded technical articles for themachinist.org. It retrieves sources, drafts only what those sources support, verifies every claim, scores itself, pauses for a human to approve the content, renders HTML, pauses again for a human to approve the layout, and merges the result through git. It runs as an authenticated FastAPI service inside a non-root Docker container, deployed on EC2 behind Caddy with automatic TLS. The hard part was never the plumbing. It was getting the agent to stop making things up, and proving that it had.</p>
-            </div>
-
+            <div class="cfa-callout"><p>Content Agent is a LangGraph workflow that retrieves sources, drafts, checks claims, revises within limits, and asks a person to review both content and layout. Git operations are guarded; the final push remains human. The earlier video shows a historical supervised demo, not qualification of the latest Phase 5 workflow.</p></div>
             <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5rem 0;">
                 <iframe
                     src="https://www.youtube.com/embed/gJttMm90ugM"
@@ -560,472 +555,103 @@
             </div>
 
             <div class="cfa-stat-grid">
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Human Gates</div>
-                    <div class="cfa-stat-value">2</div>
-                    <div class="cfa-stat-note">Content, then layout. Both mandatory in production.</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Retrieval recall@3</div>
-                    <div class="cfa-stat-value">1.0</div>
-                    <div class="cfa-stat-note">On a 35-query adversarial golden set</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Cost / Run</div>
-                    <div class="cfa-stat-value">&lt; $0.01</div>
-                    <div class="cfa-stat-note">Live rehearsal: $0.0066, topic to published</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Test Suite</div>
-                    <div class="cfa-stat-value">62</div>
-                    <div class="cfa-stat-note">$0 API cost, fully mocked, under 10s</div>
-                </div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">Retrieval · Phase 5B3</div><div class="cfa-stat-value">0.788 → 0.939</div><div class="cfa-stat-note">Exact evidence recall: retrieved seeds to verifier exposure, 33 gating queries.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">Verification · Nov 5</div><div class="cfa-stat-value">39 / 57</div><div class="cfa-stat-note">Verified claims in one live second draft; 18 weak, material policy failed.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">Reliability</div><div class="cfa-stat-value">2 gates</div><div class="cfa-stat-note">Human content and layout approval remain mandatory.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">CI · PR #10</div><div class="cfa-stat-value">2,056</div><div class="cfa-stat-note">Tests passed, 37 warnings; deterministic checks, not a live E2E.</div></div>
             </div>
-
             <hr class="cfa-divider">
-
-            <!-- THE PROBLEM -->
-            <h2>The Problem: An Agent That Writes Confident Fiction</h2>
-            <p>Ask any large language model to write a technical article and it will give you something that reads well. That is exactly the danger. It reads well whether or not the facts are real.</p>
-            <p>A model writing about, say, multi-agent systems will happily state a specific benchmark number, attribute a result to a paper, or describe an algorithm's failure mode in precise detail. Some of that is true. Some of it is invented. The fluent sentences look identical either way. For a personal blog that publishes under my own name, that is not acceptable. A single fabricated claim, confidently worded, is worse than no article at all.</p>
-            <p>So the goal was never "generate articles." Generating articles is easy and mostly useless. The goal was: <strong>generate articles where every substantive claim can be traced back to a real source, and prove it with measurement, not vibes.</strong></p>
-            <p>That turned out to be a much deeper problem than I expected, and chasing it down is the real story of this project.</p>
-
-            <hr class="cfa-divider">
-
-            <!-- WHERE THIS CAME FROM -->
-            <h2>Where This Came From: Three Earlier Agents</h2>
-            <p>Content-agent builds on three earlier agents. Each one taught a lesson the next needed.</p>
-
-            <div class="cfa-layer-stack">
-                <div class="cfa-layer">
-                    <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">1</span>
-                        <span class="cfa-layer-file">the CLI agent</span>
-                    </div>
-                    <p>A basic query-response loop. The lesson: a raw loop with control flow buried in conditionals cannot pursue a goal across steps, and gives you no way to see what it is doing mid-run.</p>
-                </div>
-                <div class="cfa-layer">
-                    <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">2</span>
-                        <span class="cfa-layer-file">the RAG knowledge agent</span>
-                    </div>
-                    <p>This added retrieval over a private knowledge base. The lesson: retrieval quality is a first-class concern. A retriever that looks fine on easy questions can quietly fail on the hard ones, and you only find out if you measure recall against a real test set.</p>
-                </div>
-                <div class="cfa-layer">
-                    <div class="cfa-layer-head">
-                        <span class="cfa-layer-badge">3</span>
-                        <span class="cfa-layer-file">the code-fix agent</span>
-                    </div>
-                    <p>A goal-directed LangGraph state machine that executes a broken script, diagnoses the failure, patches it, and retries, with a human approval step. It fixed 95% of a 20-script test set. The lesson that mattered most: exit code zero is not correctness. Code can run cleanly and still be wrong. You need a separate evaluator whose only job is to judge whether the result is actually right.</p>
-                </div>
-            </div>
-
-            <p>Content-agent inherited all three. It needed goal-directed control flow (from the code-fix agent), retrieval that was provably healthy (from the knowledge agent), and above all a verifier that judged correctness rather than trusting that fluent output meant true output (the code-fix lesson, applied to facts instead of code).</p>
-
-            <hr class="cfa-divider">
-
-            <!-- WHAT IT DOES -->
-            <h2>What Content-Agent Does</h2>
-            <p>The agent takes a topic and an editorial intent. It produces a publish-ready HTML article for themachinist.org, optionally merged into the website's git repository. Between those two points, it runs seven nodes in a fixed graph, pausing twice for a human.</p>
-            <div class="cfa-callout">
-                <p>Think of it like a newsroom with a strict fact-checking desk. A writer drafts the piece, but before anything prints, a checker goes through every factual claim and marks which ones are actually supported by the reporting. An editor reads the draft and signs off on the content. A layout person sets the page. The editor signs off again on how it looks. Only then does it go to the press, and even then, a person has to physically start the press. The agent automates the writer, the checker, and the layout person. The two editor sign-offs and the press start stay human, on purpose.</p>
-            </div>
-
-            <hr class="cfa-divider">
-
-            <!-- ARCHITECTURE -->
             <h2>Architecture: The Pipeline</h2>
-            <p>The whole system is a directed graph. Each node is a function that reads the shared state and returns an update to it. Each edge is a transition, some unconditional, some routed by a decision function.</p>
-
-            <div class="cfa-diagram-wrap">
-                <div class="cfa-diagram-label">Pipeline Topology</div>
-                <div class="cfa-diagram-body">
-<pre>        ┌───────────┐
-        │ retrieve  │   web (Tavily) + KB (Qdrant + BM25 + RRF)
-        └─────┬─────┘
-              ▼
-        ┌───────────┐
-        │   draft   │   source-aware, cite-or-generalize
-        └─────┬─────┘
-              ▼
-        ┌───────────┐
-        │  verify   │   claim-by-claim grounding score
-        └─────┬─────┘
-              ▼
-        ┌───────────┐
-        │  reflect  │   self-score 1-10 (advisory only)
-        └─────┬─────┘
-              ▼
-   route_after_reflect ──(grounding &lt; floor)──► back to draft  (max 2 iterations)
-              │
-              ▼
-   ┌────────────────────┐
-   │  GATE 1 · CONTENT  │   human: approve / feedback / reject
-   └─────────┬──────────┘   feedback ► draft        reject ► END
-     approve │
-             ▼
-        ┌───────────┐
-        │ html_gen  │   render approved content to site HTML
-        └─────┬─────┘
-              ▼
-   ┌────────────────────┐
-   │  GATE 2 · LAYOUT   │   human: approve / request changes / reject
-   │  (content frozen)  │   changes ► html_revise ► (loop back)
-   └─────────┬──────────┘
-     approve │
-             ▼
-        ┌───────────┐
-        │    git    │   LOCAL merge only, never pushes
-        └─────┬─────┘
-              ▼
-            END  ◄── a human runs `git push` to actually go live</pre>
-                </div>
-            </div>
-
-            <div class="cfa-pipeline">
-                <div class="cfa-pipeline-label">What Each Stage Does</div>
-                <div class="cfa-pipeline-body">
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">1</div>
-                        <div class="cfa-step-body">
-                            <strong>retrieve</strong>
-                            Runs first. Searches the web through Tavily across three fixed query angles, deduplicates by URL, and queries a Qdrant knowledge base of evergreen ML concepts. If the first web pass comes back thin or low-scoring, it re-runs with a forced cache refresh.
-                            <span>Retrieval freshness turned out to be the single largest lever on grounding quality, so this gate matters.</span>
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">2</div>
-                        <div class="cfa-step-body">
-                            <strong>draft</strong>
-                            Generates a four-section article (problem framing, technical deep-dive, code, takeaways) with DeepSeek. The key design choice: the draft reads the retrieved sources and is instructed to assert specific claims only where a source supports them, and to generalize otherwise.
-                            <span>This is "cite or generalize," the heart of the grounding fix below.</span>
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">3</div>
-                        <div class="cfa-step-body">
-                            <strong>verify</strong>
-                            Extracts every factual claim and scores it against the retrieved sources as verified, weak, or unverified, with a confidence. This is the fact-checking desk: a separate LLM call with its own prompt, isolated from the draft so the writer cannot grade its own homework.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">4</div>
-                        <div class="cfa-step-body">
-                            <strong>reflect</strong>
-                            The agent scores its own draft from 1 to 10 on structure, depth, grounding, and clarity. Advisory only. Language models inflate their own grades, so reflection never gets to be the hard gate.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">5</div>
-                        <div class="cfa-step-body">
-                            <strong>route after reflect</strong>
-                            Force a rewrite if grounding is below a hard floor of 0.60, or if the reflection score is below 7 and grounding is below 0.75. Otherwise move to the human. Stop revising once iterations hit the ceiling of 2 or the cost gate trips.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">6</div>
-                        <div class="cfa-step-body">
-                            <strong>hitl (Gate 1, content)</strong>
-                            The first human gate. A reviewer sees the full draft, a claim-by-claim grounding table, the reflection score, and any warnings, then approves, sends feedback (which routes back to draft), or rejects. Once approved, the content is frozen.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">7</div>
-                        <div class="cfa-step-body">
-                            <strong>html_gen</strong>
-                            Renders the approved content into themachinist.org-compliant HTML. Three of the four sections render deterministically in Python; only the technical deep-dive goes through an LLM. The output is validated for required structure before moving on.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">8</div>
-                        <div class="cfa-step-body">
-                            <strong>hitl_html (Gate 2, layout)</strong>
-                            The second human gate, reviewing only how the page looks. Content is frozen here. Change requests go to a single temperature-zero pass, and a word-multiset guard discards any revision that changes more than two visible words, so a layout edit can never silently alter the text.
-                        </div>
-                    </div>
-                    <div class="cfa-step">
-                        <div class="cfa-step-num">9</div>
-                        <div class="cfa-step-body">
-                            <strong>git</strong>
-                            Writes the HTML into the website repository on a feature branch, diffs against main, tags before merging when an existing article changes, and merges locally with no fast-forward. It never pushes. More on that below, because it is the most important safety property in the project.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3>The Stack</h3>
-            <div class="cfa-table-wrap">
-                <table class="cfa-table">
-                    <thead>
-                        <tr><th>Layer</th><th>Choice</th><th>Why</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Orchestration</td><td>LangGraph (single agent)</td><td>Explicit state machine, every transition named and inspectable</td></tr>
-                        <tr><td>Generation</td><td>DeepSeek API</td><td>Strong, cheap; 120s timeout with tenacity retries, SDK retries disabled so they do not stack</td></tr>
-                        <tr><td>Web retrieval</td><td>Tavily</td><td>7-day cache with a score-gated freshness refresh</td></tr>
-                        <tr><td>Knowledge base</td><td>Qdrant + BM25 + RRF over all-MiniLM-L6-v2</td><td>Dense plus keyword, fused by reciprocal rank fusion</td></tr>
-                        <tr><td>Service</td><td>FastAPI + SqliteSaver</td><td>Durable, resumable human-in-the-loop behind bearer auth</td></tr>
-                        <tr><td>Publish</td><td>GitPython, Netlify</td><td>Local merge, human push, static deploy</td></tr>
-                        <tr><td>Container</td><td>Docker, non-root</td><td>uid 10001, embedding model baked at build time</td></tr>
-                        <tr><td>Edge</td><td>Caddy + sslip.io</td><td>Automatic TLS without manual certs or a purchased domain</td></tr>
-                        <tr><td>Registry</td><td>Docker Hub</td><td>Build once on a fast machine, pull on the small VM</td></tr>
-                        <tr><td>Tracing</td><td>LangSmith</td><td>Cross-node traces with per-call token usage and cost</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <h3>Why ChromaDB Became Qdrant</h3>
-            <p>The knowledge base did not start on Qdrant. The first version used ChromaDB, which is a fine choice for a notebook prototype. It stopped being the right choice once the project needed to run benchmarks and behave like production infrastructure.</p>
-            <p>ChromaDB showed problems with concurrent writes under benchmark loads, which is exactly the situation where a retrieval backend has to stay reliable. Qdrant fixed that and brought three things that mattered for where this project was going: payload filtering, so retrieval can be constrained by metadata rather than vector similarity alone; a clean fit with a Docker-based production setup, running as its own network-isolated service instead of an embedded library; and a scroll API that handles larger collections without loading everything into memory at once.</p>
-            <p>The migration was not taken on faith. I re-ran the retrieval evaluation against the same 35-query adversarial golden set after switching backends and confirmed that recall at 3 held at 1.0. The backend changed underneath; the retrieval quality did not move. After the migration, ChromaDB was removed entirely, since nothing imported it anymore.</p>
-
+            <p>The graph makes each decision visible. Successful verification and reflection can lead to editorial review; failed checks may trigger a bounded revision or end the run. Approval cannot override a failed quality policy.</p>
+            <div class="cfa-diagram-wrap"><div class="cfa-diagram-label">Pipeline topology</div><div class="cfa-diagram-body"><pre>Retrieve web + knowledge base
+        ↓
+Source-aware draft ←── bounded content revision
+        ↓                      ↑
+Call A: claim inventory        │
+Call B: evidence assessment    │
+Python: identity, material, citation checks
+        ↓                      │
+Reflection ────────────────────┘
+        ↓ accepted
+Gate 1: human content review → feedback / reject
+        ↓ approve
+HTML generation
+        ↓
+Gate 2: human layout review ↔ bounded layout revision
+        ↓ approve
+Guarded local Git operations → human push</pre></div></div>
+            <p>Call A and Call B are parts of verification, not separate graph nodes. The actual graph also has terminal routes from failed stages; content feedback can begin a new quality episode. See <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/agent/graph.py">the graph</a>.</p>
             <hr class="cfa-divider">
-
-            <!-- GROUNDING INVESTIGATION -->
-            <h2 id="grounding-investigation">The Grounding Investigation</h2>
-            <p>This is the part I am proudest of, because it is where the project stopped being a build and became an investigation. The first working version produced articles that read beautifully and were full of claims I could not verify. The obvious move would have been to tweak prompts until the output looked better. Instead I treated it as a measurement problem and ran experiments.</p>
-
-            <h3>First, exonerate the verifier</h3>
-            <p>Before blaming the writer, I had to rule out the checker. Maybe grounding looked low because the verifier was too strict and marking true claims as unverified. So I built a golden fixture: twelve fixed claims, hand-labeled, covering verbatim matches, paraphrases, absent claims, and outright false ones, each crossed with substantive versus generic. The verifier scored these against a known source.</p>
-            <p>It got 8 out of 8 on the ground-truth set, including paraphrased-but-correct claims, with high confidence. The verifier was not the problem. I also checked retrieval the same way, with a 35-query adversarial set spanning easy, medium, hard, multi-hop, and out-of-scope questions. Recall at 3 was 1.0. The knowledge base was not the problem either.</p>
-            <p>With both the checker and the retriever cleared, the cause had to be the writer.</p>
-
-            <h3>The trap: optimizing the wrong number</h3>
-            <p>The naive metric for grounding is the unverified rate (UVR): what fraction of claims could not be verified. Lower is better. So why not just minimize it?</p>
-            <p>Because minimizing UVR rewards vagueness. The cheapest way to drive unverified claims to zero is to stop making specific claims at all. An article that says "neural networks can be effective in some situations" has a wonderful UVR and is worth nothing. I caught this early and <strong>voided UVR-alone as an objective.</strong></p>
-            <p>What replaced it is SV, substantive verified claims: a count of specific, technically meaningful claims that actually checked out against sources. SV is the primary quality metric. UVR is kept only as a guardrail (it must stay at or below 0.15), and any change that improves UVR by going vague triggers a mandatory co-condition: SV must not drop. You cannot win by saying less. You can only win by saying more true things.</p>
-
-            <h3>Source-aware drafting</h3>
-            <p>The root cause turned out to be over-claiming by substitution. The original draft node ran before retrieval and never saw the sources. So it wrote from the model's memory, producing confident specifics that no retrieved source backed up. When I made drafting source-aware (retrieve first, then draft, with an explicit instruction to cite or generalize), the worst offender, a multi-agent-systems topic, went from a UVR of 0.63 to 0.22 with its SV up 253%. The draft was finally writing about what it had actually found, not what it vaguely remembered.</p>
-            <div class="cfa-stat-grid">
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Worst topic, UVR</div>
-                    <div class="cfa-stat-value">0.63 → 0.22</div>
-                    <div class="cfa-stat-note">Multi-agent systems, after source-aware drafting</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Same topic, SV</div>
-                    <div class="cfa-stat-value">+253%</div>
-                    <div class="cfa-stat-note">More specific claims, and they checked out</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">Grounding floor</div>
-                    <div class="cfa-stat-value">0.60</div>
-                    <div class="cfa-stat-note">Hard gate; below it forces a rewrite</div>
-                </div>
-                <div class="cfa-stat-card">
-                    <div class="cfa-stat-label">UVR guardrail</div>
-                    <div class="cfa-stat-value">&le; 0.15</div>
-                    <div class="cfa-stat-note">With SV-no-loss as a mandatory co-condition</div>
-                </div>
-            </div>
-
-            <h3>Killing the blind re-roll</h3>
-            <p>The original revision loop, when grounding was bad, simply threw the draft away and generated a fresh one from scratch, hoping for better luck. I tested this against a smarter loop that fed the previous draft's unverified claims back in with instructions to ground them, generalize them, or cut them.</p>
-            <p>The blind re-roll was not just weaker. It was actively worse than doing nothing. On healthy topics it made grounding regress: one topic went from 0.170 to 0.270 unverified, another from 0.275 to 0.341. Rolling the dice again on a draft that was already fine just gave the model another chance to over-claim. The blind re-roll was removed. Revision now always carries forward a specific, claim-level grounding report.</p>
-
-            <h3>Why the iteration ceiling stays at 2</h3>
-            <p>Later I tested raising the maximum revision count above 2 to chase higher grounding. It failed for a clean reason: a higher ceiling cannot help drafts that never trigger a revision in the first place, and on the drafts that do revise, the extra passes traded SV for vagueness. They lowered the unverified rate by making claims blander, which is exactly the failure mode SV exists to catch. The ceiling stays at 2.</p>
-            <div class="cfa-callout">
-                <p>The thread running through all of this: it is easy to make an automated writer look more grounded by making it say less. The entire metric design exists to make that cheat impossible, so the only way to score better is to actually be better.</p>
-            </div>
-
-            <hr class="cfa-divider">
-
-            <!-- THREE BUGS -->
-            <h2>Three Bugs That Taught Me Something</h2>
-            <p>Every one of these passed at least one test before I caught it. That is the lesson in all three: a green checkmark is evidence, not proof.</p>
-
-            <h3>The chained-assignment telemetry bug</h3>
-            <p>The pipeline records latency per node. For a long time, the knowledge-base retrieval latency looked alarming, and I nearly went hunting for a Qdrant performance problem. Two things were wrong. First, a chained assignment in the telemetry code recorded the web latency under the knowledge-base field, so the number was not even measuring what its name claimed. Second, the one genuinely slow reading came from a diagnostic probe that loaded the embedding model a second time into a local variable, while the real singleton stayed cold. The "slow Qdrant" was a model load in disguise.</p>
-            <div class="cfa-callout">
-                <p>Warm queries were actually 29 to 33 milliseconds. Qdrant was fine the whole time. <strong>The lesson: a telemetry field can be broken at birth, and a measurement bug will happily masquerade as a system bug until you check that the number measures what its label says.</strong> I added a warmup step so steady-state latency is what gets recorded, and a telemetry check that asserts field correctness, not just field presence.</p>
-            </div>
-
-            <h3>The rm -f that deleted articles</h3>
-            <p>The rollback script was supposed to undo a publish. An early version ended with a manual <code>rm -f</code> of the article file. It passed its first test, so I trusted it.</p>
-            <p>It was wrong. There are two kinds of rollback: undoing a brand-new article (where deleting the file is correct) and undoing an edit to an existing article (where the correct outcome is restoring the previous version, and the file must stay). The <code>rm -f</code> deleted the file in both cases. On a modification rollback it destroyed content that should have been restored. The reason it "passed once" was a coincidence in the test article that happened to make the wrong behavior look right.</p>
-            <div class="cfa-callout">
-                <p>I rebuilt the script from git's actual revert semantics: revert the publish merge commit, which restores the prior version content-for-content, and never manually delete anything. <strong>The lesson: a rollback that silently deletes an edited article is worse than no rollback at all, and correctness has to be derived from how the tool actually works, not from one run that happened to look fine.</strong></p>
-            </div>
-
-            <h3>The filename suffix that broke republishing</h3>
-            <p>To avoid clobbering local debug copies, the HTML generator gave each run's archived file a unique suffix. That suffix leaked into the filename that the git node writes into the website repository. The effect was subtle and bad: every republish of the same topic produced a new filename, so git always saw a brand-new file, the "changed file" code path that tags before merging was never reachable, and the public URL of an article changed every single time it was updated.</p>
-            <div class="cfa-callout">
-                <p>The fix was to make the published filename always the canonical slug, and let the local archive keep its own unique name where it belongs. <strong>The lesson: a local convenience leaking into production semantics is its own bug class.</strong> A name that only mattered for avoiding a debug-file collision had quietly taken over the publishing logic.</p>
-            </div>
-
-            <hr class="cfa-divider">
-
-            <!-- FREEZE SPRINT -->
-            <h2>The Freeze Sprint: Making It Production-Grade</h2>
-            <p>Once the grounding work was locked, I gave myself a hard deadline to turn a working pipeline into a deployed, hardened system. This was a sequence of milestones, each with an explicit exit gate.</p>
+            <h2 id="grounding-investigation">Investigation 1: Grounding Quality</h2>
             <div class="cfa-grid">
-                <div class="cfa-card">
-                    <h4>Input sanitization</h4>
-                    <p>The topic becomes a slug, which becomes a filename and a git branch and tag name. Slug generation is allowlist-based by construction, with tests for path traversal, git-ref injection, and a null-byte fuzz case.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Failure-injection tests</h4>
-                    <p>Five real fault modes: DeepSeek auth failure (must propagate, never get swallowed), DeepSeek timeout and rate limit (exactly three retries, then reraise), Tavily empty or erroring, Qdrant down, and malformed model JSON. Each path is exercised and asserted, so the system degrades instead of crashing.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>CI gates</h4>
-                    <p>Two tiers. A free per-push tier runs fatal-tier lint and the full mocked suite at zero API cost. A secret-gated tier runs the real grounding gates: the golden verifier fixture with an enforced threshold, and a benchmark that fails the build if any run's unverified rate exceeds 0.15.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Durable human-in-the-loop</h4>
-                    <p>The centerpiece. The graph is compiled with a SqliteSaver checkpointer, so a paused human gate persists the entire run state to disk. A reviewer can return later, even after the process restarts, and resume from exactly where it paused.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Containerization</h4>
-                    <p>A non-root image (uid 10001) with the embedding model baked in at build time so the first run is fast. A production compose file runs the app alongside a network-isolated Qdrant that has no host port and is reachable only inside the compose network. Secrets are injected at runtime, never baked in.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Publish validation and rollback</h4>
-                    <p>The git automation was validated against a fork, never production, exercising both the new-article and changed-article paths, the rollback script, and one supervised real publish.</p>
-                </div>
+                <div class="cfa-card"><h4>Problem</h4><p>Fluent drafts made precise claims that the retrieved sources did not support. A low unverified rate alone could be achieved by making the article vague.</p></div>
+                <div class="cfa-card"><h4>Decision</h4><p>Retrieve before drafting, ask the writer to use the available sources, and supply specific claim-level feedback for eligible revisions. Track substantive verified claims (SV) alongside unverified rate (UVR).</p></div>
+                <div class="cfa-card"><h4>Evidence</h4><p>In the historical multi-agent topic experiment, UVR fell from 0.63 to 0.22 and SV rose 253%. The pre-registered criterion failed; the decision to proceed was documented as a judgment call. This is not a general reliability estimate. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/DECISIONS.md">M3 decision</a>.</p></div>
             </div>
-
+            <p>SV asks how much useful, supported substance remains; UVR measures the fraction judged unverified. Neither substitutes for complete claim coverage or material and citation policy. A later live run showed why: a score could look good while important claims still failed.</p>
             <hr class="cfa-divider">
-
-            <!-- POST FREEZE -->
-            <h2>Post-Freeze: The Live Demo and the Second Gate</h2>
-            <p>After the freeze, three pieces of work turned a command-line tool into something you can actually watch run in a browser.</p>
-            <p><strong>The second HITL gate.</strong> The original pipeline had one human gate, for content. I split review into two: content first, then layout, with content frozen at the second gate. The layout gate routes change requests to a single temperature-zero revision pass that can only touch markup. The content-freeze guard mechanically discards any "layout" edit that drifts the text by more than two words. This means a reviewer can fix how an article looks with zero risk of changing what it says.</p>
-            <p><strong>The index auto-update.</strong> Every successful publish patches a card into the website's homepage learning log, in place on republish, and excluded from the diff that decides the tag-versus-no-tag publish path so the distinction still holds.</p>
-            <p><strong>The interactive front-end.</strong> A self-contained single-page app, vanilla JavaScript with server-sent events, served by the same FastAPI app. You enter a topic and watch each node complete in real time. Both human gates appear inline: the content gate shows the draft and the grounding table, the layout gate shows the rendered HTML in a frame. A publish button does the final go-live. This streaming surface was added without touching the existing pipeline. The graph runs exactly as before. The UI is a new way to observe it, not a new way to run it.</p>
-
+            <h2>Investigation 2: Retrieval and Evidence Exposure</h2>
+            <p>I moved from ChromaDB to Qdrant after concurrency problems in earlier benchmark work. Later, I found a subtler issue: chunks sized with one tokenizer could be truncated by the embedding model's tokenizer. A relevant document can rank highly while the exact sentence needed for verification is missing from the model's context.</p>
+            <p>The Phase 5 path uses dense MiniLM and lexical BM25, combined with reciprocal rank fusion (RRF). Contiguous Structural Window Packing (CSWP) respects document structure. Same-document neighbors expand the retrieved seeds, and a bounded, seed-first pack passes evidence to the drafter and verifier. Local and Qdrant serving are separately parity-tested; the Phase 5B3 experiment used the local path.</p>
+            <div class="cfa-table-wrap"><table class="cfa-table"><thead><tr><th>Phase 5B3 stage</th><th>Exact evidence recall</th><th>Meaning</th></tr></thead><tbody>
+                <tr><td>Retrieved seeds</td><td>0.78787879</td><td>Macro recall of gold evidence spans in top-five seeds.</td></tr>
+                <tr><td>Verifier exposed</td><td>0.93939394</td><td>Gold spans available after neighbor expansion and packing.</td></tr>
+            </tbody></table></div>
+            <p>Both figures are macro recall over the same 33 gating queries, not the older document recall@3 or an article-accuracy score. Three queries retained upstream gaps. In a separate frozen reranker experiment, exact-span recall@5 rose from 0.78787879 to 0.86363636, but a critical query lost evidence, so I did not advance the reranker. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/reports/phase5/phase5b3/evaluation_summary.json">Phase 5B3 results</a> · <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/reports/phase5/phase5a2h/README.md">Reranker decision</a></p>
             <hr class="cfa-divider">
-
-            <!-- VALIDATION -->
-            <h2>Validation and Quality Gates</h2>
-            <p>Nothing here is self-reported. Every quality claim has an enforcing check behind it.</p>
-            <div class="cfa-grid">
-                <div class="cfa-card">
-                    <h4>Golden verifier fixture</h4>
-                    <p>Twelve hand-labeled claims. The check exits with a failure code if grounding accuracy drops below 11 of 12 or specificity below 10 of 12. The cheap, fast regression guard, and it runs automatically on every pull request.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Benchmark gate</h4>
-                    <p>Runs 20 topics through the real pipeline and fails outright if any run errors or any run's unverified rate exceeds 0.15. The comprehensive guard, run on demand because it spends real money.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Telemetry correctness check</h4>
-                    <p>Asserts that every required field is present and internally consistent: attribution counts sum to the claim count, every claim has a source kind, every knowledge-base result carries its chunk index. Reconstructability is a contract, not a hope.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Failure-injection suite</h4>
-                    <p>The five fault modes from the freeze sprint, all mocked, all at zero cost, all asserting the exact degradation behavior.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Fork-based publish validation</h4>
-                    <p>The git automation is only ever tested against a fork of the website. Production is never the test environment.</p>
-                </div>
+            <h2>Investigation 3: Verification Integrity</h2>
+            <p>Checking a claim is more than asking a model whether a sentence sounds right. Call A inventories claims and materiality from the draft. Call B assesses the complete roster against the evidence, including support and contradiction. Python then validates the identities, evidence bindings, material requirements and citations.</p>
+            <div class="cfa-pipeline"><div class="cfa-pipeline-label">A small illustrative example</div><div class="cfa-pipeline-body">
+                <div class="cfa-step"><div class="cfa-step-num">1</div><div class="cfa-step-body"><strong>Draft claim</strong>“The method reduced latency by 20%.”</div></div>
+                <div class="cfa-step"><div class="cfa-step-num">2</div><div class="cfa-step-body"><strong>Call A</strong>Inventory the statement, bind it to the draft and mark whether it is material.</div></div>
+                <div class="cfa-step"><div class="cfa-step-num">3</div><div class="cfa-step-body"><strong>Call B</strong>Assess whether the cited source supports, weakens or contradicts it, with an exact evidence quote.</div></div>
+                <div class="cfa-step"><div class="cfa-step-num">4</div><div class="cfa-step-body"><strong>Python checks</strong>Check the full roster, current draft identity, quote binding, material policy and citation placement. Missing or mismatched evidence cannot be treated as a pass.</div></div>
+            </div></div>
+            <p>If the draft changes, an old verification result is stale: its claims may no longer match the text. Quote binding checks that the claimed supporting words actually appear in the stated source. Complete-roster enforcement prevents an omitted claim from disappearing from the assessment. These checks constrain model output; they do not prove a model's interpretation is always correct.</p>
+            <div class="cfa-callout"><p><strong>A citation defect and repair:</strong> A November 3 live run stopped when two distinct material claims had nested, overlapping draft anchors. I reproduced the failure from its saved checkpoint and corrected citation placement to preserve both source bindings at distinct endpoints. Offline replay passed the placement check, but seven material claims remained unresolved; the repair was not an end-to-end success. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/PROJECT_STATUS.md">Failure and repair evidence</a></p></div>
+            <hr class="cfa-divider">
+            <h2>Investigation 4: Reliability Under Provider Execution</h2>
+            <p>Provider responses can be malformed, truncated or lack usable usage data. The integrated workflow uses bounded attempts, checks response integrity, preserves checkpoints, and records unknown usage rather than inventing a cost. For a specific completed quote-binding miss, a separately bounded Call B recovery uses a durable journal so a restart does not silently duplicate a request.</p>
+            <div class="cfa-callout"><p><strong>Failed live run, November 5:</strong> Run <code>34cc2a46</code> reached Call B on its second draft: 39 claims verified and 18 weak. Its grounding score was 0.921 and UVR was 0.0, yet 10 material claims remained unresolved. The run ended at the quality limit before reflection, either human gate or publication. Good aggregate numbers did not authorize an unsafe article. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/PROJECT_STATUS.md">Run record</a></p></div>
+            <p>Another run stopped when a claim's draft anchor matched two places. Guessing which occurrence was intended would compromise evidence identity, so the integrated guard fails closed. Separately, <a href="https://github.com/anudeepreddy332/content-agent/pull/11">draft PR #11</a> proposes a larger bounded Call B output allowance and a stop on unusable verifier output after a truncated response. It is not part of merged Phase 5. These checks do not qualify a complete provider-backed article.</p>
+            <hr class="cfa-divider">
+            <h2>Investigation 5: Release and Human Control</h2>
+            <div class="cfa-layer-stack">
+                <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Checks</span><span class="cfa-layer-file">CI and failure injection</span></div><p>Lint, the test suite and a deterministic semantic evaluation gate check code and contracts. Failure-injection tests exercise issues such as timeouts and malformed responses. These do not replace a live provider-backed run.</p></div>
+                <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Review</span><span class="cfa-layer-file">content, then layout</span></div><p>Authenticated access and two genuine human decisions protect the route to publication. Layout revision loops back to layout review with content protected; rejection ends the run.</p></div>
+                <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Publish</span><span class="cfa-layer-file">guarded Git and rollback</span></div><p>GitPython writes to a branch and performs guarded local Git operations. A person initiates the final push, including via the authenticated publish endpoint; Netlify serves the resulting static site. The workflow includes tags and a revert-based rollback path.</p></div>
             </div>
-            <p>The full test suite is 62 tests, runs at zero API cost because everything external is mocked, and finishes in under ten seconds.</p>
-
-            <hr class="cfa-divider">
-
-            <!-- PUBLISH SAFETY -->
-            <h2>The Publish-Safety Posture</h2>
-            <p>This deserves its own section, because it is the single design decision I am most deliberate about.</p>
-            <div class="cfa-callout">
-                <p><strong>The git node does a local merge only. It never pushes.</strong> There is no code path inside it that calls <code>git push</code>. I have grepped for it specifically. The agent can research, draft, verify, render, and merge a finished article into a local branch, and then it stops. Going live, the actual push to the remote that triggers the public deploy, is a separate command that a human runs.</p>
-            </div>
-            <p>When I added a cloud publish button to the demo, this property had to survive. It did, because the button is a separate, explicitly human-triggered endpoint that only succeeds after both human gates have already passed and the git node has already done its local merge. The push lives in its own place, gated behind everything else. Adding a go-live button extended what the system can do without weakening the rule that a person, not the agent, decides when something goes public.</p>
-            <p>This is not a limitation I am working around. It is the safeguard, and it is intentional. An automated writer that can publish to the open internet on its own is exactly the thing I do not want to build.</p>
-
+            <div class="cfa-table-wrap"><table class="cfa-table"><thead><tr><th>Evidence</th><th>Result</th><th>Boundary</th></tr></thead><tbody>
+                <tr><td>Phase 5 PR #10 CI</td><td>2,056 tests passed, 37 warnings; 122 deterministic evaluation tests passed</td><td>Regression checks, not live E2E.</td></tr>
+                <tr><td>Post-merge CI <a href="https://github.com/anudeepreddy332/content-agent/actions/runs/43167951963">43167951963</a></td><td>Tests and lint passed</td><td>Push eval gate skipped; no provider qualification implied.</td></tr>
+                <tr><td>Live provider execution</td><td>Not qualified end to end</td><td>Failed runs did not reach both human gates or publication.</td></tr>
+            </tbody></table></div>
+            <div class="cfa-callout"><p><strong>Status, November 13, 2026:</strong> Phase 5 was merged into main at <code>5d9a6cf9</code> and post-merge tests and lint passed. Live end-to-end reliability remains under qualification. The former AWS account is inaccessible; the EC2 setup below is deployment history, not a supported current target.</p></div>
             <hr class="cfa-divider">
 
             <!-- OBSERVABILITY -->
             <h2>Observability and Monitoring</h2>
-            <p>Every run is reconstructable after the fact.</p>
+            <p>Logs, checkpoints and telemetry help reconstruct a run, but crash telemetry can lack mid-run evidence and does not establish the exact code identity on its own.</p>
             <ul>
                 <li><strong>Structured logs.</strong> Every node logs JSON to stdout through a shared logger, tagged with the run ID. In a container, stdout is the log sink.</li>
-                <li><strong>Per-run telemetry.</strong> Each run writes a JSON record with the full grounding report, the retrieved sources, per-iteration metrics (so a two-pass revision is fully reconstructable, not just its final draft), claim attribution, cost, tokens, per-node latency, and any non-fatal errors.</li>
-                <li><strong>Prompt-hash versioning.</strong> Every prompt file is content-hashed at startup, and the hash is stamped into every telemetry record. Changing a prompt silently re-baselines every quality metric, because grounding numbers are only comparable across runs that used the same verifier prompt. The hash makes that comparability visible and impossible to forget.</li>
-                <li><strong>Claim-level attribution.</strong> Every verified claim is resolved back against the actual retrieved set and tagged as web, knowledge-base, or neither. A claim the verifier cited that does not resolve to anything retrieved is a hallucinated-citation signal, surfaced rather than hidden.</li>
-                <li><strong>LangSmith tracing.</strong> When credentials are present, the DeepSeek client is wrapped so every model call becomes a traced run with token usage and real per-call cost attached. This gives cross-node trace visualization and a latency breakdown that the stdout logs alone do not.</li>
+                <li><strong>Per-run telemetry.</strong> JSON records can include grounding reports, retrieved sources, per-iteration metrics, attribution, usage and latency. Available evidence depends on how far the run progressed.</li>
+                <li><strong>Prompt-hash versioning.</strong> Runtime prompt hashes are recorded to help identify changes that affect comparisons between runs. Matching a verifier prompt alone does not establish that every other experimental condition matched.</li>
+                <li><strong>Claim-level attribution.</strong> Source attribution records whether citations resolve to retrieved evidence. An unresolved attribution is a signal to investigate, not proof by itself of why a citation failed.</li>
+                <li><strong>LangSmith tracing.</strong> When configured and enabled, tracing adds cross-node visibility and model-call usage with application-estimated cost when available. Estimates are not provider billing.</li>
             </ul>
-            <p>What is deliberately not built: automated alerting and dashboards. Uptime is a manual check, a free HTTP monitor pointed at the health endpoint, set up by hand and documented in the runbook. For a single-operator system that is watched while it runs, that is an honest scope choice, not an oversight. It is written down as exactly that.</p>
+            <p>Automated alerting and dashboards were outside the original single-operator demo scope. Its runbook described a manually configured HTTP health monitor; the former deployment is no longer a supported current target.</p>
 
             <hr class="cfa-divider">
 
             <!-- CURRENT STATE -->
-            <h2>Current State</h2>
-            <p>The system is live. The demo runs on an EC2 instance behind Caddy, which handles TLS automatically, with the public URL provided by sslip.io so no real domain is needed. The app container has no public port of its own; Caddy is the only thing facing the internet.</p>
+            <h2>Historical Deployment</h2>
+            <p>The demo ran on an EC2 instance behind Caddy, which handled TLS automatically, with the public URL provided by sslip.io so no real domain was needed. The app container had no public port of its own; Caddy was the only thing facing the internet.</p>
             <p>The build strategy was not the first plan. Building the image directly on the EC2 box failed: the instance ran out of disk space partway through, because the image bakes in PyTorch and the embedding model, and those layers are large. The fix was to move the heavy work off the box. Build the ARM image once on a local machine, push it to Docker Hub, and have EC2 only ever pull the finished image. That solved the disk problem outright and made deployments faster and more repeatable, because the slow model-baking step happens once on capable hardware instead of on every deploy.</p>
-            <p>A full run, end to end, costs a fraction of a cent. The live rehearsal that took an article from topic to published, through both gates, retrieved 10 web sources, scored 0.773 grounding across 28 claims, and cost $0.0066.</p>
 
-            <h3>Known Limitations</h3>
-            <p>I keep these first-class, written down rather than discovered later.</p>
-            <div class="cfa-table-wrap">
-                <table class="cfa-table">
-                    <thead>
-                        <tr><th>Limitation</th><th>What it means</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Registry not rehydrated on restart</td>
-                            <td>A paused run's HTTP-visible state is lost if the process restarts, though the underlying checkpoint survives on disk. Drain reviews before restarting.</td>
-                            <td><span class="cfa-badge-warn">Accepted, fix scoped</span></td>
-                        </tr>
-                        <tr>
-                            <td>Tag-based rollback window</td>
-                            <td>The tag-based rollback keeps the newest five publish tags. The revert-based rollback does not depend on tags and is unbounded.</td>
-                            <td><span class="cfa-badge-done">Accepted</span></td>
-                        </tr>
-                        <tr>
-                            <td>Local merge, human push</td>
-                            <td>The agent never pushes. Every live publish needs a human command.</td>
-                            <td><span class="cfa-badge-done">Intentional safeguard</span></td>
-                        </tr>
-                        <tr>
-                            <td>Single-worker throughput</td>
-                            <td>One run computes at a time. Fine for one-article-at-a-time editorial use.</td>
-                            <td><span class="cfa-badge-done">Accepted for scope</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p>These are also exactly the things that would need to change for a multi-tenant, always-on version: per-tenant identity instead of one shared token, rate limiting and spend caps, horizontal scale instead of a single worker on a single box, and automated alerting. None of them block a supervised single-operator demo. All of them would be required before letting strangers run it unattended. Knowing precisely which is which is part of the point.</p>
-
-            <hr class="cfa-divider">
-
-            <!-- WHAT I LEARNED -->
+            <h2>Current Limitations</h2>
+            <p>The latest Phase 5 workflow has not completed a qualified live article end to end. Ambiguous anchors and unresolved material claims can stop a run. Recovery and proposed PR #11 changes still need their own live qualification, and the old deployment is not a current target.</p>
             <h2>What I Learned</h2>
-            <div class="cfa-grid">
-                <div class="cfa-card">
-                    <h4>Fluency is not truth</h4>
-                    <p>The whole project exists because a well-written false claim looks identical to a well-written true one. You cannot eyeball your way out of this. You need a separate verifier and a metric that cannot be gamed.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Pick a metric you can't cheat</h4>
-                    <p>Unverified-rate looked like the obvious grounding metric and was actively harmful, because the easy way to improve it was to say nothing specific. Designing SV with a no-vagueness co-condition mattered more than any prompt change.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>A passing test is evidence, not proof</h4>
-                    <p>All three of the bugs that taught me the most had passed a check first. Re-deriving correctness from how a thing actually works, rather than trusting one green result, is the habit that separates a demo from a system.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Keep the human where the stakes are</h4>
-                    <p>Two gates and a human-only push are not friction to be optimized away. They are the design. The agent does the labor; a person owns the decision to publish.</p>
-                </div>
-                <div class="cfa-card">
-                    <h4>Disclose your limits</h4>
-                    <p>The fastest way to lose trust in a system is to hide what it cannot do. Every limitation here is written down, scoped, and labeled as either an accepted trade-off or a deliberate safeguard.</p>
-                </div>
-            </div>
-
-            <hr class="cfa-divider">
-
-            <!-- BOTTOM LINE -->
-            <h2>Bottom Line</h2>
-            <p>Most "AI writes articles" demos stop at fluent output. This one starts there and spends all of its effort on the question that actually matters: is any of it true, and can you prove it?</p>
-            <p>The answer is a pipeline where every substantive claim is checked against a real source, where the quality metric is built so that the only way to score higher is to be more correct rather than more vague, where two humans review the work and a third action (the push) is reserved for a person, and where every run leaves behind enough telemetry to reconstruct exactly what happened. It is deployed, authenticated, containerized, and live, with its limits written down honestly rather than hidden.</p>
-            <p>It proves something specific: that an LLM system can be made trustworthy not by hoping the model behaves, but by measuring whether it did, and by keeping a human at every point where the stakes are real.</p>
+            <p>Building this taught me to treat a green test, a good-looking score and a successful model response as different pieces of evidence. I can make the system stop when its evidence is incomplete and preserve a human decision before publication. The remaining work is to demonstrate those guarantees across complete live runs, not assume that an offline pass proves them.</p>
 
             <div class="cfa-closing">
                 <p><strong>View the code on GitHub:</strong> <a href="https://github.com/anudeepreddy332/content-agent" target="_blank" rel="noopener noreferrer">github.com/anudeepreddy332/content-agent →</a></p>
