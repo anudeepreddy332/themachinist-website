@@ -262,6 +262,33 @@
             color: var(--text-color);
             white-space: pre;
         }
+        .cfa-flow {
+            display: grid;
+            gap: 0;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .cfa-flow-step {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-align: center;
+            color: var(--text-color);
+        }
+        .cfa-flow-step strong { display: block; }
+        .cfa-flow-step span {
+            display: block;
+            margin-top: 4px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .cfa-flow-arrow {
+            padding: 5px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
 
         /* ── Pipeline steps ── */
         .cfa-pipeline {
@@ -530,6 +557,7 @@
                 <span class="cfa-tech-tag">DeepSeek</span>
                 <span class="cfa-tech-tag">Qdrant + BM25 + RRF</span>
                 <span class="cfa-tech-tag">FastAPI</span>
+                <span class="cfa-tech-tag">SQLite</span>
                 <span class="cfa-tech-tag">Docker</span>
                 <span class="cfa-tech-tag">Caddy</span>
                 <span class="cfa-tech-tag">LangSmith</span>
@@ -540,9 +568,9 @@
     <main id="main">
         <article class="cfa-main">
 
-            <p>I built Content Agent to research and draft technical articles while keeping unsupported claims away from publication. The difficult part is not making an article sound convincing. It is identifying what the draft actually claims, checking the evidence it was given, and stopping when the checks cannot establish support.</p>
+            <p>I built Content Agent to research and draft technical articles. It identifies the claims in a draft, checks them against the available evidence, and either revises eligible drafts or stops the run when the checks cannot establish support.</p>
             <h2>TL;DR</h2>
-            <div class="cfa-callout"><p>Content Agent is a LangGraph workflow that retrieves sources, drafts, checks claims, revises within limits, and asks a person to review both content and layout. Git operations are guarded; the final push remains human. The earlier video shows a historical supervised demo, not qualification of the latest Phase 5 workflow.</p></div>
+            <div class="cfa-callout"><p>Content Agent is a LangGraph workflow that retrieves sources, drafts, checks claims, revises within limits, and asks a person to review both content and layout. Git operations are guarded, and a person initiates the final push. The video shows an earlier supervised demo; the project continues to evolve.</p></div>
             <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5rem 0;">
                 <iframe
                     src="https://www.youtube.com/embed/gJttMm90ugM"
@@ -555,38 +583,43 @@
             </div>
 
             <div class="cfa-stat-grid">
-                <div class="cfa-stat-card"><div class="cfa-stat-label">Retrieval · Phase 5B3</div><div class="cfa-stat-value">0.788 → 0.939</div><div class="cfa-stat-note">Exact evidence recall: retrieved seeds to verifier exposure, 33 gating queries.</div></div>
-                <div class="cfa-stat-card"><div class="cfa-stat-label">Verification · Nov 5</div><div class="cfa-stat-value">39 / 57</div><div class="cfa-stat-note">Verified claims in one live second draft; 18 weak, material policy failed.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">Retrieval</div><div class="cfa-stat-value">0.788 → 0.939</div><div class="cfa-stat-note">Exact evidence recall from seeds to verifier exposure across 33 gating queries.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">Verification</div><div class="cfa-stat-value">32 / 32</div><div class="cfa-stat-note">Claims judged verified in one earlier supervised <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/PROJECT_STATUS.md#client-demo-fixes-closed-boundary">demo-fork rehearsal</a>.</div></div>
                 <div class="cfa-stat-card"><div class="cfa-stat-label">Reliability</div><div class="cfa-stat-value">2 gates</div><div class="cfa-stat-note">Human content and layout approval remain mandatory.</div></div>
-                <div class="cfa-stat-card"><div class="cfa-stat-label">CI · PR #10</div><div class="cfa-stat-value">2,056</div><div class="cfa-stat-note">Tests passed, 37 warnings; deterministic checks, not a live E2E.</div></div>
+                <div class="cfa-stat-card"><div class="cfa-stat-label">CI</div><div class="cfa-stat-value">2,056</div><div class="cfa-stat-note">Tests passed in the Phase 5 integration checks.</div></div>
             </div>
+            <hr class="cfa-divider">
+            <h2>The Problem</h2>
+            <p>A fluent technical article can make a precise claim sound convincing even when its sources do not support it. I wanted a way to find those claims, check the evidence behind them, and keep the useful substance instead of improving a score by making the writing vague.</p>
+            <h2>What Content Agent Does</h2>
+            <p>Given a topic, the agent gathers web and knowledge-base sources, drafts an article, and checks its claims against the evidence. It can revise within a bounded quality episode, then pauses for content review and later for layout review. Checkpoints preserve state across those pauses, and guarded Git operations prepare an approved article for a person to publish.</p>
             <hr class="cfa-divider">
             <h2>Architecture: The Pipeline</h2>
             <p>The graph makes each decision visible. Successful verification and reflection can lead to editorial review; failed checks may trigger a bounded revision or end the run. Approval cannot override a failed quality policy.</p>
-            <div class="cfa-diagram-wrap"><div class="cfa-diagram-label">Pipeline topology</div><div class="cfa-diagram-body"><pre>Retrieve web + knowledge base
-        ↓
-Source-aware draft ←── bounded content revision
-        ↓                      ↑
-Call A: claim inventory        │
-Call B: evidence assessment    │
-Python: identity, material, citation checks
-        ↓                      │
-Reflection ────────────────────┘
-        ↓ accepted
-Gate 1: human content review → feedback / reject
-        ↓ approve
-HTML generation
-        ↓
-Gate 2: human layout review ↔ bounded layout revision
-        ↓ approve
-Guarded local Git operations → human push</pre></div></div>
-            <p>Call A and Call B are parts of verification, not separate graph nodes. The actual graph also has terminal routes from failed stages; content feedback can begin a new quality episode. See <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/agent/graph.py">the graph</a>.</p>
+            <div class="cfa-diagram-wrap"><div class="cfa-diagram-label">Pipeline topology</div><div class="cfa-diagram-body"><div class="cfa-flow">
+                <div class="cfa-flow-step"><strong>Retrieve</strong><span>Web sources + knowledge base</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓</div>
+                <div class="cfa-flow-step"><strong>Draft</strong><span>Write with the retrieved evidence</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓</div>
+                <div class="cfa-flow-step"><strong>Verify</strong><span>Inventory claims, assess evidence, check identity and citations. Eligible revisions return to Draft; other failures can end the run.</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓</div>
+                <div class="cfa-flow-step"><strong>Reflect and route</strong><span>Eligible revisions return to Draft; failed checks can end the run</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓ accepted</div>
+                <div class="cfa-flow-step"><strong>Gate 1 · Content review</strong><span>Feedback returns to Draft; rejection ends the run</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓ approved</div>
+                <div class="cfa-flow-step"><strong>Generate HTML</strong></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓</div>
+                <div class="cfa-flow-step"><strong>Gate 2 · Layout review</strong><span>Requested changes return through layout revision; rejection ends the run</span></div>
+                <div class="cfa-flow-arrow" aria-hidden="true">↓ approved</div>
+                <div class="cfa-flow-step"><strong>Guarded local Git</strong><span>A person initiates the final push</span></div>
+            </div></div></div>
+            <p>During verification, Call A inventories the draft's claims and Call B assesses their evidence. Python checks the result before the graph can move forward. Failed stages can end the run, and content feedback can start a new quality episode. See <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/agent/graph.py">the graph</a>.</p>
             <hr class="cfa-divider">
             <h2 id="grounding-investigation">Investigation 1: Grounding Quality</h2>
             <div class="cfa-grid">
                 <div class="cfa-card"><h4>Problem</h4><p>Fluent drafts made precise claims that the retrieved sources did not support. A low unverified rate alone could be achieved by making the article vague.</p></div>
                 <div class="cfa-card"><h4>Decision</h4><p>Retrieve before drafting, ask the writer to use the available sources, and supply specific claim-level feedback for eligible revisions. Track substantive verified claims (SV) alongside unverified rate (UVR).</p></div>
-                <div class="cfa-card"><h4>Evidence</h4><p>In the historical multi-agent topic experiment, UVR fell from 0.63 to 0.22 and SV rose 253%. The pre-registered criterion failed; the decision to proceed was documented as a judgment call. This is not a general reliability estimate. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/DECISIONS.md">M3 decision</a>.</p></div>
+                <div class="cfa-card"><h4>Evidence</h4><p>In a historical multi-agent topic experiment, UVR fell from 0.63 to 0.22 and SV rose 253%. The pre-registered criterion failed, and I documented the decision to proceed as a judgment call. The result describes that experiment, not general reliability. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/DECISIONS.md">M3 decision</a>.</p></div>
             </div>
             <p>SV asks how much useful, supported substance remains; UVR measures the fraction judged unverified. Neither substitutes for complete claim coverage or material and citation policy. A later live run showed why: a score could look good while important claims still failed.</p>
             <hr class="cfa-divider">
@@ -615,14 +648,14 @@ Guarded local Git operations → human push</pre></div></div>
             <div class="cfa-callout"><p><strong>Failed live run, November 5:</strong> Run <code>34cc2a46</code> reached Call B on its second draft: 39 claims verified and 18 weak. Its grounding score was 0.921 and UVR was 0.0, yet 10 material claims remained unresolved. The run ended at the quality limit before reflection, either human gate or publication. Good aggregate numbers did not authorize an unsafe article. <a href="https://github.com/anudeepreddy332/content-agent/blob/5d9a6cf9d36c471ad3cb8ec09f35048f68f0f9d0/PROJECT_STATUS.md">Run record</a></p></div>
             <p>Another run stopped when a claim's draft anchor matched two places. Guessing which occurrence was intended would compromise evidence identity, so the integrated guard fails closed. Separately, <a href="https://github.com/anudeepreddy332/content-agent/pull/11">draft PR #11</a> proposes a larger bounded Call B output allowance and a stop on unusable verifier output after a truncated response. It is not part of merged Phase 5. These checks do not qualify a complete provider-backed article.</p>
             <hr class="cfa-divider">
-            <h2>Investigation 5: Release and Human Control</h2>
+            <h2>Investigation 5: Testing, Review, and Publishing</h2>
             <div class="cfa-layer-stack">
                 <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Checks</span><span class="cfa-layer-file">CI and failure injection</span></div><p>Lint, the test suite and a deterministic semantic evaluation gate check code and contracts. Failure-injection tests exercise issues such as timeouts and malformed responses. These do not replace a live provider-backed run.</p></div>
                 <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Review</span><span class="cfa-layer-file">content, then layout</span></div><p>Authenticated access and two genuine human decisions protect the route to publication. Layout revision loops back to layout review with content protected; rejection ends the run.</p></div>
                 <div class="cfa-layer"><div class="cfa-layer-head"><span class="cfa-layer-badge">Publish</span><span class="cfa-layer-file">guarded Git and rollback</span></div><p>GitPython writes to a branch and performs guarded local Git operations. A person initiates the final push, including via the authenticated publish endpoint; Netlify serves the resulting static site. The workflow includes tags and a revert-based rollback path.</p></div>
             </div>
             <div class="cfa-table-wrap"><table class="cfa-table"><thead><tr><th>Evidence</th><th>Result</th><th>Boundary</th></tr></thead><tbody>
-                <tr><td>Phase 5 PR #10 CI</td><td>2,056 tests passed, 37 warnings; 122 deterministic evaluation tests passed</td><td>Regression checks, not live E2E.</td></tr>
+                <tr><td>Phase 5 PR #10 <a href="https://github.com/anudeepreddy332/content-agent/actions/runs/42189923479">CI</a></td><td>2,056 tests passed, 37 warnings; 122 deterministic evaluation tests passed</td><td>Regression checks, not live E2E.</td></tr>
                 <tr><td>Post-merge CI <a href="https://github.com/anudeepreddy332/content-agent/actions/runs/43167951963">43167951963</a></td><td>Tests and lint passed</td><td>Push eval gate skipped; no provider qualification implied.</td></tr>
                 <tr><td>Live provider execution</td><td>Not qualified end to end</td><td>Failed runs did not reach both human gates or publication.</td></tr>
             </tbody></table></div>
