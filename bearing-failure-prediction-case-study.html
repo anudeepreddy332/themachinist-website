@@ -5,19 +5,19 @@
     <script src="theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bearing Failure Prediction | The Machinist</title>
-    <meta name="description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://themachinist.org/bearing-failure-prediction-case-study.html">
-    <meta property="og:title" content="Bearing Failure Prediction | The Machinist">
-    <meta property="og:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
+    <title>What My Bearing Failure Model Was Predicting | The Machinist</title>
+    <meta name="description" content="I built a vibration-based bearing model, found leakage in its evaluation, and tested whether condition monitoring could support an inspection policy.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://themachinist.org/bearing-failure-prediction-case-study">
+    <meta property="og:title" content="What My Bearing Failure Model Was Predicting | The Machinist">
+    <meta property="og:description" content="I built a vibration-based bearing model, found leakage in its evaluation, and tested whether condition monitoring could support an inspection policy.">
     <meta property="og:image" content="https://themachinist.org/og-default.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Bearing Failure Prediction | The Machinist">
-    <meta name="twitter:description" content="How stratified sampling and weighted loss functions fixed a failing bearing fault classifier, taking it from 52% accuracy to production-ready.">
+    <meta name="twitter:title" content="What My Bearing Failure Model Was Predicting | The Machinist">
+    <meta name="twitter:description" content="I built a vibration-based bearing model, found leakage in its evaluation, and tested whether condition monitoring could support an inspection policy.">
     <meta name="twitter:image" content="https://themachinist.org/og-default.png">
-    <link rel="canonical" href="https://themachinist.org/bearing-failure-prediction-case-study.html">
-    <meta name="keywords" content="Predictive Maintenance, Bearing Failure, Machine Learning, RUL Prediction, LightGBM, Manufacturing, Condition Monitoring">
+    <link rel="canonical" href="https://themachinist.org/bearing-failure-prediction-case-study">
+    <meta name="keywords" content="Predictive Maintenance, Bearing Vibration, IMS Bearing Dataset, Evaluation Leakage, LightGBM, Condition Monitoring">
     <meta name="author" content="Anudeep Reddy">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,10 +49,29 @@
             font-size: 0.975rem;
             font-style: italic;
         }
-        pre {
-            overflow-x: auto;
-            max-width: 100%;
-            white-space: pre;
+        .bfp-figure {
+            max-width: 600px;
+            margin: var(--spacing-md) auto;
+        }
+        .bfp-figure img,
+        .bfp-figure table {
+            margin: 0 0 var(--spacing-xs);
+        }
+        .bfp-figure img {
+            height: auto;
+        }
+        .bfp-figure table {
+            display: table;
+        }
+        .bfp-figure figcaption {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .bfp-evidence {
+            color: var(--text-color);
+            text-decoration: underline;
+            text-decoration-color: var(--accent);
+            text-underline-offset: 0.15em;
         }
     </style>
 </head>
@@ -118,246 +137,71 @@
                 <span class="cra-breadcrumb-sep">/</span>
                 <strong>Bearing Failure Prediction</strong>
             </nav>
-            <h1>Predicting Bearing Failures with 2.88-Hour Accuracy</h1>
-            <p class="bfp-subtitle">How stratified sampling and weighted loss optimization turned a failing model into a production-ready system</p>
+            <h1>What My Bearing Failure Model Was Predicting</h1>
+            <p class="bfp-subtitle">Bearing holdouts exposed a leaky evaluation. The shared run clock explained what the label was measuring.</p>
         </div>
     </header>
 
     <main id="main">
-
-        <!-- TL;DR -->
-        <h2>TL;DR</h2>
-        <p><strong>2.88-hour prediction accuracy</strong> in the critical 0-50 hour failure zone. Achieved through <strong>weighted loss optimization</strong> (penalizes low-RUL errors 10x more) + <strong>stratified RUL sampling</strong> (fixed train/test distribution mismatch). <strong>Result:</strong> R² improved from -11.9 to 0.9852, with modeled ~$300K annual savings and a projected 98.5% failure prevention in critical zones.</p>
-
-        <hr>
-
-        <!-- THE PROBLEM -->
-        <h2>The Problem: $50K Per Unexpected Failure</h2>
-        <p>Manufacturing plants lose <strong>$50K+ per unexpected bearing failure</strong>: downtime, emergency repairs, production losses. Traditional time-based maintenance (replace every 30 days) wastes <strong>$200K annually</strong> replacing perfectly healthy bearings.</p>
-        <p>Existing prediction models are dangerously inaccurate: ±30 hour errors when actual RUL is only 10 hours. That's a <strong>300% error rate</strong>, useless for emergency maintenance planning.</p>
-        <p><strong>My mission:</strong> Predict bearing Remaining Useful Life (RUL) with &lt;5 hour accuracy in critical failure zones using the NASA/UC IMS Bearing Dataset: 984 measurements over 34 days, sampled at 20,480 Hz.</p>
+        <h2>From vibration to a prediction prototype</h2>
+        <p>IMS Set 1 was one rig run shared by four bearings. It contains 2,156 vibration recordings, each with 20,480 samples per channel at 20 kHz across eight channels.</p>
+        <p><strong>Vibration</strong> → RMS, kurtosis and bandpower → rolling statistics, exponential moving averages and cross-axis summaries → <strong>Random Forest and LightGBM</strong>.</p>
+        <p>I tuned LightGBM with Optuna and built a Streamlit dashboard and FastAPI endpoint to explore the remaining-life predictions.</p>
 
         <hr>
 
-        <!-- THE DATA -->
-        <h2>The Data: 34 Days Until Failure</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/degradation_overview.png" alt="Bearing degradation over time showing RMS trends">
-        <p>Four test bearings ran 24/7 under constant 6,000 lb load until failure. Bearings 3 and 4 developed inner race defects and eventually failed catastrophically. Vibration sensors captured data every 10 minutes at 20,480 Hz, both low-frequency degradation trends and high-frequency impact events.</p>
-        <p><strong>Key observation:</strong> RMS (vibration amplitude) steadily increases as bearings degrade, but the rate accelerates dramatically in the final 100 hours before failure. This non-linear behavior is what makes prediction challenging, and what I exploited.</p>
+        <h2>How the row split leaked information</h2>
+        <p>I split individual sensor rows into train and test, stratified by the target. Opposite axes from the same bearing and timestamp could land on either side.</p>
+        <figure class="bfp-figure">
+            <table aria-label="Example train and test assignments by split">
+                <thead>
+                    <tr><th scope="col">Split</th><th scope="col">Train</th><th scope="col">Test</th></tr>
+                </thead>
+                <tbody>
+                    <tr><th scope="row">Sensor rows</th><td>Bearing 3<br>X axis</td><td>Bearing 3<br>Y axis</td></tr>
+                    <tr><th scope="row">Physical bearing</th><td>Bearing 4<br>Both axes</td><td>Bearing 3<br>Both axes</td></tr>
+                </tbody>
+            </table>
+            <figcaption>Schematic. The first row shows two views of the same instant. A bearing holdout keeps the entire trajectory together.</figcaption>
+        </figure>
+        <p>I also computed temporal and cross-axis features before splitting, then tuned on the partition I later scored as test. I withdrew the original accuracy claims. The values are preserved in the <a class="bfp-evidence" href="https://github.com/anudeepreddy332/bearing-failure-prediction/blob/6fcd020f65acbbe1c31be7a258e55b0a12c0d038/docs/archive/README.md">historical archive</a>.</p>
 
         <hr>
 
-        <!-- APPROACH -->
-        <h2>Approach: A 5-Stage Pipeline</h2>
-        <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
-        <table>
-            <tr><th>Stage</th><th>What I Did</th><th>Impact</th></tr>
-            <tr><td>1. Feature Engineering</td><td>Extracted 380 temporal + frequency features from raw vibration signals</td><td>Captured degradation patterns across time and frequency domains</td></tr>
-            <tr><td>2. Feature Selection</td><td>Correlation + Mutual Information ranking → Top 50 features</td><td>Reduced noise while preserving predictive signal</td></tr>
-            <tr><td>3. Data Split</td><td>Stratified by RUL bins (not time!)</td><td>R² jumped from -11.9 to 0.985</td></tr>
-            <tr><td>4. Loss Function</td><td>Weighted MAE (10x penalty for low-RUL errors)</td><td>Critical zone MAE: 30h → 2.88h</td></tr>
-            <tr><td>5. Hyperparameter Tuning</td><td>Optuna Bayesian optimization (80 trials)</td><td>Fine-tuned LightGBM for production</td></tr>
-        </table>
-        </div>
+        <h2>Holding out a bearing raised the error</h2>
+        <p>For the LightGBM rerun, I rebuilt features within each fold and fit normalization and imputation on training rows. The row-split control still shared bearing timestamps across train and test.</p>
+        <figure class="bfp-figure">
+            <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/run-end-proxy-mae.png" width="968" height="594" alt="Mean absolute error against the run-end proxy. Row-split control, 20.14 hours. Bearing 3 held out, 206.89 hours. Bearing 4 held out, 246.02 hours.">
+            <figcaption>Each holdout trained on one of the two documented damaged bearings and tested on the other, within the same rig run.</figcaption>
+        </figure>
 
         <hr>
 
-        <!-- FEATURE ENGINEERING -->
-        <h2>Feature Engineering: From Raw Signals to 380 Features</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/feature_importance.png" alt="Top 10 most important features">
-
-        <p>I extracted four categories of features from the raw 20,480 Hz vibration signals:</p>
-
-        <h3>1. Temporal Features (Rolling Stats, EMAs, Slopes)</h3>
-        <p>Exponential moving averages smooth sensor noise while preserving trends. EMAs weight recent data more heavily, critical for detecting accelerating degradation.</p>
-        <pre><code>rms_mean_ema_10 = df['rms_mean'].ewm(span=10).mean()
-rms_mean_slope_5 = (df['rms_mean'] - df['rms_mean'].shift(5)) / 5</code></pre>
-
-        <h3>2. Frequency Features (Bandpower Analysis)</h3>
-        <p>Bearing defects generate energy at specific frequencies. The 1-5 kHz band captures defect frequencies; 5-10 kHz captures high-frequency impacts.</p>
-        <pre><code>bp_1k_5k = bandpower(signal, fs=20480, fmin=1000, fmax=5000)
-bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
-
-        <h3>3. Statistical Features (Kurtosis, Z-scores)</h3>
-        <p>Kurtosis measures impulsiveness: sharp spikes when balls hit crack edges. Z-scores detect outliers indicating abnormal behavior.</p>
-
-        <h3>4. Cross-Bearing Features</h3>
-        <p>Multi-axis aggregates capture asymmetric degradation patterns, when one bearing axis degrades faster than others.</p>
-
-        <h3>Why Temporal Features Won (2.5x Better)</h3>
-        <p>Raw statistics are noisy and volatile. A 10-point EMA filters noise but still captures the true degradation trend. The <strong>top feature</strong> was <code>bp_1k_5k_mean_ema_10</code>: defect frequency energy, smoothed with exponential weighting.</p>
+        <h2>The label counted down to the last observation</h2>
+        <p>Both held-out bearings shared the same final timestamp. Starting with the training bearing’s initial countdown and subtracting elapsed time reproduced the label on each held-out trajectory.</p>
+        <figure class="bfp-figure">
+            <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/shared-run-clock.png" width="968" height="682" alt="Hours to the last observation fall to zero as elapsed hours rise. The run-end label and its clock reconstruction overlap across both bearing holdouts.">
+            <figcaption>The clock reconstructed the retrospective run-end proxy with a maximum residual of 0 seconds. The time of physical failure remains unknown.</figcaption>
+        </figure>
 
         <hr>
 
-        <!-- FIRST FAILURE -->
-        <h2>The First Failure: Distribution Mismatch (R² = -11.9)</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/train_test_split_comparison.png" alt="Time-based vs Stratified Split comparison">
-
-        <h3>What Went Wrong</h3>
-        <p>My initial approach used a standard <strong>time-based train/test split</strong>:</p>
-        <ul>
-            <li><strong>Training set:</strong> Early degradation (RUL 263-827 hours), mostly healthy bearings</li>
-            <li><strong>Test set:</strong> Late degradation + failure (RUL 0-263 hours), failing bearings</li>
-        </ul>
-        <p><strong>The disaster:</strong> The model learned patterns from healthy bearings but was tested on late-stage failures it had <em>never seen</em> during training. Result: <strong>R² = -11.9</strong>, worse than random guessing!</p>
-
-        <h3>The Breakthrough: Stratified Sampling by RUL</h3>
-        <p>Instead of splitting by time, I created <strong>stratified samples by RUL bins</strong>:</p>
-        <ul>
-            <li>Bins: [0-50h], [50-100h], [100-150h], ..., [500+h]</li>
-            <li>Each bin split 80/20 into train and test</li>
-            <li><strong>Critical insight:</strong> Both sets now contain examples from ALL degradation stages</li>
-        </ul>
-        <p><strong>Impact:</strong> R² improved from -11.9 to 0.9852, the model finally learned the full degradation progression.</p>
-
-        <hr>
-
-        <!-- SECOND BREAKTHROUGH -->
-        <h2>The Second Breakthrough: Weighted Loss Function</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/weighted_loss_impact.png" alt="Impact of weighted loss on MAE by RUL range">
-
-        <h3>The Problem: Not All Errors Are Equal</h3>
-        <p>Standard MAE treats all errors equally. But a 30-hour error has <strong>drastically different consequences</strong> depending on actual RUL:</p>
-        <ul>
-            <li><strong>At RUL = 500h:</strong> 30h error = 6% (acceptable, bearing is still healthy)</li>
-            <li><strong>At RUL = 10h:</strong> 30h error = 300% (catastrophic: you think you have 40 hours but only have 10!)</li>
-        </ul>
-
-        <h3>The Solution: Custom Weighted Loss</h3>
-        <p>I implemented a loss function that <strong>penalizes low-RUL errors 10x more</strong>:</p>
-        <pre><code>def weighted_mae(y_true, y_pred):
-    errors = abs(y_true - y_pred)
-    weights = 1.0 + (1.0 / (y_true + 10))
-    # RUL=10h  → weight=1.1   (11x penalty)
-    # RUL=500h → weight=1.002 (minimal penalty)
-    return (errors * weights).mean()</code></pre>
-        <p><strong>Impact:</strong> Critical zone (0-50h) MAE dropped from 30h to <strong>2.88h</strong>, a 10x improvement where it matters most!</p>
-
-        <hr>
-
-        <!-- HYPERPARAMETER TUNING -->
-        <h2>Hyperparameter Tuning: 80 Trials with Optuna</h2>
-        <p>Bayesian optimization searched through 80 hyperparameter combinations for LightGBM:</p>
-        <pre><code>best_params = {
-    'num_leaves': 122,
-    'learning_rate': 0.0302,
-    'n_estimators': 350,
-    'max_depth': 9,
-    'subsample': 0.853,
-    'colsample_bytree': 0.855,
-    'reg_alpha': 0.079,
-    'reg_lambda': 0.168
-}</code></pre>
-        <p>Total tuning time: <strong>45 minutes</strong> on a standard laptop. Optuna's smart search found better parameters in 80 trials than grid search would in 1000+.</p>
-
-        <hr>
-
-        <!-- RESULTS -->
-        <h2>Results: Before vs After</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/before_after_comparison.png" alt="Before and After optimization results">
-
-        <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
-        <table>
-            <tr><th>Metric</th><th>Before (Baseline)</th><th>After (Optimized)</th></tr>
-            <tr><td>Critical Zone MAE (0-50h)</td><td>~30 hours</td><td><strong>2.88 hours</strong></td></tr>
-            <tr><td>Overall MAE</td><td>258.8 hours</td><td><strong>13.42 hours</strong></td></tr>
-            <tr><td>Test R²</td><td>-14.58</td><td><strong>0.9852</strong></td></tr>
-            <tr><td>Variance Explained</td><td>N/A (negative)</td><td><strong>98.5%</strong></td></tr>
-        </table>
-        </div>
-
-        <h3>Performance by RUL Range</h3>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/rul_range_performance.png" alt="Model performance across different RUL ranges">
-
-        <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
-        <table>
-            <tr><th>RUL Range</th><th>MAE (hours)</th><th>Use Case</th></tr>
-            <tr><td><strong>0-50h (Critical)</strong></td><td><strong>2.88</strong></td><td>Emergency maintenance: trigger within 24 hours</td></tr>
-            <tr><td>50-100h (Warning)</td><td>4.77</td><td>Schedule maintenance within 2-3 days</td></tr>
-            <tr><td>100-150h (Alert)</td><td>10.77</td><td>Plan maintenance this week</td></tr>
-            <tr><td>150-300h (Monitor)</td><td>~17</td><td>Track closely, no immediate action</td></tr>
-            <tr><td>300+h (Healthy)</td><td>~15</td><td>Baseline monitoring, no concerns</td></tr>
-        </table>
-        </div>
-        <p><strong>Model behavior:</strong> Accuracy is highest where it matters most (imminent failures) and gracefully degrades for less critical predictions. Exactly what production systems need.</p>
-
-        <hr>
-
-        <!-- PHYSICS -->
-        <h2>Understanding Bearing Failure Physics</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/rms_kurtosis_behavior.png" alt="RMS vs Kurtosis behavior over time">
-
-        <p><strong>Surprising observation:</strong> RMS rises throughout degradation, but kurtosis peaks mid-failure then <em>drops</em> near catastrophic failure. Why?</p>
-        <ul>
-            <li><strong>Early failure (RUL 300-500h):</strong> Micro-cracks develop. Both RMS and kurtosis rise as balls start hitting crack edges, creating sharp impacts.</li>
-            <li><strong>Mid failure (RUL 100-300h):</strong> Kurtosis peaks. Cracks widen, creating distinct impacts every time a ball crosses a crack.</li>
-            <li><strong>Late failure (RUL 0-100h):</strong> RMS peaks but kurtosis <strong>falls</strong>. Cracks become so large there's continuous metal-on-metal grinding instead of distinct impacts. The signal becomes Gaussian (continuous noise) rather than impulsive.</li>
-        </ul>
-        <p>This physics insight guided feature engineering, explaining why both RMS-based and kurtosis-based features are necessary but tell different parts of the story.</p>
-
-        <hr>
-
-        <!-- BUSINESS IMPACT -->
-        <h2>Business Impact: Modeled ~$300K Annual Savings</h2>
-        <div style="overflow-x: auto; max-width: 100%; width: 100%; display: block;">
-        <table>
-            <tr><th>Metric</th><th>Before (Time-based)</th><th>After (Predictive)</th></tr>
-            <tr><td>Strategy</td><td>Replace every 30 days</td><td>Replace when RUL &lt; 100h</td></tr>
-            <tr><td>Premature Replacements</td><td>40% ($200K waste)</td><td><strong>0%</strong></td></tr>
-            <tr><td>Unexpected Failures</td><td>5% ($300K downtime)</td><td><strong>1.5%</strong> (98.5% caught)</td></tr>
-            <tr><td>Annual Cost</td><td>$500K</td><td><strong>$200K</strong></td></tr>
-            <tr><td><strong>Savings</strong></td><td>N/A</td><td><strong>$300K/year (60%)</strong></td></tr>
-        </table>
-        </div>
-
-        <hr>
-
-        <!-- DASHBOARD -->
-        <h2>Production Deployment: Streamlit Dashboard</h2>
-        <img loading="lazy" src="images/portfolio-projects/ims-bearing-failure-prediction/dashboard_screenshot-0.png" alt="Interactive Streamlit dashboard for bearing health monitoring">
-
-        <p>Built an interactive dashboard for real-time monitoring:</p>
-        <ul>
-            <li><strong>RUL predictions with confidence intervals</strong></li>
-            <li><strong>Risk-based alerts:</strong> Critical (&lt;50h), Warning (50-100h), Normal (&gt;100h)</li>
-            <li><strong>Degradation trend visualization</strong>: RMS, kurtosis, bandpower over time</li>
-            <li><strong>Maintenance scheduling</strong>: optimal replacement timing recommendations</li>
-        </ul>
-
-        <hr>
-
-        <!-- KEY LEARNINGS -->
-        <h2>Key Learnings</h2>
-        <p><strong>1. Distribution mismatch kills models.</strong> Time-based splits fail catastrophically for degradation data. Stratified RUL sampling ensures train/test alignment, fixing R² from -11.9 to 0.985.</p>
-        <p><strong>2. Not all errors are equal.</strong> A 30h error at RUL=10h is 10x worse than at RUL=500h. Custom weighted loss reduced critical zone MAE by 10x (30h → 2.88h).</p>
-        <p><strong>3. Temporal features dominate.</strong> EMAs and rolling statistics outperformed raw features by 2.5x. They smooth noise while preserving trends and react quickly to accelerating failures.</p>
-        <p><strong>4. Physics matters.</strong> Understanding failure mechanics (RMS rises, kurtosis peaks then falls) guided feature engineering. Domain knowledge + ML = better predictions.</p>
-
-        <hr>
-
-        <!-- TECH STACK -->
-        <h2>Tech Stack</h2>
-        <ul>
-            <li><strong>ML:</strong> LightGBM 4.1, scikit-learn 1.3, Optuna 3.4</li>
-            <li><strong>Data:</strong> pandas 2.1, NumPy 1.26, SciPy 1.11</li>
-            <li><strong>Database:</strong> PostgreSQL 15, SQLAlchemy 2.0</li>
-            <li><strong>Visualization:</strong> Streamlit 1.28, Plotly 5.18, Matplotlib 3.8</li>
-            <li><strong>Languages:</strong> Python 3.13, SQL</li>
-        </ul>
-
-        <hr>
-
-        <!-- BOTTOM LINE -->
-        <h2>Bottom Line</h2>
-        <p>Bearings fail in predictable patterns, <strong>if you capture the right signals and learn from all degradation stages</strong>.</p>
-        <p>Three innovations transformed a failing model (R² = -11.9) into a production system (R² = 0.9852):</p>
-        <ol>
-            <li><strong>Stratified sampling</strong>: train/test distribution alignment</li>
-            <li><strong>Weighted loss</strong>: accuracy prioritized where it matters</li>
-            <li><strong>Temporal features</strong>: noise smoothing with trend preservation</li>
-        </ol>
-        <p><strong>Result:</strong> 2.88h accuracy in critical zones, with modeled ~$300K annual savings and a projected 98.5% failure prevention in critical zones.</p>
-        <p><strong>GitHub:</strong> <a href="https://github.com/anudeepreddy332/ims-bearing-failure-prediction" target="_blank" rel="noopener noreferrer">Full code, pipeline, and documentation →</a></p>
+        <h2>Why I stopped at condition monitoring</h2>
+        <p>I scored each bearing’s vibration against its early-run baseline, required sustained deviation before raising an alert, and abstained when evidence was insufficient. Then I compared the monitor with a common elapsed-time schedule.</p>
+        <figure class="bfp-figure">
+            <table aria-label="Inspection policy comparison and sensitivity results">
+                <thead>
+                    <tr><th scope="col">Check</th><th scope="col">Result</th></tr>
+                </thead>
+                <tbody>
+                    <tr><th scope="row">Alert state differed from schedule</th><td>4,311 of 8,624 matched bearing timestamps</td></tr>
+                    <tr><th scope="row">Alert burden ranking changed</th><td>6 of 8 variants</td></tr>
+                    <tr><th scope="row">Alert onset order available</th><td>0 of 8 variants</td></tr>
+                </tbody>
+            </table>
+            <figcaption>The schedule comparison covered all four bearings, including their baseline timestamps.</figcaption>
+        </figure>
+        <p>The frozen inspection policy failed its robustness gate, so I stopped at condition monitoring. The <a class="bfp-evidence" href="https://github.com/anudeepreddy332/bearing-failure-prediction/blob/6fcd020f65acbbe1c31be7a258e55b0a12c0d038/docs/RESEARCH_CLOSEOUT.md">research closeout</a> records the decision, and the <a class="bfp-evidence" href="https://github.com/anudeepreddy332/bearing-failure-prediction">GitHub repository</a> contains the code.</p>
 
         <a href="index.html#projects" class="back-link">← Back to Projects</a>
     </main>
@@ -382,20 +226,22 @@ bp_5k_10k = bandpower(signal, fs=20480, fmin=5000, fmax=10000)</code></pre>
     <script src="shared.js"></script>
     <script type="application/ld+json">
     {
-      "": "https://schema.org",
-      "": "Article",
-      "headline": "Bearing Failure Prediction | The Machinist",
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "What My Bearing Failure Model Was Predicting",
+      "description": "I built a vibration-based bearing model, found leakage in its evaluation, and tested whether condition monitoring could support an inspection policy.",
+      "image": "https://themachinist.org/og-default.png",
       "author": {
-        "": "Person",
-        "name": "Anudeep",
+        "@type": "Person",
+        "name": "Anudeep Reddy",
         "url": "https://themachinist.org"
       },
       "publisher": {
-        "": "Organization",
+        "@type": "Organization",
         "name": "The Machinist",
         "url": "https://themachinist.org"
       },
-      "url": "https://themachinist.org/bearing-failure-prediction-case-study.html"
+      "url": "https://themachinist.org/bearing-failure-prediction-case-study"
     }
     </script>
 </body>
